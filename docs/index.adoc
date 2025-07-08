@@ -1,0 +1,20 @@
+= Introduction to Enonic GraphQL API
+:toc: right
+:experimental:
+:imagesdir: media/
+:sourcedir: ../
+
+A hands-on introduction to developing a GraphQL API.
+
+== Introduction
+
+This guide will show you how to:
+
+* set up a local development environment
+* create an Enonic app
+* build your own GraphQL API using the GraphQL library
+* access and use the GraphQL API
+
+image::ready-set-code.svg["Ready...Set...Code!", width=720px]
+
+The first step is to <<setup#, crank up the development environment>>.

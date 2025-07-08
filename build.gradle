@@ -1,0 +1,65 @@
+plugins {
+    id 'com.enonic.xp.app' version '3.6.1'
+    id 'com.github.node-gradle.node' version '7.1.0'
+}
+
+apply from: "$rootDir/gradle/node.gradle"
+
+app {
+    name = "${appName}"
+    displayName = "${appDisplayName}"
+    vendorName = "${vendorName}"
+    vendorUrl = "${vendorUrl}"
+    systemVersion = "${xpVersion}"
+}
+
+dependencies {
+    implementation "com.enonic.xp:core-api:${xpVersion}"
+    implementation "com.enonic.xp:portal-api:${xpVersion}"
+
+    include "com.enonic.lib:lib-graphql:2.1.0"
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    xp.enonicRepo()
+}
+
+node {
+    download = true
+    version = '22.16.0'
+}
+
+tasks.register( 'lint', NpmTask ) {
+    group 'verification'
+    dependsOn( npmInstall )
+    args = ['run', 'lint']
+    outputs.upToDateWhen { false }
+}
+
+tasks.register( 'vite', NpmTask ) {
+    dependsOn( npmInstall, lint )
+    doLast {
+        println "Build mode: production"
+    }
+    environment = ['NODE_ENV': 'production']
+    description = 'Build assets'
+    args = ['run', 'build']
+    inputs.dir 'src/main/resources/assets'
+    inputs.file 'vite.config.ts'
+    outputs.dir layout.buildDirectory.dir( "resources/main" )
+}
+
+check.dependsOn( lint )
+
+jar {
+    exclude 'assets/**/*.ts'
+    exclude 'assets/**/*.tsx'
+    exclude 'assets/*/**/*.css'
+    exclude 'assets/index.css'
+
+    outputs.dir layout.buildDirectory.dir( "resources/main" )
+
+    dependsOn += vite
+}

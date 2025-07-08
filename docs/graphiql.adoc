@@ -1,0 +1,9 @@
+= GraphiQL Playground
+:toc: right
+:experimental:
+:imagesdir: media/
+:sourcedir: ../
+
+This section explains how to integrate the GraphiQL Playground into your application.
+The Playground offers a user-friendly web interface for writing and executing GraphQL queries, making it easier to test and debug your GraphQL API.
+

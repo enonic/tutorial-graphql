@@ -1,0 +1,37 @@
+{
+    "menuItems": [
+      {
+        "title": "Create sandbox",
+        "document": "setup"
+      },
+      {
+        "title": "Create application",
+        "document": "app"
+      },
+      {
+        "title": "Hello GraphQL",
+        "document": "graphql"
+      },
+      {
+        "title": "GraphiQL",
+        "document": "graphiql"
+      },
+      {
+        "title": "Types",
+        "document": "types"
+      },
+      {
+        "title": "Mutations",
+        "document": "mutations"
+      },
+      {
+        "title": "Subscriptions",
+        "document": "subscriptions"
+      },
+      {
+        "title": "Appendix",
+        "document": "GraphQL Library"
+      }
+    ]
+}
+  
