@@ -1,32 +1,17 @@
 {
-  "compilerOptions": {
-    "target": "ESNext",
-    "lib": [
-      "DOM",
-      "DOM.Iterable",
-      "ESNext"
-    ],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "module": "ESNext",
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "noEmit": true,
-    "jsx": "react-jsx"
-  },
-  "files": [
-    "vite.config.ts",
-  ],
-  "include": [
-    "src",
-    "config"
-  ],
-  "exclude": [
-    "build/**/*"
-  ]
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es5",
+        "sourceMap": true,
+        "lib": [
+            "es2015",
+            "es2015.promise",
+            "dom"
+        ],
+        "jsx": "react"
+    },
+
+    "include": [
+        "src/**/*"
+    ]
 }

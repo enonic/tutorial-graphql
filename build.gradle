@@ -3,6 +3,7 @@ plugins {
     id 'com.github.node-gradle.node' version '7.1.0'
 }
 
+apply from: "$rootDir/gradle/env.gradle"
 apply from: "$rootDir/gradle/node.gradle"
 
 app {
@@ -17,7 +18,12 @@ dependencies {
     implementation "com.enonic.xp:core-api:${xpVersion}"
     implementation "com.enonic.xp:portal-api:${xpVersion}"
 
+    include "com.enonic.xp:lib-portal:${xpVersion}"
+
     include "com.enonic.lib:lib-graphql:2.1.0"
+    include "com.enonic.lib:lib-mustache:2.1.1"
+    include "com.enonic.lib:lib-static:2.1.1"
+    include "com.enonic.lib:lib-router:3.2.0"
 }
 
 repositories {
@@ -27,39 +33,41 @@ repositories {
 }
 
 node {
+    version = '18.17.1'
     download = true
-    version = '22.16.0'
 }
 
 tasks.register( 'lint', NpmTask ) {
     group 'verification'
     dependsOn( npmInstall )
-    args = ['run', 'lint']
-    outputs.upToDateWhen { false }
+    args = ['run', 'lint:quiet']
+    inputs.files fileTree( dir: 'src', include: '**/*.ts' )
 }
 
-tasks.register( 'vite', NpmTask ) {
-    dependsOn( npmInstall, lint )
-    doLast {
-        println "Build mode: production"
-    }
-    environment = ['NODE_ENV': 'production']
-    description = 'Build assets'
+tasks.register( 'webpack', NpmTask ) {
+    dependsOn( npmInstall )
+    environment = ['NODE_ENV': nodeEnvironment()]
+    description = 'Build UI resources (ts, css, etc).'
     args = ['run', 'build']
-    inputs.dir 'src/main/resources/assets'
-    inputs.file 'vite.config.ts'
+    inputs.dir "src/main"
+    inputs.file 'webpack.config.js'
     outputs.dir layout.buildDirectory.dir( "resources/main" )
 }
 
 check.dependsOn( lint )
 
 jar {
-    exclude 'assets/**/*.ts'
     exclude 'assets/**/*.tsx'
-    exclude 'assets/*/**/*.css'
-    exclude 'assets/index.css'
+    exclude 'assets/**/*.less'
+    exclude 'assets/styles/graphiql.min.css'
+    exclude 'assets/**/styles/*.js'
+
+    if ( isProd() )
+    {
+        exclude 'assets/**/*.map'
+    }
 
     outputs.dir layout.buildDirectory.dir( "resources/main" )
 
-    dependsOn += vite
+    dependsOn( webpack )
 }
