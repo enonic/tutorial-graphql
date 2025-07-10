@@ -30,8 +30,13 @@
       },
       {
         "title": "Appendix",
-        "document": "GraphQL Library"
+        "document": "GraphQL Library",
+        "menuItems": [
+          {
+            "title": "GraphQL Lib",
+            "document": "lib-graphql"
+          }
+        ]
       }
     ]
 }
-  

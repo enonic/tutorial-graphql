@@ -1,0 +1,177 @@
+= GraphQL Library API
+:toc: right
+
+This document describes the constants and functions accessible through the library's API.
+
+== Scalar types
+
+A GraphQL object type has a name and fields, but at some point those fields have to resolve to some concrete data.
+That's where the scalar types come in: they represent the leaves of the query.
+
+GraphQL comes with a set of default scalar types:
+
+* GraphQLInt
+* GraphQLFloat
+* GraphQLString
+* GraphQLBoolean
+* GraphQLID
+
+The following scalars are supported starting from version 1.2.0 of the GraphQL Lib:
+
+* Json
+* Date
+* Time
+* DateTime
+
+The following scalars are supported starting from version 2.0.0 of the GraphQL Lib:
+
+* LocalDateTime
+* LocalTime
+
+== Type wrappers
+
+By default the type of field has an occurrence of 0..1.
+To make the field mandatory or a list, use the functions ``nonNull`` or ``list``
+
+=== nonNull
+
+Returns a modified type that indicates the underlying wrapped type will not be null
+
+==== Arguments
+|===
+|type: GraphQLType | Wrapped GraphQL type
+|===
+
+=== list
+
+Returns a modified type that indicates a list of the underlying wrapped type
+
+==== Arguments
+|===
+|type: GraphQLType | Wrapped GraphQL type
+|===
+
+=== reference
+
+Returns a special type that allows an object/interface type to reference a type by its key. Necessary for self reference.
+
+==== Arguments
+|===
+|typeName: String | The type name
+|===
+
+
+== Schema execution function
+
+=== execute
+
+Executes a GraphQL query and variables against a schema
+
+==== Arguments
+|===
+|schema: Schema (Required) | GraphQL schema created
+|query: String (Required) | GraphQL query to execute
+|variables: JS Object (Required) | JS Object containing the variables used in the query
+|context: JS Object (Optional) | The context object to use for GraphQL call. Data of this object available for each field
+|===
+
+== Schema creation functions
+
+Starting from version 2.0.0 of the GraphQL Lib in order to create a schema you must use `schemaGenerator` object, which contains the following functions:
+
+=== createSchema
+
+Creates a GraphQL schema
+
+==== Parameters
+|===
+|query: GraphQLObjectType (Required) | Root query type
+|mutation: GraphQLObjectType | Root mutation type
+|subscription: GraphQLObjectType | Root subscription type
+|dictionary: Array<GraphQLObjectType> | Additional types (Necessary for types accessed through references)
+|===
+
+=== createObjectType
+
+Creates a GraphQL object type
+
+==== Parameters
+|===
+|name: String (Required) | Type name
+|fields: JS Object (Required) | JS Object containing the type fields
+|interfaces: Array<GraphQLInterfaceType OR GraphQLTypeReference> | Type interfaces
+|description: String | Type description
+|===
+
+=== createInputObjectType
+
+Creates a GraphQL input object type
+
+==== Parameters
+|===
+|name: String (Required) | Type name
+|fields: JS Object (Required) | JS Object containing the type fields
+|description: String | Type description
+|===
+
+=== createInterfaceType
+
+Creates a GraphQL interface type
+
+==== Parameters
+|===
+|name: String (Required) | Type name
+|fields: JS Object (Required) | JS Object containing the type fields
+|typeResolver: Function (Required) | Type resolution function
+|description: String | Type description
+|===
+
+There is a bit of a "chicken or the egg" problem when it comes to interface-types and object-types.
+You cannot alter an interface- or object-type after it's definition, but both of them reference each other upon definition, so who do you define first?
+Luckily lib-graphql comes with a reference-type which can be used to point to something by name.
+So even though it's not defined yet, we assume it will be defined by the time it's needed.
+
+There is one last challenge. Inside a type resolver, you have to return an actual object-type, NOT a reference-type.
+You can solve this in two ways:
+1. Either define the object-types first, and store a pointer to each of them in their own constants, and then use those constants when defining the type resolver.
+2. Or make a "global" javascript object, where each object-type is a property, it doesn't matter that the property isn't added yet (upon definition), because it's only needed when the resolver is executed (runtime).
+
+=== createUnionType
+
+Creates a GraphQL union type
+
+==== Parameters
+|===
+|name: String (Required) | Type name
+|types: Array<GraphQLObjectType OR GraphQLTypeReference> (Required) | Possible types
+|typeResolver: Function (Required) | Type resolution function
+|===
+
+=== createEnumType
+
+Creates a GraphQL enum type
+
+==== Parameters
+|===
+|name: String (Required) | Type name
+|values: Array<String> (Required) | Possible values
+|description: String | Description
+|===
+
+In order to create an instance of `schemaGenerator` call `newSchemaGenerator()` method of the GraphQL Lib, for instance:
+
+[source,js]
+----
+const libGraphQL = require('/lib/graphql');
+
+const schemaGenerator = libGraphQL.newSchemaGenerator();
+
+schemaGenerator.createObjectType({
+   ...
+});
+----
+
+=== Breaking changes
+
+==== 2.0.0
+Functions can no longer be created directly, use the `schemaGenerator` object instead.
