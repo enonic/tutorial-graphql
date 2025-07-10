@@ -1,0 +1,127 @@
+= Mutation
+:toc: right
+:experimental:
+:imagesdir: media/
+:sourcedir: ../
+
+In this section, we will look at how to add a `Mutation` to our GraphQL schema.
+In GraphQL, mutations are used to modify data on the server.
+
+Let’s say we need a Notes API to manage notes.
+This API should allow users to add new notes, view individual notes, delete notes, and retrieve a list of all notes.
+
+== Defining the Note type
+
+First, we need to define a `Note` type that describes the structure of a note object.
+Here's a basic example:
+
+.src/main/resources/apis/graphql/schema.js
+[source,js]
+----
+const noteType = schemaGenerator.createObjectType({
+    name: 'Note',
+    fields: {
+        id: {
+            type: graphQlLib.nonNull(graphQlLib.GraphQLID),
+        },
+        title: {
+            type: graphQlLib.nonNull(graphQlLib.GraphQLString),
+        },
+        content: {
+            type: graphQlLib.GraphQLString,
+        },
+        createdAt: {
+            type: graphQlLib.nonNull(graphQlLib.String),
+        }
+    }
+});
+----
+
+In this example, we define the fields for a GraphQL Object Type using the `schemaGenerator.createObjectType` function and apply constraints such as not-null to ensure required fields are properly validated.
+
+== Defining the root Mutation type
+
+Defining a mutation works the same way as defining any other GraphQL Object Type.
+The only difference is that the mutation type must be assigned to the `mutation` field when building the schema.
+
+Let's define the root `Mutation` type to specify which operations can modify the data.
+For the Notes API, we will include mutations for creating and deleting notes:
+
+.src/main/resources/apis/graphql/schema.js
+[source,js]
+----
+const rootMutationType = schemaGenerator.createObjectType({
+    name: 'Mutation',
+    fields: {
+        createNote: {
+            type: graphQlLib.reference('Note'),
+            args: {
+                title: graphQlLib.nonNull(graphQlLib.GraphQLString),
+                content: graphQlLib.nonNull(graphQlLib.GraphQLString),
+            },
+            resolve: (env) => {
+                // Creates the note and returns it as the result.
+            }
+        },
+        deleteNote: {
+            type: graphQlLib.reference('Note'),
+            args: {
+                id: graphQlLib.nonNull(graphQlLib.GraphQLID),
+            },
+            resolve: (env) => {
+                // Removes the note and returns it as the result.
+            }
+        },
+    }
+});
+----
+
+This example is slightly more complex than defining the `Note` type.
+Here, we use arguments for the `createNote` and `deleteNote` fields, and we also define `resolve` functions for them.
+In general, if a field name matches the corresponding property in the source object and the value should be returned as-is, the `resolve` function can be omitted.
+
+Also, notice how we reference the `Note` object in these fields.
+To specify the field type, we use the `graphQlLib.reference` function.
+
+NOTE:: You could also directly use the `noteType` variable, which was initialized when creating the `Note` type. However, using `graphQlLib.reference` is preferred, especially for larger schemas.
+
+Now, let’s see how the `rootMutationType` is used when creating the schema:
+
+.src/main/resources/apis/graphql/schema.js
+[source,js]
+----
+const graphQLSchema = schemaGenerator.createSchema({
+    query: rootQueryType, // <1>
+    mutation: rootMutationType, // <2>
+    dictionary: [noteType] // <3>
+});
+----
+
+<1> Sets the root `Query` type to handle data fetching operations.
+<2> Sets the root `Mutation` type to handle data modification operations.
+<3> Lists the types used in the schema, including custom objects like `Note`.
+
+NOTE:: `dictionary` is also necessary to ensure that objects referenced via `reference` are properly resolved and included in the schema.
+
+
+Here is the complete example implementation of schema.js. You can also see the implementation of the getNote and getNotes fields for the root Query type, which we omitted earlier since their implementation follows the same approach as the fields described in this section.
+
+./src/main/resources/apis/graphql/schema.js
+[source,js]
+----
+include::{sourcedir}/src/main/resources/apis/graphql/schema.js[]
+----
+
+NOTE:: For simplicity, we use a plain JavaScript object as our data store.
+
+The image below shows the result of a `createNote` mutation executed in the GraphiQL UI.
+
+image::mutation-playground.png["Query Playground in action", width="1024px"]
+
+== Summary
+
+In this section, we covered:
+
+- How to add a mutation to a GraphQL schema
+- How to use arguments in GraphQL type fields
+- How to register GraphQL types in the dictionary to enable referencing them using the `reference` function

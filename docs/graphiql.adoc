@@ -155,7 +155,7 @@ router.post('/?', (req) => { // <4>
 <3> Define an endpoint to serve the GraphiQL UI.
 <4> Define an endpoint to handle GraphQL requests.
 
-The GraphiQL UI should now be accessible at the endpoint GET `/api/com.enonic.app.graphql:graphql`.
+The GraphiQL UI should now be accessible at the endpoint GET http://localhost:8080/api/com.enonic.app.graphql:graphql.
 
 image::query-playground.png["Query Playground in action", width="1024px"]
 

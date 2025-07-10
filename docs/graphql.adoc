@@ -35,9 +35,9 @@ In the descriptor, we define which user roles will have access to the API, wheth
 == Define schema
 
 Now we can focus on developing the GraphQL schema.
-To do this, we need to import the GraphQL Lib library in our controller, as shown below.
+To do this, we need to import the GraphQL Lib library, as shown below.
 
-./src/main/resources/apis/graphql/graphql.js
+./src/main/resources/apis/graphql/schema.js
 [source,js]
 ----
 const graphQlLib = require('/lib/graphql');
@@ -45,7 +45,7 @@ const graphQlLib = require('/lib/graphql');
 
 After that, we need to obtain an instance of `schemaGenerator` in order to define `types`, `input types`, the `schema`, `unions`, `enums`, `interfaces`, and more.
 
-./src/main/resources/apis/graphql/graphql.js
+./src/main/resources/apis/graphql/schema.js
 [source,js]
 ----
 const schemaGenerator = graphQlLib.newSchemaGenerator();
@@ -57,10 +57,10 @@ This will allow us to see how a schema is defined and how to get the response wh
 We will begin constructing the schema by defining the root Query object type.
 This type serves as the entry point for all read operations in the GraphQL API and will contain the fields that clients can query.
 
-./src/main/resources/apis/graphql/graphql.js
+./src/main/resources/apis/graphql/schema.js
 [source,js]
 ----
-const queryType = schemaGenerator.createObjectType({ // <1>
+const rootQueryType = schemaGenerator.createObjectType({ // <1>
     name: 'Query',
     fields: {
         serverTime: { // <2>
@@ -84,16 +84,19 @@ This function is executed when the field is queried and returns the current serv
 Next, we define the schema object itself.
 The schema ties together the root Query type (and optionally Mutation and Subscription types) and serves as the core configuration for the GraphQL API.
 
-./src/main/resources/apis/graphql/graphql.js
+./src/main/resources/apis/graphql/schema.js
 [source,js]
 ----
 const graphQLSchema = schemaGenerator.createSchema({ // <1>
-    query: queryType,
+    query: rootQueryType,
 });
+
+module.exports = graphQLSchema; // <2>
 ----
 
-<1> Creates a new GraphQL schema.
-This defines the overall structure of the API, starting with the root query type.
+<1> Creates a new GraphQL schema. This defines the overall structure of the API, starting with the root query type.
+
+<2> Export the created GraphQL schema for use in the application.
 
 Now that the schema is defined, let’s define the HTTP POST method for our API controller.
 This method will handle incoming client requests and pass them to the GraphQL engine for execution.
@@ -101,6 +104,9 @@ This method will handle incoming client requests and pass them to the GraphQL en
 ./src/main/resources/apis/graphql/graphql.js
 [source,js]
 ----
+const graphQlLib = require('/lib/graphql');
+const graphQLSchema = require('./schema');
+
 exports.post = (req) => {
     const body = JSON.parse(req.body);
     const result = graphQlLib.execute(graphQLSchema, body.query, body.variables);
@@ -111,39 +117,32 @@ exports.post = (req) => {
 };
 ----
 
-The complete example of the API controller is shown below.
+The complete example of the `schema.js` is shown below.
 
-./src/main/resources/apis/graphql/graphql.js
+./src/main/resources/apis/graphql/schema.js
 [source,js]
 ----
 const graphQlLib = require('/lib/graphql');
 
 const schemaGenerator = graphQlLib.newSchemaGenerator();
 
-const queryType = schemaGenerator.createObjectType({ // <1>
+const rootQueryType = schemaGenerator.createObjectType({
     name: 'Query',
     fields: {
-        serverTime: { // <2>
-            type: graphQlLib.GraphQLString,  // <3>
-            resolve: (env) => { // <4>
+        serverTime: {
+            type: graphQlLib.GraphQLString,
+            resolve: (env) => {
                 return new Date().toISOString();
             }
         },
     },
 });
 
-const graphQLSchema = schemaGenerator.createSchema({ // <1>
-    query: queryType,
+const graphQLSchema = schemaGenerator.createSchema({
+    query: rootQueryType,
 });
 
-exports.post = (req) => {
-    const body = JSON.parse(req.body);
-    const result = graphQlLib.execute(graphQLSchema, body.query, body.variables);
-    return {
-        contentType: 'application/json',
-        body: result,
-    };
-};
+module.exports = graphQLSchema;
 ----
 
 The application is now ready to be built, redeployed, and tested with the GraphQL API.
