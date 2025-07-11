@@ -1,4 +1,6 @@
 const graphQlLib = require('/lib/graphql');
+const graphQlRxLib = require('/lib/graphql-rx');
+const eventLib = require('/lib/xp/event');
 
 const schemaGenerator = graphQlLib.newSchemaGenerator();
 
@@ -55,6 +57,25 @@ const rootQueryType = schemaGenerator.createObjectType({
     },
 });
 
+const rootSubscriptionType = schemaGenerator.createObjectType({
+    name: 'Subscription',
+    fields: {
+        event: {
+            type: graphQlLib.Json,
+            resolve: (env) => {
+                const processor = graphQlRxLib.createPublishProcessor();
+                eventLib.listener({
+                    type: 'custom.note.*',
+                    callback: (event) => {
+                        processor.onNext(event);
+                    }
+                });
+                return processor;
+            },
+        }
+    }
+});
+
 const rootMutationType = schemaGenerator.createObjectType({
     name: 'Mutation',
     fields: {
@@ -72,6 +93,15 @@ const rootMutationType = schemaGenerator.createObjectType({
                     createdAt: new Date().toISOString(),
                 };
                 storage[note.id] = note;
+
+                eventLib.send({
+                    type: 'note.created',
+                    distributed: true,
+                    data: {
+                        note: note,
+                    }
+                });
+
                 return note;
             }
         },
@@ -84,6 +114,15 @@ const rootMutationType = schemaGenerator.createObjectType({
                 const id = env.args.id;
                 const note = storage[id];
                 delete storage[id];
+
+                eventLib.send({
+                    type: 'note.deleted',
+                    distributed: true,
+                    data: {
+                        note: note,
+                    }
+                });
+
                 return note;
             }
         }
@@ -93,6 +132,7 @@ const rootMutationType = schemaGenerator.createObjectType({
 const graphQLSchema = schemaGenerator.createSchema({
     query: rootQueryType,
     mutation: rootMutationType,
+    subscription: rootSubscriptionType,
     dictionary: [noteType]
 });
 

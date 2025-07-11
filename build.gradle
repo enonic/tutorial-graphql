@@ -19,6 +19,8 @@ dependencies {
     implementation "com.enonic.xp:portal-api:${xpVersion}"
 
     include "com.enonic.xp:lib-portal:${xpVersion}"
+    include "com.enonic.xp:lib-event:${xpVersion}"
+    include "com.enonic.xp:lib-websocket:${xpVersion}"
 
     include "com.enonic.lib:lib-graphql:2.1.0"
     include "com.enonic.lib:lib-mustache:2.1.1"
