@@ -1,0 +1,181 @@
+= GraphQL API
+:toc: right
+:experimental:
+:imagesdir: media/
+:sourcedir: ../
+
+In this section, we will go through an example of how to create a custom GraphQL API.
+
+== GraphQL Lib
+
+In order to build your own GraphQL API using the Enonic XP Platform, you should use the https://market.enonic.com/vendors/enonic/graphql-lib[GraphQL Lib^].
+This library makes it easy to build custom types and manage the schema lifecycle.
+
+First of all, we should add the https://market.enonic.com/vendors/enonic/graphql-lib[GraphQL Lib^] dependency to the `build.gradle` file.
+
+.build.gradle
+[source,kotlin]
+----
+include "com.enonic.lib:lib-graphql:2.1.0"
+----
+
+== Define GraphQL API
+
+To create our GraphQL API, we need to create a `graphql` directory inside `/src/main/resources/apis`.
+Then, we must add a descriptor file named `graphql.xml` and a controller file named `graphql.js`.
+
+./src/main/resources/apis/graphql/graphql.xml
+[source,XML]
+----
+include::{sourcedir}/src/main/resources/apis/graphql/graphql.xml[]
+----
+
+In the descriptor, we define which user roles will have access to the API, whether it should be mounted under `/api`, and optionally provide a `displayName` and `description`.
+
+== Define schema
+
+Now we can focus on developing the GraphQL schema.
+To do this, we need to import the GraphQL Lib library, as shown below.
+
+./src/main/resources/apis/graphql/schema.js
+[source,js]
+----
+const graphQlLib = require('/lib/graphql');
+----
+
+After that, we need to obtain an instance of `schemaGenerator` in order to define `types`, `input types`, the `schema`, `unions`, `enums`, `interfaces`, and more.
+
+./src/main/resources/apis/graphql/schema.js
+[source,js]
+----
+const schemaGenerator = graphQlLib.newSchemaGenerator();
+----
+
+For simplicity, let’s start by creating a schema with a single field called `serverTime`.
+This will allow us to see how a schema is defined and how to get the response when querying our API.
+
+We will begin constructing the schema by defining the root Query object type.
+This type serves as the entry point for all read operations in the GraphQL API and will contain the fields that clients can query.
+
+./src/main/resources/apis/graphql/schema.js
+[source,js]
+----
+const rootQueryType = schemaGenerator.createObjectType({ // <1>
+    name: 'Query',
+    fields: {
+        serverTime: { // <2>
+            type: graphQlLib.GraphQLString,  // <3>
+            resolve: (env) => { // <4>
+                return new Date().toISOString();
+            }
+        },
+    },
+});
+----
+
+<1> Defines the root `Query` object type, which specifies the fields that can be queried in the GraphQL API.
+<2> Declares the `serverTime` field inside the root query type.
+This is the name of the field that can be requested by GraphQL clients.
+<3> Specifies the return type of the `serverTime` field.
+In this case, it is a `GraphQLString`, meaning the field returns a string value.
+<4> Defines the `resolver` function for the `serverTime` field.
+This function is executed when the field is queried and returns the current server time in ISO 8601 format.
+
+Next, we define the schema object itself.
+The schema ties together the root Query type (and optionally Mutation and Subscription types) and serves as the core configuration for the GraphQL API.
+
+./src/main/resources/apis/graphql/schema.js
+[source,js]
+----
+const graphQLSchema = schemaGenerator.createSchema({ // <1>
+    query: rootQueryType,
+});
+
+module.exports = graphQLSchema; // <2>
+----
+
+<1> Creates a new GraphQL schema. This defines the overall structure of the API, starting with the root query type.
+
+<2> Export the created GraphQL schema for use in the application.
+
+Now that the schema is defined, let’s define the HTTP POST method for our API controller.
+This method will handle incoming client requests and pass them to the GraphQL engine for execution.
+
+./src/main/resources/apis/graphql/graphql.js
+[source,js]
+----
+const graphQlLib = require('/lib/graphql');
+const graphQLSchema = require('./schema');
+
+exports.post = (req) => {
+    const body = JSON.parse(req.body);
+    const result = graphQlLib.execute(graphQLSchema, body.query, body.variables);
+    return {
+        contentType: 'application/json',
+        body: result,
+    };
+};
+----
+
+The complete example of the `schema.js` is shown below.
+
+./src/main/resources/apis/graphql/schema.js
+[source,js]
+----
+const graphQlLib = require('/lib/graphql');
+
+const schemaGenerator = graphQlLib.newSchemaGenerator();
+
+const rootQueryType = schemaGenerator.createObjectType({
+    name: 'Query',
+    fields: {
+        serverTime: {
+            type: graphQlLib.GraphQLString,
+            resolve: (env) => {
+                return new Date().toISOString();
+            }
+        },
+    },
+});
+
+const graphQLSchema = schemaGenerator.createSchema({
+    query: rootQueryType,
+});
+
+module.exports = graphQLSchema;
+----
+
+The application is now ready to be built, redeployed, and tested with the GraphQL API.
+
+== Test GraphQL API
+
+In the API descriptor `graphql.xml`, we defined that the API is accessible to all users (`<principal>role:system.everyone</principal>`) and is mounted at `/api` (`<mount>true</mount>`).
+As a result, the GraphQL API will be available at the following endpoint:
+
+ /api/<appName>:<apiKey>
+
+In our case, since the `appName` is `com.enonic.app.graphql` and the `apiKey` is `graphql`, the endpoint becomes:
+
+ /api/com.enonic.app.graphql:graphql
+
+For testing, we will use cURL.
+It is assumed that cURL is already installed on your system.
+
+[source,bash]
+----
+curl -X POST "http://localhost:8080/api/com.enonic.app.graphql:graphql" -H "Content-Type: application/json" -d "{ \"query\": \"{ serverTime }\" }"
+----
+
+As a result of executing this command, you should see a response similar to the following:
+
+[source,json]
+----
+{
+   "data":{
+     "serverTime":"2025-07-08T12:44:22.049Z"
+   }
+}
+----
+
+Great! We now have a working example of a simple GraphQL API.
+In the following sections, we will learn how to define more advanced schemas using custom types, mutations, and other GraphQL features.

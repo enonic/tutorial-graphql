@@ -1,0 +1,75 @@
+plugins {
+    id 'com.enonic.xp.app' version '3.6.1'
+    id 'com.github.node-gradle.node' version '7.1.0'
+}
+
+apply from: "$rootDir/gradle/env.gradle"
+apply from: "$rootDir/gradle/node.gradle"
+
+app {
+    name = "${appName}"
+    displayName = "${appDisplayName}"
+    vendorName = "${vendorName}"
+    vendorUrl = "${vendorUrl}"
+    systemVersion = "${xpVersion}"
+}
+
+dependencies {
+    implementation "com.enonic.xp:core-api:${xpVersion}"
+    implementation "com.enonic.xp:portal-api:${xpVersion}"
+
+    include "com.enonic.xp:lib-portal:${xpVersion}"
+    include "com.enonic.xp:lib-event:${xpVersion}"
+    include "com.enonic.xp:lib-websocket:${xpVersion}"
+
+    include "com.enonic.lib:lib-graphql:2.1.0"
+    include "com.enonic.lib:lib-mustache:2.1.1"
+    include "com.enonic.lib:lib-static:2.1.1"
+    include "com.enonic.lib:lib-router:3.2.0"
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    xp.enonicRepo( 'dev' )
+}
+
+node {
+    version = '18.17.1'
+    download = true
+}
+
+tasks.register( 'lint', NpmTask ) {
+    group 'verification'
+    dependsOn( npmInstall )
+    args = ['run', 'lint:quiet']
+    inputs.files fileTree( dir: 'src', include: '**/*.ts' )
+}
+
+tasks.register( 'webpack', NpmTask ) {
+    dependsOn( npmInstall )
+    environment = ['NODE_ENV': nodeEnvironment()]
+    description = 'Build UI resources (ts, css, etc).'
+    args = ['run', 'build']
+    inputs.dir "src/main"
+    inputs.file 'webpack.config.js'
+    outputs.dir layout.buildDirectory.dir( "resources/main" )
+}
+
+check.dependsOn( lint )
+
+jar {
+    exclude 'assets/**/*.tsx'
+    exclude 'assets/**/*.less'
+    exclude 'assets/styles/graphiql.min.css'
+    exclude 'assets/**/styles/*.js'
+
+    if ( isProd() )
+    {
+        exclude 'assets/**/*.map'
+    }
+
+    outputs.dir layout.buildDirectory.dir( "resources/main" )
+
+    dependsOn( webpack )
+}

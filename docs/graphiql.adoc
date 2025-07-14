@@ -1,0 +1,169 @@
+= GraphiQL
+:toc: right
+:experimental:
+:imagesdir: media/
+:sourcedir: ../
+
+This section explains how to integrate the GraphiQL into your XP application. The GraphiQL offers a user-friendly web interface for writing and executing GraphQL queries, making it easier to test and debug your GraphQL API.
+
+== Adding GraphiQL to the application
+
+To enable the GraphiQL within our application, the following steps are required:
+
+- Declare GraphiQL UI IDE dependencies in `package.json`
+Add the necessary packages to support the GraphiQL user interface:
+
+[source,json]
+----
+{
+  "dependencies": {
+    "@graphiql/react": "^<version>", // <1>
+    "@graphiql/toolkit": "^<version>", // <2>
+    "graphiql": "^<version>", // <3>
+    "graphql-ws": "^<version>", // <4>
+    "react": "^<version>", // <5>
+    "react-dom": "^<version>" // <6>
+  }
+}
+----
+
+<1> `@graphiql/react` provides modular and reusable React components for building custom GraphiQL interfaces.
+<2> `@graphiql/toolkit`	contains shared utility logic used by `@graphiql/react`, such as fetcher creation and schema handling.
+<3> `graphiql` the main GraphiQL IDE package. Can be used directly for embedding the default GraphiQL experience or as a base for customization.
+<4> `graphql-ws` required for enabling GraphQL subscriptions via WebSocket using the `graphql-ws` protocol.
+<5> `react`	a peer dependency for all `@graphiql/*` packages. Needed to render the UI.
+<6> `react-dom`	React's DOM renderer.
+
+- Declare backend dependencies in build.gradle Add dependencies required to serve static files, render the GraphiQL markup, and handle HTTP requests in the controller:
+
+.build.gradle
+[source,kotlin]
+----
+dependencies {
+    include "com.enonic.xp:lib-portal:${xpVersion}" // <1>
+
+    include "com.enonic.lib:lib-mustache:2.1.1" // <2>
+    include "com.enonic.lib:lib-static:2.1.1" // <3>
+    include "com.enonic.lib:lib-router:3.2.0" // <4>
+}
+----
+
+<1>	`lib-portal` provides access to Enonic XP’s portal API, including URL building.
+<2>	`lib-mustache` adds support for rendering templates using the Mustache syntax. Useful for server-side rendering of HTML views.
+<3>	`lib-static` allows serving static resources (JavaScript, CSS, images, etc.) from the application.
+<4>	`lib-router` provides a lightweight server-side router for handling HTTP requests with route-based logic. Useful for implementing custom endpoints (e.g. `/graphql`, `/graphiql` and etc).
+
+NOTE: Full Webpack and Gradle configuration is omitted here. You can view the complete code https://github.com/enonic/tutorial-graphql[here^].
+
+We are now ready to proceed with the implementation.
+
+== Creating the GraphiQL UI Page
+To enable our API to serve the GraphiQL UI, we need to add an `graphql.html` file with the following content:
+
+.src/main/resources/apis/graphql/graphql.html
+[source,html]
+----
+include::{sourcedir}src/main/resources/apis/graphql/graphql.html[]
+----
+
+Here, we define the div element `graphiql-container-wrapper`, which will serve as the mounting point for the React component. We also define variables that specify:
+
+- `handleUrl` the target URL for sending GraphQL requests
+- `playgroundCss` and `playgroundScript` the base path for loading static assets such as CSS and JavaScript required to render the GraphiQL interface.
+
+
+To initialize and render the GraphiQL React component, add the following code:
+
+.src/main/resources/assets/js/playground.tsx
+[source,ts]
+----
+include::{sourcedir}src/main/resources/assets/js/playground.tsx[]
+----
+
+and add custom styles to customize the appearance
+
+.src/main/resources/assets/styles/playground.less
+[source,less]
+----
+include::{sourcedir}src/main/resources/assets/styles/playground.less[]
+----
+
+
+== Implementing the GraphQL Controller
+
+Now we need to update our controller to handle GraphQL requests and render the GraphiQL UI.
+To achieve this, the following changes are required:
+
+./src/main/resources/apis/graphql/graphql.js
+[source,js]
+----
+const portalLib = require('/lib/xp/portal');
+const graphQlLib = require('/lib/graphql');
+const mustacheLib = require('/lib/mustache');
+const staticLib = require('/lib/enonic/static');
+const router = require('/lib/router')();
+const graphQLSchema = require('./schema');
+
+exports.all = (req) => { // <1>
+    return router.dispatch(req);
+};
+
+router.get(`/_static/{path:.*}`, (request) => { // <2>
+    return staticLib.requestHandler(
+        request,
+        {
+            cacheControl: () => staticLib.RESPONSE_CACHE_CONTROL.SAFE,
+            index: false,
+            root: '/assets',
+            relativePath: staticLib.mappedRelativePath('/_static/'),
+        }
+    );
+});
+
+router.get('/?', (req) => { // <3>
+    const view = resolve('graphql.html');
+
+    const apiUrl = portalLib.apiUrl({
+        api: 'graphql'
+    });
+
+    const params = {
+        handlerUrl: apiUrl,
+        playgroundCss: `${apiUrl}/_static/styles/playground.css`,
+        playgroundScript: `${apiUrl}/_static/js/playground.js`,
+    };
+
+    return {
+        status: 200,
+        contentType: 'text/html',
+        body: mustacheLib.render(view, params)
+    };
+});
+
+router.post('/?', (req) => { // <4>
+    const body = JSON.parse(req.body);
+    const result = graphQlLib.execute(graphQLSchema, body.query, body.variables);
+    return {
+        contentType: 'application/json',
+        body: result,
+    };
+});
+----
+
+<1> Delegate all incoming requests to the router for further handling.
+<2> Define an endpoint for serving static resources, e.g. `/api/com.enonic.app.graphql:graphql/_/static/<path>`.
+<3> Define an endpoint to serve the GraphiQL UI.
+<4> Define an endpoint to handle GraphQL requests.
+
+The GraphiQL UI should now be accessible at the endpoint GET http://localhost:8080/api/com.enonic.app.graphql:graphql.
+
+image::query-playground.png["Query Playground in action", width="1024px"]
+
+== Summary
+
+In this example, we covered:
+
+- How to add the GraphiQL UI to our application.
+- How to implement an API with multiple endpoints using https://market.enonic.com/vendors/enonic/router-lib[lib-router^].
+- How to serve static resources using https://market.enonic.com/vendors/enonic/lib-static[lib-static^].
+- How to generate the apiUrl using https://developer.enonic.com/docs/xp/stable/api/lib-portal[lib-portal^].

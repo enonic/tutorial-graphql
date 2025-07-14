@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<api xmlns="urn:enonic:xp:model:1.0">
+  <display-name>GraphQL API</display-name>
+  <description>Notes GraphQL API</description>
+  <mount>true</mount>
+  <allow>
+    <principal>role:system.everyone</principal>
+  </allow>
+</api>

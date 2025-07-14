@@ -1,0 +1,293 @@
+= Subscriptions
+:toc: right
+:experimental:
+:imagesdir: media/
+:sourcedir: ../
+
+On this page, we will explore how to add `Subscriptions`, which enable receiving real-time updates from a GraphQL server using long-lived requests.
+
+We will use the official `graphql-transport-ws` protocol from the GraphQL Foundation, as defined in the https://github.com/graphql/graphql-over-http/blob/main/rfcs/GraphQLOverWebSocket.md[GraphQL over WebSocket specification^].
+
+To achieve this, we need to:
+
+1. Add the necessary libraries for working with WebSockets and Events provided by the Enonic Platform.
+2. Create a GraphQL Subscription type and add it to our GraphQL schema.
+3. Add WebSocket support to our API.
+
+== Root Subscription GraphQL type
+
+First of all, we should add the `lib-websocket` and the `lib-event` dependencies to the `build.gradle` file.
+
+.build.gradle
+[source,kotlin]
+----
+include "com.enonic.xp:lib-event:${xpVersion}"
+include "com.enonic.xp:lib-websocket:${xpVersion}"
+----
+
+Creating a `Subscription` type is no different from creating a regular GraphQL Object type. In our example, for simplicity, we will use a field called `event` with the type `Json`.
+
+./src/main/resources/apis/graphql/schema.js
+[source,js]
+----
+const rootSubscriptionType = schemaGenerator.createObjectType({
+    name: 'Subscription',
+    fields: {
+        event: {
+            type: graphQlLib.Json,
+            resolve: (env) => {
+                // Implementation
+            },
+        }
+    }
+});
+----
+
+We then add it to our schema using the subscription property:
+
+./src/main/resources/apis/graphql/schema.js
+[source,js]
+----
+const graphQLSchema = schemaGenerator.createSchema({
+    query: rootQueryType,
+    mutation: rootMutationType,
+    subscription: rootSubscriptionType,
+    dictionary: [noteType]
+});
+----
+
+Now we just need to implement the `resolve` function to complete the GraphQL part.
+
+The GraphQL Lib library provides functionality for creating a reactive processor for GraphQL publish streams using the `createPublishProcessor` function from the `graphql-rx.js` file. It also allows creating a subscriber via the `createSubscriber` function to handle operations such as subscribe, publish, connection, next, complete, etc., by processing push events to subscribers.
+
+You can include the library as follows:
+
+./src/main/resources/apis/graphql/schema.js
+[source,js]
+----
+const graphQlRxLib = require('/lib/graphql-rx');
+----
+
+We will also include the Event Lib to subscribe to events:
+
+./src/main/resources/apis/graphql/schema.js
+[source,js]
+----
+const eventLib = require('/lib/xp/event');
+----
+
+In the resolve function, we will create a processor and subscribe to events matching `custom.note.*`. The implementation of the `resolve` function will then look as follows:
+
+./src/main/resources/apis/graphql/schema.js
+[source,js]
+----
+const rootSubscriptionType = schemaGenerator.createObjectType({
+    name: 'Subscription',
+    fields: {
+        event: {
+            type: graphQlLib.Json,
+            resolve: (env) => {
+                const processor = graphQlRxLib.createPublishProcessor();
+                eventLib.listener({
+                    type: 'custom.note.*',
+                    callback: (event) => {
+                        processor.onNext(event);
+                    }
+                });
+                return processor;
+            },
+        }
+    }
+});
+----
+
+To enable our `Subscription` to receive real messages, let's add event publishing for `note.created` and `note.deleted` within the resolve functions of the `createNote` and `deleteNote` Mutation fields, respectively. Below is an example for `createNote`. For `deleteNote`, the implementation will be similar, except the `type` will be `note.deleted`.
+
+./src/main/resources/apis/graphql/schema.js
+[source,js]
+----
+eventLib.send({
+    type: 'note.created',
+    distributed: true,
+    data: {
+        note: note,
+    }
+});
+----
+
+The GraphQL part is ready.
+
+== Extend GraphQL API
+
+Now we need to add https://developer.enonic.com/docs/xp/stable/framework/websocket[WebSocket^] support to the controller of our GraphQL API.
+
+To do this, we need to:
+
+- Add an endpoint that will handle HTTP WebSocket requests
+- Add a WebSocket event listener
+- Generate a WebSocket URL and configure the WebSocket client for the GraphQL fetcher
+
+We will add an events endpoint to our controller as follows:
+
+./src/main/resources/apis/graphql/graphql.js
+[source,js]
+----
+router.get('/events', (req) => {
+    if (!req.webSocket) {
+        return {
+            status: 404
+        };
+    }
+    return {
+        webSocket: {
+            subProtocols: ['graphql-transport-ws']
+        }
+    };
+});
+----
+
+and add a WebSocket event handler:
+
+./src/main/resources/apis/graphql/graphql.js
+[source,js]
+----
+exports.webSocketEvent = function (socketEvent) {
+    if (!socketEvent) {
+        return;
+    }
+
+    if (socketEvent.type === 'message') {
+        const message = JSON.parse(socketEvent.message);
+        const sessionId = socketEvent.session.id;
+        if (message.type === 'connection_init') {
+            webSocketLib.send(sessionId, JSON.stringify({
+                type: 'connection_ack'
+            }));
+        } else if (message.type === 'subscribe') {
+            handleSubscribeMessage(sessionId, message);
+        } else if (message.type === 'complete') {
+            cancelSubscription(sessionId);
+        } else {
+            log.debug(`Unknown message type ${message.type}`);
+        }
+    }
+};
+----
+
+Let's take a look at the implementation of the `handleSubscribeMessage` function, which handles messages of type `subscribe`.
+Within this function, a GraphQL query is executed, and its result must contain a data property of type `com.enonic.lib.graphql.rx.Publisher`.
+This type is a wrapper around `org.reactivestreams.Publisher` and allows registering a subscriber.
+
+./src/main/resources/apis/graphql/graphql.js
+[source,js]
+----
+function handleSubscribeMessage(sessionId, message) {
+    const payload = message.payload;
+
+    const result = graphQlLib.execute(graphQLSchema, payload.query, payload.variables);
+
+    if (result.data instanceof com.enonic.lib.graphql.rx.Publisher) {
+        const subscriber = graphQlRxLib.createSubscriber({
+            onNext: (payload) => {
+                webSocketLib.send(sessionId, JSON.stringify({
+                    type: 'next',
+                    id: message.id,
+                    payload: payload,
+                }));
+            }
+        });
+        graphQlSubscribers[sessionId] = subscriber;
+        result.data.subscribe(subscriber);
+    }
+}
+----
+
+where `subscriber` sends the data to the client via WebSocket in the format expected by the https://github.com/graphql/graphql-over-http/blob/main/rfcs/GraphQLOverWebSocket.md#next[GraphQL over WebSocket protocol].
+
+When the operation completes or terminates due to an error, the subscription must be canceled:
+
+./src/main/resources/apis/graphql/graphql.js
+[source,js]
+----
+function cancelSubscription(sessionId) {
+    const subscriber = graphQlSubscribers[sessionId];
+    if (subscriber) {
+        delete graphQlSubscribers[sessionId];
+        subscriber.cancelSubscription();
+    }
+}
+----
+
+As the final step, we need to generate a URL for the events API and assign it to the dataFetcher.
+
+./src/main/resources/apis/graphql/graphql.js
+[source,js]
+----
+router.get('/?', (req) => {
+    const view = resolve('graphql.html');
+
+    const apiUrl = portalLib.apiUrl({
+        api: 'graphql'
+    });
+
+    const eventsUrl = portalLib.apiUrl({ // <1>
+        api: 'graphql',
+        type: 'websocket'
+    });
+
+    const params = {
+        handlerUrl: apiUrl,
+        eventsUrl: `${eventsUrl}/events`, // <2>
+        playgroundCss: `${apiUrl}/_static/styles/playground.css`,
+        playgroundScript: `${apiUrl}/_static/js/playground.js`,
+    };
+
+    return {
+        status: 200,
+        contentType: 'text/html',
+        body: mustacheLib.render(view, params)
+    };
+});
+----
+
+<1> Generates Events API URL
+<2> Passes the `eventsUrl` to the rendering
+
+./src/main/resources/apis/graphql/graphql.html
+[source,html]
+----
+<div id="graphiql-container-wrapper" data-config-handler-url="{{handlerUrl}}" data-config-events-url="{{eventsUrl}}"></div>
+----
+
+.src/main/resources/assets/js/playground.tsx
+[source,js]
+----
+const fetcher = createGraphiQLFetcher({
+    url: container.dataset.configHandlerUrl,
+    wsClient: createClient({ // <1>
+        url: container.dataset.configEventsUrl, // <2>
+    }),
+});
+----
+
+<1> Create a WebSocket client for handling GraphQL subscriptions.
+<2> Set the WebSocket endpoint URL for subscriptions, taken from a data-config-events-url attribute on the container element.
+
+Now everything is ready — after deploying the changes, subscriptions should be available in our GraphQL schema.
+
+In this screenshot, you can see that the Subscriptions have been successfully added to the GraphQL schema. To execute a `subscription`, you need to set the `operationName` to `subscription` and specify the field to return the result — in our case, it is `event`.
+
+image::subscription-before-run.png["Query Playground - Subscription before run", width="1024px"]
+
+After executing the request, you should see a spinner - this indicates that the long-lived request was successfully sent. In the browser's developer tools under the Network tab, for the GET request to `ws://localhost:8080/api/com.enonic.app.graphql:graphql/events`, you can also verify that the connection between the client and server was successfully established and that a `subscribe` message was received.
+
+image::subscription-running.png["Query Playground - Subscription is running", width="1024px"]
+
+Now we can, for example, create a new note to receive a new event for the subscription, as shown in the screenshot below.
+
+image::subscription-got-message.png["Query Playground - Subscription got a message", width="1024px"]
+
+NOTE:: To execute a note creation or deletion request in GraphiQL while a Subscription request is running, perform it in a separate browser tab — otherwise, the current Subscription request will be terminated.
+
+
+That's it! In this chapter, we explored how to add Subscriptions and subscribe to real-time events using the capabilities of the Enonic Platform.

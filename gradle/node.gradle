@@ -1,0 +1,8 @@
+tasks.register( 'npmInstallForce', NpmTask ) {
+    description = 'Update all project node dependencies'
+    args = ['install', '--force']
+}
+
+tasks.register( 'cleanNode', Delete ) {
+    delete 'node_modules'
+}
