@@ -690,7 +690,7 @@ This type is a wrapper around <code>org.reactivestreams.Publisher</code> and all
 </div>
 </div>
 <div class="paragraph">
-<p>where <code>subscriber</code> sends the data to the client via WebSocket in the format expected by the <a href="https://github.com/graphql/graphql-over-http/blob/main/rfcs/GraphQLOverWebSocket.md#next">GraphQL over WebSocket protocol</a>.</p>
+<p>where <code>subscriber</code> sends the data to the client via WebSocket in the format expected by the <a href="https://github.com/graphql/graphql-over-http/blob/main/rfcs/GraphQLOverWebSocket.md#next" target="_blank" rel="noopener">GraphQL over WebSocket protocol</a>.</p>
 </div>
 <div class="paragraph">
 <p>When the operation completes or terminates due to an error, the subscription must be canceled:</p>
@@ -828,7 +828,7 @@ To execute a note creation or deletion request in GraphiQL while a Subscription 
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2025-07-14 13:51:27 UTC
+Last updated 2025-07-14 13:52:11 UTC
 </div>
 </div>
 </body>
