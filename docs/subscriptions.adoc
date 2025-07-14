@@ -202,7 +202,7 @@ function handleSubscribeMessage(sessionId, message) {
 }
 ----
 
-where `subscriber` sends the data to the client via WebSocket in the format expected by the https://github.com/graphql/graphql-over-http/blob/main/rfcs/GraphQLOverWebSocket.md#next[GraphQL over WebSocket protocol].
+where `subscriber` sends the data to the client via WebSocket in the format expected by the https://github.com/graphql/graphql-over-http/blob/main/rfcs/GraphQLOverWebSocket.md#next[GraphQL over WebSocket protocol^].
 
 When the operation completes or terminates due to an error, the subscription must be canceled:
 
