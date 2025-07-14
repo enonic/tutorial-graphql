@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.23">
-<title>GraphQL API</title>
+<title>Subscriptions</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /*! Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -435,21 +435,400 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
-<body class="article">
+<body class="article toc2 toc-right">
 <div id="header">
-<h1>GraphQL API</h1>
+<h1>Subscriptions</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#root_subscription_graphql_type">Root Subscription GraphQL type</a></li>
+<li><a href="#extend_graphql_api">Extend GraphQL API</a></li>
+</ul>
+</div>
 </div>
 <div id="content">
+<div id="preamble">
+<div class="sectionbody">
 <div class="paragraph">
-<p>In this section, we will go through an example of how to create a custom Notes GraphQL API.</p>
+<p>On this page, we will explore how to add <code>Subscriptions</code>, which enable receiving real-time updates from a GraphQL server using long-lived requests.</p>
 </div>
 <div class="paragraph">
-<p>The Notes GraphQL API should allow users to create a new note, view a single note, and retrieve a list of all notes.</p>
+<p>We will use the official <code>graphql-transport-ws</code> protocol from the GraphQL Foundation, as defined in the <a href="https://github.com/graphql/graphql-over-http/blob/main/rfcs/GraphQLOverWebSocket.md" target="_blank" rel="noopener">GraphQL over WebSocket specification</a>.</p>
+</div>
+<div class="paragraph">
+<p>To achieve this, we need to:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Add the necessary libraries for working with WebSockets and Events provided by the Enonic Platform.</p>
+</li>
+<li>
+<p>Create a GraphQL Subscription type and add it to our GraphQL schema.</p>
+</li>
+<li>
+<p>Add WebSocket support to our API.</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="root_subscription_graphql_type"><a class="link" href="#root_subscription_graphql_type">Root Subscription GraphQL type</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>First of all, we should add the <code>lib-websocket</code> and the <code>lib-event</code> dependencies to the <code>build.gradle</code> file.</p>
+</div>
+<div class="listingblock">
+<div class="title">build.gradle</div>
+<div class="content">
+<pre class="highlight"><code class="language-kotlin" data-lang="kotlin">include "com.enonic.xp:lib-event:${xpVersion}"
+include "com.enonic.xp:lib-websocket:${xpVersion}"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Creating a <code>Subscription</code> type is no different from creating a regular GraphQL Object type. In our example, for simplicity, we will use a field called <code>event</code> with the type <code>Json</code>.</p>
+</div>
+<div class="listingblock">
+<div class="title">/src/main/resources/apis/graphql/schema.js</div>
+<div class="content">
+<pre class="highlight"><code class="language-js" data-lang="js">const rootSubscriptionType = schemaGenerator.createObjectType({
+    name: 'Subscription',
+    fields: {
+        event: {
+            type: graphQlLib.Json,
+            resolve: (env) =&gt; {
+                // Implementation
+            },
+        }
+    }
+});</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>We then add it to our schema using the subscription property:</p>
+</div>
+<div class="listingblock">
+<div class="title">/src/main/resources/apis/graphql/schema.js</div>
+<div class="content">
+<pre class="highlight"><code class="language-js" data-lang="js">const graphQLSchema = schemaGenerator.createSchema({
+    query: rootQueryType,
+    mutation: rootMutationType,
+    subscription: rootSubscriptionType,
+    dictionary: [noteType]
+});</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now we just need to implement the <code>resolve</code> function to complete the GraphQL part.</p>
+</div>
+<div class="paragraph">
+<p>The GraphQL Lib library provides functionality for creating a reactive processor for GraphQL publish streams using the <code>createPublishProcessor</code> function from the <code>graphql-rx.js</code> file. It also allows creating a subscriber via the <code>createSubscriber</code> function to handle operations such as subscribe, publish, connection, next, complete, etc., by processing push events to subscribers.</p>
+</div>
+<div class="paragraph">
+<p>You can include the library as follows:</p>
+</div>
+<div class="listingblock">
+<div class="title">/src/main/resources/apis/graphql/schema.js</div>
+<div class="content">
+<pre class="highlight"><code class="language-js" data-lang="js">const graphQlRxLib = require('/lib/graphql-rx');</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>We will also include the Event Lib to subscribe to events:</p>
+</div>
+<div class="listingblock">
+<div class="title">/src/main/resources/apis/graphql/schema.js</div>
+<div class="content">
+<pre class="highlight"><code class="language-js" data-lang="js">const eventLib = require('/lib/xp/event');</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In the resolve function, we will create a processor and subscribe to events matching <code>custom.note.*</code>. The implementation of the <code>resolve</code> function will then look as follows:</p>
+</div>
+<div class="listingblock">
+<div class="title">/src/main/resources/apis/graphql/schema.js</div>
+<div class="content">
+<pre class="highlight"><code class="language-js" data-lang="js">const rootSubscriptionType = schemaGenerator.createObjectType({
+    name: 'Subscription',
+    fields: {
+        event: {
+            type: graphQlLib.Json,
+            resolve: (env) =&gt; {
+                const processor = graphQlRxLib.createPublishProcessor();
+                eventLib.listener({
+                    type: 'custom.note.*',
+                    callback: (event) =&gt; {
+                        processor.onNext(event);
+                    }
+                });
+                return processor;
+            },
+        }
+    }
+});</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>To enable our <code>Subscription</code> to receive real messages, let&#8217;s add event publishing for <code>note.created</code> and <code>note.deleted</code> within the resolve functions of the <code>createNote</code> and <code>deleteNote</code> Mutation fields, respectively. Below is an example for <code>createNote</code>. For <code>deleteNote</code>, the implementation will be similar, except the <code>type</code> will be <code>note.deleted</code>.</p>
+</div>
+<div class="listingblock">
+<div class="title">/src/main/resources/apis/graphql/schema.js</div>
+<div class="content">
+<pre class="highlight"><code class="language-js" data-lang="js">eventLib.send({
+    type: 'note.created',
+    distributed: true,
+    data: {
+        note: note,
+    }
+});</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The GraphQL part is ready.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="extend_graphql_api"><a class="link" href="#extend_graphql_api">Extend GraphQL API</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Now we need to add <a href="https://developer.enonic.com/docs/xp/stable/framework/websocket" target="_blank" rel="noopener">WebSocket</a> support to the controller of our GraphQL API.</p>
+</div>
+<div class="paragraph">
+<p>To do this, we need to:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Add an endpoint that will handle HTTP WebSocket requests</p>
+</li>
+<li>
+<p>Add a WebSocket event listener</p>
+</li>
+<li>
+<p>Generate a WebSocket URL and configure the WebSocket client for the GraphQL fetcher</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>We will add an events endpoint to our controller as follows:</p>
+</div>
+<div class="listingblock">
+<div class="title">/src/main/resources/apis/graphql/graphql.js</div>
+<div class="content">
+<pre class="highlight"><code class="language-js" data-lang="js">router.get('/events', (req) =&gt; {
+    if (!req.webSocket) {
+        return {
+            status: 404
+        };
+    }
+    return {
+        webSocket: {
+            subProtocols: ['graphql-transport-ws']
+        }
+    };
+});</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>and add a WebSocket event handler:</p>
+</div>
+<div class="listingblock">
+<div class="title">/src/main/resources/apis/graphql/graphql.js</div>
+<div class="content">
+<pre class="highlight"><code class="language-js" data-lang="js">exports.webSocketEvent = function (socketEvent) {
+    if (!socketEvent) {
+        return;
+    }
+
+    if (socketEvent.type === 'message') {
+        const message = JSON.parse(socketEvent.message);
+        const sessionId = socketEvent.session.id;
+        if (message.type === 'connection_init') {
+            webSocketLib.send(sessionId, JSON.stringify({
+                type: 'connection_ack'
+            }));
+        } else if (message.type === 'subscribe') {
+            handleSubscribeMessage(sessionId, message);
+        } else if (message.type === 'complete') {
+            cancelSubscription(sessionId);
+        } else {
+            log.debug(`Unknown message type ${message.type}`);
+        }
+    }
+};</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Let&#8217;s take a look at the implementation of the <code>handleSubscribeMessage</code> function, which handles messages of type <code>subscribe</code>.
+Within this function, a GraphQL query is executed, and its result must contain a data property of type <code>com.enonic.lib.graphql.rx.Publisher</code>.
+This type is a wrapper around <code>org.reactivestreams.Publisher</code> and allows registering a subscriber.</p>
+</div>
+<div class="listingblock">
+<div class="title">/src/main/resources/apis/graphql/graphql.js</div>
+<div class="content">
+<pre class="highlight"><code class="language-js" data-lang="js">function handleSubscribeMessage(sessionId, message) {
+    const payload = message.payload;
+
+    const result = graphQlLib.execute(graphQLSchema, payload.query, payload.variables);
+
+    if (result.data instanceof com.enonic.lib.graphql.rx.Publisher) {
+        const subscriber = graphQlRxLib.createSubscriber({
+            onNext: (payload) =&gt; {
+                webSocketLib.send(sessionId, JSON.stringify({
+                    type: 'next',
+                    id: message.id,
+                    payload: payload,
+                }));
+            }
+        });
+        graphQlSubscribers[sessionId] = subscriber;
+        result.data.subscribe(subscriber);
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>where <code>subscriber</code> sends the data to the client via WebSocket in the format expected by the <a href="https://github.com/graphql/graphql-over-http/blob/main/rfcs/GraphQLOverWebSocket.md#next">GraphQL over WebSocket protocol</a>.</p>
+</div>
+<div class="paragraph">
+<p>When the operation completes or terminates due to an error, the subscription must be canceled:</p>
+</div>
+<div class="listingblock">
+<div class="title">/src/main/resources/apis/graphql/graphql.js</div>
+<div class="content">
+<pre class="highlight"><code class="language-js" data-lang="js">function cancelSubscription(sessionId) {
+    const subscriber = graphQlSubscribers[sessionId];
+    if (subscriber) {
+        delete graphQlSubscribers[sessionId];
+        subscriber.cancelSubscription();
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>As the final step, we need to generate a URL for the events API and assign it to the dataFetcher.</p>
+</div>
+<div class="listingblock">
+<div class="title">/src/main/resources/apis/graphql/graphql.js</div>
+<div class="content">
+<pre class="highlight"><code class="language-js" data-lang="js">router.get('/?', (req) =&gt; {
+    const view = resolve('graphql.html');
+
+    const apiUrl = portalLib.apiUrl({
+        api: 'graphql'
+    });
+
+    const eventsUrl = portalLib.apiUrl({ <i class="conum" data-value="1"></i><b>(1)</b>
+        api: 'graphql',
+        type: 'websocket'
+    });
+
+    const params = {
+        handlerUrl: apiUrl,
+        eventsUrl: `${eventsUrl}/events`, <i class="conum" data-value="2"></i><b>(2)</b>
+        playgroundCss: `${apiUrl}/_static/styles/playground.css`,
+        playgroundScript: `${apiUrl}/_static/js/playground.js`,
+    };
+
+    return {
+        status: 200,
+        contentType: 'text/html',
+        body: mustacheLib.render(view, params)
+    };
+});</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Generates Events API URL</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Passes the <code>eventsUrl</code> to the rendering</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="title">/src/main/resources/apis/graphql/graphql.html</div>
+<div class="content">
+<pre class="highlight"><code class="language-html" data-lang="html">&lt;div id="graphiql-container-wrapper" data-config-handler-url="{{handlerUrl}}" data-config-events-url="{{eventsUrl}}"&gt;&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">src/main/resources/assets/js/playground.tsx</div>
+<div class="content">
+<pre class="highlight"><code class="language-js" data-lang="js">const fetcher = createGraphiQLFetcher({
+    url: container.dataset.configHandlerUrl,
+    wsClient: createClient({ <i class="conum" data-value="1"></i><b>(1)</b>
+        url: container.dataset.configEventsUrl, <i class="conum" data-value="2"></i><b>(2)</b>
+    }),
+});</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Create a WebSocket client for handling GraphQL subscriptions.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Set the WebSocket endpoint URL for subscriptions, taken from a data-config-events-url attribute on the container element.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Now everything is ready — after deploying the changes, subscriptions should be available in our GraphQL schema.</p>
+</div>
+<div class="paragraph">
+<p>In this screenshot, you can see that the Subscriptions have been successfully added to the GraphQL schema. To execute a <code>subscription</code>, you need to set the <code>operationName</code> to <code>subscription</code> and specify the field to return the result — in our case, it is <code>event</code>.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="media/subscription-before-run.png" alt="Query Playground - Subscription before run" width="1024px">
+</div>
+</div>
+<div class="paragraph">
+<p>After executing the request, you should see a spinner - this indicates that the long-lived request was successfully sent. In the browser&#8217;s developer tools under the Network tab, for the GET request to <code>ws://localhost:8080/api/com.enonic.app.graphql:graphql/events</code>, you can also verify that the connection between the client and server was successfully established and that a <code>subscribe</code> message was received.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="media/subscription-running.png" alt="Query Playground - Subscription is running" width="1024px">
+</div>
+</div>
+<div class="paragraph">
+<p>Now we can, for example, create a new note to receive a new event for the subscription, as shown in the screenshot below.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="media/subscription-got-message.png" alt="Query Playground - Subscription got a message" width="1024px">
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+To execute a note creation or deletion request in GraphiQL while a Subscription request is running, perform it in a separate browser tab — otherwise, the current Subscription request will be terminated.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>That&#8217;s it! In this chapter, we explored how to add Subscriptions and subscribe to real-time events using the capabilities of the Enonic Platform.</p>
+</div>
+</div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2025-07-14 12:57:58 UTC
+Last updated 2025-07-14 13:51:27 UTC
 </div>
 </div>
 </body>

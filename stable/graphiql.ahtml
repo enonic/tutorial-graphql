@@ -589,7 +589,7 @@ Full Webpack and Gradle configuration is omitted here. You can view the complete
 &lt;/head&gt;
 &lt;body&gt;
 &lt;div class="app-graphql-container"&gt;
-    &lt;div id="graphiql-container-wrapper" data-config-handler-url="{{handlerUrl}}" data-config-events-url="{{eventsUrl}}"&gt;&lt;/div&gt;
+    &lt;div id="graphiql-container-wrapper" data-config-handler-url="{{handlerUrl}}"&gt;&lt;/div&gt;
     &lt;script src="{{playgroundScript}}"&gt;&lt;/script&gt;
 &lt;/div&gt;
 &lt;/body&gt;
@@ -619,16 +619,11 @@ Full Webpack and Gradle configuration is omitted here. You can view the complete
 import {createRoot} from 'react-dom/client';
 import {GraphiQL} from 'graphiql';
 import {createGraphiQLFetcher} from '@graphiql/toolkit';
-import {createClient} from 'graphql-ws';
 
 const container = document.getElementById('graphiql-container-wrapper');
 
 const fetcher = createGraphiQLFetcher({
     url: container.dataset.configHandlerUrl,
-    wsClient: createClient(
-        {
-            url: container.dataset.configEventsUrl,
-        }),
 });
 
 createRoot(container).render(&lt;GraphiQL fetcher={fetcher}/&gt;);</code></pre>
@@ -778,7 +773,7 @@ router.post('/?', (req) =&gt; { <i class="conum" data-value="4"></i><b>(4)</b>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2025-07-14 12:57:58 UTC
+Last updated 2025-07-14 13:51:27 UTC
 </div>
 </div>
 </body>

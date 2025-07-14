@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.23">
-<title>Subscriptions</title>
+<title>Mutation</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /*! Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -437,12 +437,13 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="article toc2 toc-right">
 <div id="header">
-<h1>Subscriptions</h1>
+<h1>Mutation</h1>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
-<li><a href="#root_subscription_graphql_type">Root Subscription GraphQL type</a></li>
-<li><a href="#extend_graphql_api">Extend GraphQL API</a></li>
+<li><a href="#defining_the_note_type">Defining the Note type</a></li>
+<li><a href="#defining_the_root_mutation_type">Defining the root Mutation type</a></li>
+<li><a href="#summary">Summary</a></li>
 </ul>
 </div>
 </div>
@@ -450,106 +451,217 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>On this page, we will explore how to add <code>Subscriptions</code>, which enable receiving real-time updates from a GraphQL server using long-lived requests.</p>
+<p>In this section, we will look at how to add a <code>Mutation</code> to our GraphQL schema.
+In GraphQL, mutations are used to modify data on the server.</p>
 </div>
 <div class="paragraph">
-<p>We will use the official <code>graphql-transport-ws</code> protocol from the GraphQL Foundation, as defined in the <a href="https://github.com/graphql/graphql-over-http/blob/main/rfcs/GraphQLOverWebSocket.md" target="_blank" rel="noopener">GraphQL over WebSocket specification</a>.</p>
-</div>
-<div class="paragraph">
-<p>To achieve this, we need to:</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Add the necessary libraries for working with WebSockets and Events provided by the Enonic Platform.</p>
-</li>
-<li>
-<p>Create a GraphQL Subscription type and add it to our GraphQL schema.</p>
-</li>
-<li>
-<p>Add WebSocket support to our API.</p>
-</li>
-</ol>
+<p>Let’s say we need a Notes API to manage notes.
+This API should allow users to add new notes, view individual notes, delete notes, and retrieve a list of all notes.</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="root_subscription_graphql_type"><a class="link" href="#root_subscription_graphql_type">Root Subscription GraphQL type</a></h2>
+<h2 id="defining_the_note_type"><a class="link" href="#defining_the_note_type">Defining the Note type</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>First of all, we should add the <code>lib-websocket</code> and the <code>lib-event</code> dependencies to the <code>build.gradle</code> file.</p>
+<p>First, we need to define a <code>Note</code> type that describes the structure of a note object.
+Here&#8217;s a basic example:</p>
 </div>
 <div class="listingblock">
-<div class="title">build.gradle</div>
+<div class="title">src/main/resources/apis/graphql/schema.js</div>
 <div class="content">
-<pre class="highlight"><code class="language-kotlin" data-lang="kotlin">include "com.enonic.xp:lib-event:${xpVersion}"
-include "com.enonic.xp:lib-websocket:${xpVersion}"</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Creating a <code>Subscription</code> type is no different from creating a regular GraphQL Object type. In our example, for simplicity, we will use a field called <code>event</code> with the type <code>Json</code>.</p>
-</div>
-<div class="listingblock">
-<div class="title">/src/main/resources/apis/graphql/schema.js</div>
-<div class="content">
-<pre class="highlight"><code class="language-js" data-lang="js">const rootSubscriptionType = schemaGenerator.createObjectType({
-    name: 'Subscription',
+<pre class="highlight"><code class="language-js" data-lang="js">const noteType = schemaGenerator.createObjectType({
+    name: 'Note',
     fields: {
-        event: {
-            type: graphQlLib.Json,
-            resolve: (env) =&gt; {
-                // Implementation
-            },
+        id: {
+            type: graphQlLib.nonNull(graphQlLib.GraphQLID),
+        },
+        title: {
+            type: graphQlLib.nonNull(graphQlLib.GraphQLString),
+        },
+        content: {
+            type: graphQlLib.GraphQLString,
+        },
+        createdAt: {
+            type: graphQlLib.nonNull(graphQlLib.String),
         }
     }
 });</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>We then add it to our schema using the subscription property:</p>
+<p>In this example, we define the fields for a GraphQL Object Type using the <code>schemaGenerator.createObjectType</code> function and apply constraints such as not-null to ensure required fields are properly validated.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="defining_the_root_mutation_type"><a class="link" href="#defining_the_root_mutation_type">Defining the root Mutation type</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Defining a mutation works the same way as defining any other GraphQL Object Type.
+The only difference is that the mutation type must be assigned to the <code>mutation</code> field when building the schema.</p>
+</div>
+<div class="paragraph">
+<p>Let&#8217;s define the root <code>Mutation</code> type to specify which operations can modify the data.
+For the Notes API, we will include mutations for creating and deleting notes:</p>
 </div>
 <div class="listingblock">
-<div class="title">/src/main/resources/apis/graphql/schema.js</div>
+<div class="title">src/main/resources/apis/graphql/schema.js</div>
 <div class="content">
-<pre class="highlight"><code class="language-js" data-lang="js">const graphQLSchema = schemaGenerator.createSchema({
-    query: rootQueryType,
-    mutation: rootMutationType,
-    subscription: rootSubscriptionType,
-    dictionary: [noteType]
+<pre class="highlight"><code class="language-js" data-lang="js">const rootMutationType = schemaGenerator.createObjectType({
+    name: 'Mutation',
+    fields: {
+        createNote: {
+            type: graphQlLib.reference('Note'),
+            args: {
+                title: graphQlLib.nonNull(graphQlLib.GraphQLString),
+                content: graphQlLib.nonNull(graphQlLib.GraphQLString),
+            },
+            resolve: (env) =&gt; {
+                // Creates the note and returns it as the result.
+            }
+        },
+        deleteNote: {
+            type: graphQlLib.reference('Note'),
+            args: {
+                id: graphQlLib.nonNull(graphQlLib.GraphQLID),
+            },
+            resolve: (env) =&gt; {
+                // Removes the note and returns it as the result.
+            }
+        },
+    }
 });</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Now we just need to implement the <code>resolve</code> function to complete the GraphQL part.</p>
+<p>This example is slightly more complex than defining the <code>Note</code> type.
+Here, we use arguments for the <code>createNote</code> and <code>deleteNote</code> fields, and we also define <code>resolve</code> functions for them.
+In general, if a field name matches the corresponding property in the source object and the value should be returned as-is, the <code>resolve</code> function can be omitted.</p>
 </div>
 <div class="paragraph">
-<p>The GraphQL Lib library provides functionality for creating a reactive processor for GraphQL publish streams using the <code>createPublishProcessor</code> function from the <code>graphql-rx.js</code> file. It also allows creating a subscriber via the <code>createSubscriber</code> function to handle operations such as subscribe, publish, connection, next, complete, etc., by processing push events to subscribers.</p>
+<p>Also, notice how we reference the <code>Note</code> object in these fields.
+To specify the field type, we use the <code>graphQlLib.reference</code> function.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+You could also directly use the <code>noteType</code> variable, which was initialized when creating the <code>Note</code> type. However, using <code>graphQlLib.reference</code> is preferred, especially for larger schemas.
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
-<p>You can include the library as follows:</p>
+<p>Now, let’s see how the <code>rootMutationType</code> is used when creating the schema:</p>
+</div>
+<div class="listingblock">
+<div class="title">src/main/resources/apis/graphql/schema.js</div>
+<div class="content">
+<pre class="highlight"><code class="language-js" data-lang="js">const graphQLSchema = schemaGenerator.createSchema({
+    query: rootQueryType, <i class="conum" data-value="1"></i><b>(1)</b>
+    mutation: rootMutationType, <i class="conum" data-value="2"></i><b>(2)</b>
+    dictionary: [noteType] <i class="conum" data-value="3"></i><b>(3)</b>
+});</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Sets the root <code>Query</code> type to handle data fetching operations.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Sets the root <code>Mutation</code> type to handle data modification operations.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Lists the types used in the schema, including custom objects like <code>Note</code>.</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<code>dictionary</code> is also necessary to ensure that objects referenced via <code>reference</code> are properly resolved and included in the schema.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Here is the complete example implementation of schema.js. You can also see the implementation of the getNote and getNotes fields for the root Query type, which we omitted earlier since their implementation follows the same approach as the fields described in this section.</p>
 </div>
 <div class="listingblock">
 <div class="title">/src/main/resources/apis/graphql/schema.js</div>
 <div class="content">
-<pre class="highlight"><code class="language-js" data-lang="js">const graphQlRxLib = require('/lib/graphql-rx');</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>We will also include the Event Lib to subscribe to events:</p>
-</div>
-<div class="listingblock">
-<div class="title">/src/main/resources/apis/graphql/schema.js</div>
-<div class="content">
-<pre class="highlight"><code class="language-js" data-lang="js">const eventLib = require('/lib/xp/event');</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>In the resolve function, we will create a processor and subscribe to events matching <code>custom.note.*</code>. The implementation of the <code>resolve</code> function will then look as follows:</p>
-</div>
-<div class="listingblock">
-<div class="title">/src/main/resources/apis/graphql/schema.js</div>
-<div class="content">
-<pre class="highlight"><code class="language-js" data-lang="js">const rootSubscriptionType = schemaGenerator.createObjectType({
+<pre class="highlight"><code class="language-js" data-lang="js">const graphQlLib = require('/lib/graphql');
+const graphQlRxLib = require('/lib/graphql-rx');
+const eventLib = require('/lib/xp/event');
+
+const schemaGenerator = graphQlLib.newSchemaGenerator();
+
+const storage = {};
+
+const noteType = schemaGenerator.createObjectType({
+    name: 'Note',
+    fields: {
+        id: {
+            type: graphQlLib.nonNull(graphQlLib.GraphQLID),
+        },
+        title: {
+            type: graphQlLib.nonNull(graphQlLib.GraphQLString),
+        },
+        content: {
+            type: graphQlLib.GraphQLString,
+        },
+        createdAt: {
+            type: graphQlLib.nonNull(graphQlLib.GraphQLString)
+        }
+    }
+});
+
+const rootQueryType = schemaGenerator.createObjectType({
+    name: 'Query',
+    fields: {
+        serverTime: {
+            type: graphQlLib.GraphQLString,
+            resolve: (env) =&gt; {
+                return new Date().toISOString();
+            }
+        },
+        getNote: {
+            type: graphQlLib.reference('Note'),
+            args: {
+                id: graphQlLib.nonNull(graphQlLib.GraphQLID),
+            },
+            resolve: (env) =&gt; {
+                return storage[env.args.id];
+            },
+        },
+        getNotes: {
+            type: graphQlLib.list(graphQlLib.reference('Note')),
+            resolve: (env) =&gt; {
+                const result = [];
+                for (let key in storage) {
+                    if (storage.hasOwnProperty(key)) {
+                        result.push(storage[key]);
+                    }
+                }
+                return result;
+            }
+        }
+    },
+});
+
+const rootSubscriptionType = schemaGenerator.createObjectType({
     name: 'Subscription',
     fields: {
         event: {
@@ -566,265 +678,118 @@ include "com.enonic.xp:lib-websocket:${xpVersion}"</code></pre>
             },
         }
     }
-});</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>To enable our <code>Subscription</code> to receive real messages, let&#8217;s add event publishing for <code>note.created</code> and <code>note.deleted</code> within the resolve functions of the <code>createNote</code> and <code>deleteNote</code> Mutation fields, respectively. Below is an example for <code>createNote</code>. For <code>deleteNote</code>, the implementation will be similar, except the <code>type</code> will be <code>note.deleted</code>.</p>
-</div>
-<div class="listingblock">
-<div class="title">/src/main/resources/apis/graphql/schema.js</div>
-<div class="content">
-<pre class="highlight"><code class="language-js" data-lang="js">eventLib.send({
-    type: 'note.created',
-    distributed: true,
-    data: {
-        note: note,
+});
+
+const rootMutationType = schemaGenerator.createObjectType({
+    name: 'Mutation',
+    fields: {
+        createNote: {
+            type: graphQlLib.reference('Note'),
+            args: {
+                title: graphQlLib.nonNull(graphQlLib.GraphQLString),
+                content: graphQlLib.nonNull(graphQlLib.GraphQLString),
+            },
+            resolve: (env) =&gt; {
+                const note = {
+                    id: Math.random().toString(36).substring(2, 15),
+                    title: env.args.title,
+                    content: env.args.content,
+                    createdAt: new Date().toISOString(),
+                };
+                storage[note.id] = note;
+
+                eventLib.send({
+                    type: 'note.created',
+                    distributed: true,
+                    data: {
+                        note: note,
+                    }
+                });
+
+                return note;
+            }
+        },
+        deleteNote: {
+            type: graphQlLib.reference('Note'),
+            args: {
+                id: graphQlLib.nonNull(graphQlLib.GraphQLID),
+            },
+            resolve: (env) =&gt; {
+                const id = env.args.id;
+                const note = storage[id];
+                delete storage[id];
+
+                eventLib.send({
+                    type: 'note.deleted',
+                    distributed: true,
+                    data: {
+                        note: note,
+                    }
+                });
+
+                return note;
+            }
+        }
     }
-});</code></pre>
+});
+
+const graphQLSchema = schemaGenerator.createSchema({
+    query: rootQueryType,
+    mutation: rootMutationType,
+    subscription: rootSubscriptionType,
+    dictionary: [noteType]
+});
+
+module.exports = graphQLSchema;</code></pre>
 </div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+For simplicity, we use a plain JavaScript object as our data store.
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
-<p>The GraphQL part is ready.</p>
+<p>The image below shows the result of a <code>createNote</code> mutation executed in the GraphiQL UI.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="media/mutation-playground.png" alt="Query Playground in action" width="1024px">
+</div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="extend_graphql_api"><a class="link" href="#extend_graphql_api">Extend GraphQL API</a></h2>
+<h2 id="summary"><a class="link" href="#summary">Summary</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Now we need to add <a href="https://developer.enonic.com/docs/xp/stable/framework/websocket" target="_blank" rel="noopener">WebSocket</a> support to the controller of our GraphQL API.</p>
-</div>
-<div class="paragraph">
-<p>To do this, we need to:</p>
+<p>In this section, we covered:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>Add an endpoint that will handle HTTP WebSocket requests</p>
+<p>How to add a mutation to a GraphQL schema</p>
 </li>
 <li>
-<p>Add a WebSocket event listener</p>
+<p>How to use arguments in GraphQL type fields</p>
 </li>
 <li>
-<p>Generate a WebSocket URL and configure the WebSocket client for the GraphQL fetcher</p>
+<p>How to register GraphQL types in the dictionary to enable referencing them using the <code>reference</code> function</p>
 </li>
 </ul>
-</div>
-<div class="paragraph">
-<p>We will add an events endpoint to our controller as follows:</p>
-</div>
-<div class="listingblock">
-<div class="title">/src/main/resources/apis/graphql/graphql.js</div>
-<div class="content">
-<pre class="highlight"><code class="language-js" data-lang="js">router.get('/events', (req) =&gt; {
-    if (!req.webSocket) {
-        return {
-            status: 404
-        };
-    }
-    return {
-        webSocket: {
-            subProtocols: ['graphql-transport-ws']
-        }
-    };
-});</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>and add a WebSocket event handler:</p>
-</div>
-<div class="listingblock">
-<div class="title">/src/main/resources/apis/graphql/graphql.js</div>
-<div class="content">
-<pre class="highlight"><code class="language-js" data-lang="js">exports.webSocketEvent = function (socketEvent) {
-    if (!socketEvent) {
-        return;
-    }
-
-    if (socketEvent.type === 'message') {
-        const message = JSON.parse(socketEvent.message);
-        const sessionId = socketEvent.session.id;
-        if (message.type === 'connection_init') {
-            webSocketLib.send(sessionId, JSON.stringify({
-                type: 'connection_ack'
-            }));
-        } else if (message.type === 'subscribe') {
-            handleSubscribeMessage(sessionId, message);
-        } else if (message.type === 'complete') {
-            cancelSubscription(sessionId);
-        } else {
-            log.debug(`Unknown message type ${message.type}`);
-        }
-    }
-};</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Let&#8217;s take a look at the implementation of the <code>handleSubscribeMessage</code> function, which handles messages of type <code>subscribe</code>.
-Within this function, a GraphQL query is executed, and its result must contain a data property of type <code>com.enonic.lib.graphql.rx.Publisher</code>.
-This type is a wrapper around <code>org.reactivestreams.Publisher</code> and allows registering a subscriber.</p>
-</div>
-<div class="listingblock">
-<div class="title">/src/main/resources/apis/graphql/graphql.js</div>
-<div class="content">
-<pre class="highlight"><code class="language-js" data-lang="js">function handleSubscribeMessage(sessionId, message) {
-    const payload = message.payload;
-
-    const result = graphQlLib.execute(graphQLSchema, payload.query, payload.variables);
-
-    if (result.data instanceof com.enonic.lib.graphql.rx.Publisher) {
-        const subscriber = graphQlRxLib.createSubscriber({
-            onNext: (payload) =&gt; {
-                webSocketLib.send(sessionId, JSON.stringify({
-                    type: 'next',
-                    id: message.id,
-                    payload: payload,
-                }));
-            }
-        });
-        graphQlSubscribers[sessionId] = subscriber;
-        result.data.subscribe(subscriber);
-    }
-}</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>where <code>subscriber</code> sends the data to the client via WebSocket in the format expected by the <a href="https://github.com/graphql/graphql-over-http/blob/main/rfcs/GraphQLOverWebSocket.md#next">GraphQL over WebSocket protocol</a>.</p>
-</div>
-<div class="paragraph">
-<p>When the operation completes or terminates due to an error, the subscription must be canceled:</p>
-</div>
-<div class="listingblock">
-<div class="title">/src/main/resources/apis/graphql/graphql.js</div>
-<div class="content">
-<pre class="highlight"><code class="language-js" data-lang="js">function cancelSubscription(sessionId) {
-    const subscriber = graphQlSubscribers[sessionId];
-    if (subscriber) {
-        delete graphQlSubscribers[sessionId];
-        subscriber.cancelSubscription();
-    }
-}</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>As the final step, we need to generate a URL for the events API and assign it to the dataFetcher.</p>
-</div>
-<div class="listingblock">
-<div class="title">/src/main/resources/apis/graphql/graphql.js</div>
-<div class="content">
-<pre class="highlight"><code class="language-js" data-lang="js">router.get('/?', (req) =&gt; {
-    const view = resolve('graphql.html');
-
-    const apiUrl = portalLib.apiUrl({
-        api: 'graphql'
-    });
-
-    const eventsUrl = portalLib.apiUrl({ <i class="conum" data-value="1"></i><b>(1)</b>
-        api: 'graphql',
-        type: 'websocket'
-    });
-
-    const params = {
-        handlerUrl: apiUrl,
-        eventsUrl: `${eventsUrl}/events`, <i class="conum" data-value="2"></i><b>(2)</b>
-        playgroundCss: `${apiUrl}/_static/styles/playground.css`,
-        playgroundScript: `${apiUrl}/_static/js/playground.js`,
-    };
-
-    return {
-        status: 200,
-        contentType: 'text/html',
-        body: mustacheLib.render(view, params)
-    };
-});</code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Generates Events API URL</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Passes the <code>eventsUrl</code> to the rendering</td>
-</tr>
-</table>
-</div>
-<div class="listingblock">
-<div class="title">/src/main/resources/apis/graphql/graphql.html</div>
-<div class="content">
-<pre class="highlight"><code class="language-html" data-lang="html">&lt;div id="graphiql-container-wrapper" data-config-handler-url="{{handlerUrl}}" data-config-events-url="{{eventsUrl}}"&gt;&lt;/div&gt;</code></pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="title">src/main/resources/assets/js/playground.tsx</div>
-<div class="content">
-<pre class="highlight"><code class="language-js" data-lang="js">const fetcher = createGraphiQLFetcher({
-    url: container.dataset.configHandlerUrl,
-    wsClient: createClient({ <i class="conum" data-value="1"></i><b>(1)</b>
-        url: container.dataset.configEventsUrl, <i class="conum" data-value="2"></i><b>(2)</b>
-    }),
-});</code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Create a WebSocket client for handling GraphQL subscriptions.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Set the WebSocket endpoint URL for subscriptions, taken from a data-config-events-url attribute on the container element.</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>Now everything is ready — after deploying the changes, subscriptions should be available in our GraphQL schema.</p>
-</div>
-<div class="paragraph">
-<p>In this screenshot, you can see that the Subscriptions have been successfully added to the GraphQL schema. To execute a <code>subscription</code>, you need to set the <code>operationName</code> to <code>subscription</code> and specify the field to return the result — in our case, it is <code>event</code>.</p>
-</div>
-<div class="imageblock">
-<div class="content">
-<img src="media/subscription-before-run.png" alt="Query Playground - Subscription before run" width="1024px">
-</div>
-</div>
-<div class="paragraph">
-<p>After executing the request, you should see a spinner - this indicates that the long-lived request was successfully sent. In the browser&#8217;s developer tools under the Network tab, for the GET request to <code>ws://localhost:8080/api/com.enonic.app.graphql:graphql/events</code>, you can also verify that the connection between the client and server was successfully established and that a <code>subscribe</code> message was received.</p>
-</div>
-<div class="imageblock">
-<div class="content">
-<img src="media/subscription-running.png" alt="Query Playground - Subscription is running" width="1024px">
-</div>
-</div>
-<div class="paragraph">
-<p>Now we can, for example, create a new note to receive a new event for the subscription, as shown in the screenshot below.</p>
-</div>
-<div class="imageblock">
-<div class="content">
-<img src="media/subscription-got-message.png" alt="Query Playground - Subscription got a message" width="1024px">
-</div>
-</div>
-<div class="dlist">
-<dl>
-<dt class="hdlist1">NOTE</dt>
-<dd>
-<p>To execute a note creation or deletion request in GraphiQL while a Subscription request is running, perform it in a separate browser tab — otherwise, the current Subscription request will be terminated.</p>
-</dd>
-</dl>
-</div>
-<div class="paragraph">
-<p>That&#8217;s it! In this chapter, we explored how to add Subscriptions and subscribe to real-time events using the capabilities of the Enonic Platform.</p>
 </div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2025-07-14 12:57:58 UTC
+Last updated 2025-07-14 13:51:27 UTC
 </div>
 </div>
 </body>
