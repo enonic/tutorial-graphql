@@ -597,14 +597,12 @@ You could also directly use the <code>noteType</code> variable, which was initia
 </table>
 </div>
 <div class="paragraph">
-<p>Here is the complete example implementation of schema.js. You can also see the implementation of the getNote and getNotes fields for the root Query type, which we omitted earlier since their implementation follows the same approach as the fields described in this section.</p>
+<p>Here is the complete example implementation of schema.js. You can also see the implementation of the <code>getNote</code> and <code>getNotes</code> fields for the root <code>Query</code> type, which we omitted earlier since their implementation follows the same approach as the fields described in this section.</p>
 </div>
 <div class="listingblock">
 <div class="title">/src/main/resources/apis/graphql/schema.js</div>
 <div class="content">
 <pre class="highlight"><code class="language-js" data-lang="js">const graphQlLib = require('/lib/graphql');
-const graphQlRxLib = require('/lib/graphql-rx');
-const eventLib = require('/lib/xp/event');
 
 const schemaGenerator = graphQlLib.newSchemaGenerator();
 
@@ -661,25 +659,6 @@ const rootQueryType = schemaGenerator.createObjectType({
     },
 });
 
-const rootSubscriptionType = schemaGenerator.createObjectType({
-    name: 'Subscription',
-    fields: {
-        event: {
-            type: graphQlLib.Json,
-            resolve: (env) =&gt; {
-                const processor = graphQlRxLib.createPublishProcessor();
-                eventLib.listener({
-                    type: 'custom.note.*',
-                    callback: (event) =&gt; {
-                        processor.onNext(event);
-                    }
-                });
-                return processor;
-            },
-        }
-    }
-});
-
 const rootMutationType = schemaGenerator.createObjectType({
     name: 'Mutation',
     fields: {
@@ -697,15 +676,6 @@ const rootMutationType = schemaGenerator.createObjectType({
                     createdAt: new Date().toISOString(),
                 };
                 storage[note.id] = note;
-
-                eventLib.send({
-                    type: 'note.created',
-                    distributed: true,
-                    data: {
-                        note: note,
-                    }
-                });
-
                 return note;
             }
         },
@@ -718,15 +688,6 @@ const rootMutationType = schemaGenerator.createObjectType({
                 const id = env.args.id;
                 const note = storage[id];
                 delete storage[id];
-
-                eventLib.send({
-                    type: 'note.deleted',
-                    distributed: true,
-                    data: {
-                        note: note,
-                    }
-                });
-
                 return note;
             }
         }
@@ -736,7 +697,6 @@ const rootMutationType = schemaGenerator.createObjectType({
 const graphQLSchema = schemaGenerator.createSchema({
     query: rootQueryType,
     mutation: rootMutationType,
-    subscription: rootSubscriptionType,
     dictionary: [noteType]
 });
 
@@ -789,7 +749,7 @@ For simplicity, we use a plain JavaScript object as our data store.
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2025-07-14 13:52:11 UTC
+Last updated 2025-07-14 13:57:04 UTC
 </div>
 </div>
 </body>
