@@ -83,7 +83,7 @@ In general, if a field name matches the corresponding property in the source obj
 Also, notice how we reference the `Note` object in these fields.
 To specify the field type, we use the `graphQlLib.reference` function.
 
-NOTE:: You could also directly use the `noteType` variable, which was initialized when creating the `Note` type. However, using `graphQlLib.reference` is preferred, especially for larger schemas.
+NOTE: You could also directly use the `noteType` variable, which was initialized when creating the `Note` type. However, using `graphQlLib.reference` is preferred, especially for larger schemas.
 
 Now, let’s see how the `rootMutationType` is used when creating the schema:
 
@@ -101,7 +101,7 @@ const graphQLSchema = schemaGenerator.createSchema({
 <2> Sets the root `Mutation` type to handle data modification operations.
 <3> Lists the types used in the schema, including custom objects like `Note`.
 
-NOTE:: `dictionary` is also necessary to ensure that objects referenced via `reference` are properly resolved and included in the schema.
+NOTE: `dictionary` is also necessary to ensure that objects referenced via `reference` are properly resolved and included in the schema.
 
 
 Here is the complete example implementation of schema.js. You can also see the implementation of the getNote and getNotes fields for the root Query type, which we omitted earlier since their implementation follows the same approach as the fields described in this section.
@@ -112,7 +112,7 @@ Here is the complete example implementation of schema.js. You can also see the i
 include::{sourcedir}/src/main/resources/apis/graphql/schema.js[]
 ----
 
-NOTE:: For simplicity, we use a plain JavaScript object as our data store.
+NOTE: For simplicity, we use a plain JavaScript object as our data store.
 
 The image below shows the result of a `createNote` mutation executed in the GraphiQL UI.
 

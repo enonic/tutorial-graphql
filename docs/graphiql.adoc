@@ -63,7 +63,7 @@ To enable our API to serve the GraphiQL UI, we need to add an `graphql.html` fil
 .src/main/resources/apis/graphql/graphql.html
 [source,html]
 ----
-include::{sourcedir}src/main/resources/apis/graphql/graphql.html[]
+include::{sourcedir}samples/playground-simple-fetcher.html[]
 ----
 
 Here, we define the div element `graphiql-container-wrapper`, which will serve as the mounting point for the React component. We also define variables that specify:
@@ -77,7 +77,7 @@ To initialize and render the GraphiQL React component, add the following code:
 .src/main/resources/assets/js/playground.tsx
 [source,ts]
 ----
-include::{sourcedir}src/main/resources/assets/js/playground.tsx[]
+include::{sourcedir}samples/playground-simple-fetcher.tsx[]
 ----
 
 and add custom styles to customize the appearance

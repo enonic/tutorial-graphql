@@ -1,9 +1,0 @@
-= GraphQL API
-:toc: right
-:experimental:
-:imagesdir: media/
-:sourcedir: ../
-
-In this section, we will go through an example of how to create a custom Notes GraphQL API.
-
-The Notes GraphQL API should allow users to create a new note, view a single note, and retrieve a list of all notes.

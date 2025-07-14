@@ -17,16 +17,12 @@
         "document": "graphiql"
       },
       {
-        "title": "Types",
-        "document": "types"
-      },
-      {
         "title": "Mutations",
         "document": "mutations"
       },
       {
         "title": "Subscriptions",
-        "document": "subscription"
+        "document": "subscriptions"
       },
       {
         "title": "Appendix",
