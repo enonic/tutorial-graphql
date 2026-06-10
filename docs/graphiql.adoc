@@ -34,7 +34,7 @@ Add the necessary packages to support the GraphiQL user interface:
 <5> `react`	a peer dependency for all `@graphiql/*` packages. Needed to render the UI.
 <6> `react-dom`	React's DOM renderer.
 
-- Declare backend dependencies in build.gradle Add dependencies required to serve static files, render the GraphiQL markup, and handle HTTP requests in the controller:
+- Declare backend dependencies in `build.gradle`. Add dependencies required to serve static files, render the GraphiQL markup, and handle HTTP requests in the controller:
 
 .build.gradle
 [source,kotlin]
@@ -42,9 +42,9 @@ Add the necessary packages to support the GraphiQL user interface:
 dependencies {
     include "com.enonic.xp:lib-portal:${xpVersion}" // <1>
 
-    include "com.enonic.lib:lib-mustache:3.0.0" // <2>
-    include "com.enonic.lib:lib-static:3.0.0" // <3>
-    include "com.enonic.lib:lib-router:4.0.0" // <4>
+    include "com.enonic.lib:lib-mustache:<version>" // <2>
+    include "com.enonic.lib:lib-static:<version>" // <3>
+    include "com.enonic.lib:lib-router:<version>" // <4>
 }
 ----
 
@@ -58,7 +58,7 @@ NOTE: Full Webpack and Gradle configuration is omitted here. You can view the co
 We are now ready to proceed with the implementation.
 
 == Creating the GraphiQL UI Page
-To enable our API to serve the GraphiQL UI, we need to add an `graphql.html` file with the following content:
+To enable our API to serve the GraphiQL UI, we need to add a `graphql.html` file with the following content:
 
 .src/main/resources/apis/graphql/graphql.html
 [source,html]

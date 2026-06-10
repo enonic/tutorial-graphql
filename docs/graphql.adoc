@@ -16,7 +16,7 @@ First of all, we should add the https://market.enonic.com/vendors/enonic/graphql
 .build.gradle
 [source,kotlin]
 ----
-include "com.enonic.lib:lib-graphql:3.0.0"
+include "com.enonic.lib:lib-graphql:<version>"
 ----
 
 == Define GraphQL API

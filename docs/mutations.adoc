@@ -31,7 +31,7 @@ const noteType = schemaGenerator.createObjectType({
             type: graphQlLib.GraphQLString,
         },
         createdAt: {
-            type: graphQlLib.nonNull(graphQlLib.String),
+            type: graphQlLib.nonNull(graphQlLib.GraphQLString),
         }
     }
 });
