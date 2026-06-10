@@ -1,0 +1,7 @@
+kind: "API"
+title: "GraphQL API"
+description: "Notes GraphQL API"
+mount:
+    - "web"
+allow:
+  - "role:system.everyone"

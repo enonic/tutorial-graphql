@@ -42,25 +42,16 @@ src/
   resources/
    assets <3>
    apis <4>
-   controllers <5>
-   i18n <6>
-   import <7>
-   site/
-    content-types/ <8>
-    x-data/ <9>
-gradle.properties <10>
+   enonic.yaml <5>
+gradle.properties <6>
 ----
 
 <1> The documentation you are reading now
 <2> Code samples that will be used in this guide
 <3> Client-side assets
 <4> Server-side APIs
-<5> https://developer.enonic.com/docs/xp/stable/framework/controllers[Server-side controllers and templates^]
-<6> https://developer.enonic.com/docs/xp/stable/framework/i18n[Localisation bundles^]
-<7> Sample content
-<8> https://developer.enonic.com/docs/xp/stable/cms/content-types[Content Type schemas^]
-<9> https://developer.enonic.com/docs/xp/stable/cms/x-data[X-data schemas^]
-<10> App name and other settings
+<5> Application descriptor
+<6> App name and other settings
 
 == Build and deploy
 
