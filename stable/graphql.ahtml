@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 2.0.23">
+<meta name="generator" content="Asciidoctor 2.0.26">
 <title>GraphQL API</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
@@ -116,7 +116,6 @@ h1 strong,h2 strong,h3 strong,#toctitle strong,.sidebarblock>.content>.title str
 :not(pre):not([class^=L])>code{font-size:.9375em;font-style:normal!important;letter-spacing:0;padding:.1em .5ex;word-spacing:-.15em;background:#f7f7f8;border-radius:4px;line-height:1.45;text-rendering:optimizeSpeed}
 pre{color:rgba(0,0,0,.9);font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;line-height:1.45;text-rendering:optimizeSpeed}
 pre code,pre pre{color:inherit;font-size:inherit;line-height:inherit}
-pre>code{display:block}
 pre.nowrap,pre.nowrap pre{white-space:pre;word-wrap:normal}
 em em{font-style:normal}
 strong strong{font-weight:400}
@@ -219,6 +218,7 @@ table.tableblock.fit-content>caption.title{white-space:nowrap;width:0}
 .literalblock pre,.listingblock>.content>pre:not(.highlight),.listingblock>.content>pre[class=highlight],.listingblock>.content>pre[class^="highlight "]{background:#f7f7f8}
 .literalblock.output pre{color:#f7f7f8;background:rgba(0,0,0,.9)}
 .listingblock>.content{position:relative}
+.listingblock pre>code{display:block}
 .listingblock code[data-lang]::before{display:none;content:attr(data-lang);position:absolute;font-size:.75em;top:.425rem;right:.5rem;line-height:1;text-transform:uppercase;color:inherit;opacity:.5}
 .listingblock:hover code[data-lang]::before{display:block}
 .listingblock.terminal pre .command::before{content:attr(data-prompt);padding-right:.5em;color:inherit;opacity:.5}
@@ -469,7 +469,7 @@ This library makes it easy to build custom types and manage the schema lifecycle
 <div class="listingblock">
 <div class="title">build.gradle</div>
 <div class="content">
-<pre class="highlight"><code class="language-kotlin" data-lang="kotlin">include "com.enonic.lib:lib-graphql:2.1.0"</code></pre>
+<pre class="highlight"><code class="language-kotlin" data-lang="kotlin">include "com.enonic.lib:lib-graphql:&lt;version&gt;"</code></pre>
 </div>
 </div>
 </div>
@@ -479,24 +479,22 @@ This library makes it easy to build custom types and manage the schema lifecycle
 <div class="sectionbody">
 <div class="paragraph">
 <p>To create our GraphQL API, we need to create a <code>graphql</code> directory inside <code>/src/main/resources/apis</code>.
-Then, we must add a descriptor file named <code>graphql.xml</code> and a controller file named <code>graphql.js</code>.</p>
+Then, we must add a descriptor file named <code>graphql.yaml</code> and a controller file named <code>graphql.js</code>.</p>
 </div>
 <div class="listingblock">
-<div class="title">/src/main/resources/apis/graphql/graphql.xml</div>
+<div class="title">/src/main/resources/apis/graphql/graphql.yaml</div>
 <div class="content">
-<pre class="highlight"><code class="language-XML" data-lang="XML">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-&lt;api xmlns="urn:enonic:xp:model:1.0"&gt;
-  &lt;display-name&gt;GraphQL API&lt;/display-name&gt;
-  &lt;description&gt;Notes GraphQL API&lt;/description&gt;
-  &lt;mount&gt;true&lt;/mount&gt;
-  &lt;allow&gt;
-    &lt;principal&gt;role:system.everyone&lt;/principal&gt;
-  &lt;/allow&gt;
-&lt;/api&gt;</code></pre>
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">kind: "API"
+title: "GraphQL API"
+description: "Notes GraphQL API"
+mount:
+    - "web"
+allow:
+  - "role:system.everyone"</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>In the descriptor, we define which user roles will have access to the API, whether it should be mounted under <code>/api</code>, and optionally provide a <code>displayName</code> and <code>description</code>.</p>
+<p>In the descriptor, we define which user roles will have access to the API, whether it should be mounted under <code>/api</code>, and optionally provide a <code>title</code> and <code>description</code>.</p>
 </div>
 </div>
 </div>
@@ -653,7 +651,7 @@ module.exports = graphQLSchema;</code></pre>
 <h2 id="test_graphql_api"><a class="link" href="#test_graphql_api">Test GraphQL API</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>In the API descriptor <code>graphql.xml</code>, we defined that the API is accessible to all users (<code>&lt;principal&gt;role:system.everyone&lt;/principal&gt;</code>) and is mounted at <code>/api</code> (<code>&lt;mount&gt;true&lt;/mount&gt;</code>).
+<p>In the API descriptor <code>graphql.yaml</code>, we defined that the API is accessible to all users (allow: ["role:system.everyone"]) and is mounted at <code>/api</code> (<code>mount: ["web"]</code>).
 As a result, the GraphQL API will be available at the following endpoint:</p>
 </div>
 <div class="literalblock">
@@ -699,7 +697,7 @@ In the following sections, we will learn how to define more advanced schemas usi
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2025-07-14 13:57:04 UTC
+Last updated 2026-06-11 06:12:19 UTC
 </div>
 </div>
 </body>
