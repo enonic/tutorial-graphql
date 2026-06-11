@@ -1,31 +1,23 @@
 plugins {
-    id 'com.enonic.xp.app' version '3.6.1'
+    id 'com.enonic.xp.app'
     id 'com.github.node-gradle.node' version '7.1.0'
 }
 
 apply from: "$rootDir/gradle/env.gradle"
 apply from: "$rootDir/gradle/node.gradle"
 
-app {
-    name = "${appName}"
-    displayName = "${appDisplayName}"
-    vendorName = "${vendorName}"
-    vendorUrl = "${vendorUrl}"
-    systemVersion = "${xpVersion}"
-}
-
 dependencies {
-    implementation "com.enonic.xp:core-api:${xpVersion}"
-    implementation "com.enonic.xp:portal-api:${xpVersion}"
+    implementation xplibs.api.core
+    implementation xplibs.api.portal
 
-    include "com.enonic.xp:lib-portal:${xpVersion}"
-    include "com.enonic.xp:lib-event:${xpVersion}"
-    include "com.enonic.xp:lib-websocket:${xpVersion}"
+    include xplibs.portal
+    include xplibs.event
+    include xplibs.websocket
 
-    include "com.enonic.lib:lib-graphql:2.1.0"
-    include "com.enonic.lib:lib-mustache:2.1.1"
-    include "com.enonic.lib:lib-static:2.1.1"
-    include "com.enonic.lib:lib-router:3.2.0"
+    include "com.enonic.lib:lib-graphql:3.0.0-B2"
+    include "com.enonic.lib:lib-mustache:3.0.0-B1"
+    include "com.enonic.lib:lib-static:3.0.0"
+    include "com.enonic.lib:lib-router:4.0.0"
 }
 
 repositories {
@@ -35,7 +27,7 @@ repositories {
 }
 
 node {
-    version = '18.17.1'
+    version = '24.15.0'
     download = true
 }
 
