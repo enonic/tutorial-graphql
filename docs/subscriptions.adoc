@@ -175,8 +175,8 @@ exports.webSocketEvent = function (socketEvent) {
 ----
 
 Let's take a look at the implementation of the `handleSubscribeMessage` function, which handles messages of type `subscribe`.
-Within this function, a GraphQL query is executed, and its result must contain a data property of type `com.enonic.lib.graphql.rx.Publisher`.
-This type is a wrapper around `org.reactivestreams.Publisher` and allows registering a subscriber.
+Within this function, a GraphQL query is executed. For a subscription, its `data` property is a reactive `Publisher` (an `org.reactivestreams.Publisher`) that exposes a `subscribe` method.
+We detect a subscription result by checking for that `subscribe` method, and then register a subscriber.
 
 ./src/main/resources/apis/graphql/graphql.js
 [source,js]
@@ -186,7 +186,7 @@ function handleSubscribeMessage(sessionId, message) {
 
     const result = graphQlLib.execute(graphQLSchema, payload.query, payload.variables);
 
-    if (result.data instanceof com.enonic.lib.graphql.rx.Publisher) {
+    if (result.data && typeof result.data.subscribe === 'function') {
         const subscriber = graphQlRxLib.createSubscriber({
             onNext: (payload) => {
                 webSocketLib.send(sessionId, JSON.stringify({

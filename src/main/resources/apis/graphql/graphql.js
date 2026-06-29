@@ -106,7 +106,7 @@ function handleSubscribeMessage(sessionId, message) {
 
     const result = graphQlLib.execute(graphQLSchema, payload.query, payload.variables);
 
-    if (result.data instanceof com.enonic.lib.graphql.rx.Publisher) {
+    if (result.data && typeof result.data.subscribe === 'function') {
         const subscriber = graphQlRxLib.createSubscriber({
             onNext: (payload) => {
                 webSocketLib.send(sessionId, JSON.stringify({
