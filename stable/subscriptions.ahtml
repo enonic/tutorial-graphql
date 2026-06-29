@@ -662,8 +662,8 @@ include "com.enonic.xp:lib-websocket:${xpVersion}"</code></pre>
 </div>
 <div class="paragraph">
 <p>Let&#8217;s take a look at the implementation of the <code>handleSubscribeMessage</code> function, which handles messages of type <code>subscribe</code>.
-Within this function, a GraphQL query is executed, and its result must contain a data property of type <code>com.enonic.lib.graphql.rx.Publisher</code>.
-This type is a wrapper around <code>org.reactivestreams.Publisher</code> and allows registering a subscriber.</p>
+Within this function, a GraphQL query is executed. For a subscription, its <code>data</code> property is a reactive <code>Publisher</code> (an <code>org.reactivestreams.Publisher</code>) that exposes a <code>subscribe</code> method.
+We detect a subscription result by checking for that <code>subscribe</code> method, and then register a subscriber.</p>
 </div>
 <div class="listingblock">
 <div class="title">/src/main/resources/apis/graphql/graphql.js</div>
@@ -673,7 +673,7 @@ This type is a wrapper around <code>org.reactivestreams.Publisher</code> and all
 
     const result = graphQlLib.execute(graphQLSchema, payload.query, payload.variables);
 
-    if (result.data instanceof com.enonic.lib.graphql.rx.Publisher) {
+    if (result.data &amp;&amp; typeof result.data.subscribe === 'function') {
         const subscriber = graphQlRxLib.createSubscriber({
             onNext: (payload) =&gt; {
                 webSocketLib.send(sessionId, JSON.stringify({
@@ -828,7 +828,7 @@ To execute a note creation or deletion request in GraphiQL while a Subscription 
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-06-11 06:12:19 UTC
+Last updated 2026-06-29 05:59:04 UTC
 </div>
 </div>
 </body>
