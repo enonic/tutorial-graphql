@@ -58,7 +58,7 @@ const graphQLSchema = schemaGenerator.createSchema({
 
 Now we just need to implement the `resolve` function to complete the GraphQL part.
 
-The GraphQL Lib library provides functionality for creating a reactive processor for GraphQL publish streams using the `createPublishProcessor` function from the `graphql-rx.js` file. It also allows creating a subscriber via the `createSubscriber` function to handle operations such as subscribe, publish, connection, next, complete, etc., by processing push events to subscribers.
+The GraphQL Library provides functionality for creating a reactive processor for GraphQL publish streams using the `createPublishProcessor` function from the `graphql-rx.js` file. It also allows creating a subscriber via the `createSubscriber` function to handle operations such as subscribe, publish, connection, next, complete, etc., by processing push events to subscribers.
 
 You can include the library as follows:
 
