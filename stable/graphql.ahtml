@@ -441,7 +441,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
-<li><a href="#graphql_lib">GraphQL Lib</a></li>
+<li><a href="#graphql_library">GraphQL Library</a></li>
 <li><a href="#define_graphql_api">Define GraphQL API</a></li>
 <li><a href="#define_schema">Define schema</a></li>
 <li><a href="#test_graphql_api">Test GraphQL API</a></li>
@@ -457,14 +457,15 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div class="sect1">
-<h2 id="graphql_lib"><a class="link" href="#graphql_lib">GraphQL Lib</a></h2>
+<h2 id="graphql_library"><a class="link" href="#graphql_library">GraphQL Library</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>In order to build your own GraphQL API using the Enonic XP Platform, you should use the <a href="https://market.enonic.com/vendors/enonic/graphql-lib" target="_blank" rel="noopener">GraphQL Lib</a>.
-This library makes it easy to build custom types and manage the schema lifecycle.</p>
+<p>In order to build your own GraphQL API using the Enonic XP Platform, you should use the <a href="https://developer.enonic.com/docs/graphql-library">GraphQL Library</a>.
+This library makes it easy to build custom types and manage the schema lifecycle.
+Its documentation describes every function and constant used in this tutorial.</p>
 </div>
 <div class="paragraph">
-<p>First of all, we should add the <a href="https://market.enonic.com/vendors/enonic/graphql-lib" target="_blank" rel="noopener">GraphQL Lib</a> dependency to the <code>build.gradle</code> file.</p>
+<p>First of all, we should add the <a href="https://developer.enonic.com/docs/graphql-library">GraphQL Library</a> dependency to the <code>build.gradle</code> file.</p>
 </div>
 <div class="listingblock">
 <div class="title">build.gradle</div>
@@ -503,7 +504,7 @@ allow:
 <div class="sectionbody">
 <div class="paragraph">
 <p>Now we can focus on developing the GraphQL schema.
-To do this, we need to import the GraphQL Lib library, as shown below.</p>
+To do this, we need to import the GraphQL Library, as shown below.</p>
 </div>
 <div class="listingblock">
 <div class="title">/src/main/resources/apis/graphql/schema.js</div>
@@ -697,7 +698,7 @@ In the following sections, we will learn how to define more advanced schemas usi
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-06-29 05:59:04 UTC
+Last updated 2026-08-11 07:39:42 UTC
 </div>
 </div>
 </body>

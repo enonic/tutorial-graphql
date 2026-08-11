@@ -1,38 +1,28 @@
 {
     "menuItems": [
       {
-        "title": "Create sandbox",
+        "title": "1 - Create sandbox",
         "document": "setup"
       },
       {
-        "title": "Create application",
+        "title": "2 - Create application",
         "document": "app"
       },
       {
-        "title": "Hello GraphQL",
+        "title": "3 - Hello GraphQL",
         "document": "graphql"
       },
       {
-        "title": "GraphiQL",
+        "title": "4 - GraphiQL",
         "document": "graphiql"
       },
       {
-        "title": "Mutations",
+        "title": "5 - Mutations",
         "document": "mutations"
       },
       {
-        "title": "Subscriptions",
+        "title": "6 - Subscriptions",
         "document": "subscriptions"
-      },
-      {
-        "title": "Appendix",
-        "document": "GraphQL Library",
-        "menuItems": [
-          {
-            "title": "GraphQL Lib",
-            "document": "lib-graphql"
-          }
-        ]
       }
     ]
 }

@@ -523,7 +523,7 @@ include "com.enonic.xp:lib-websocket:${xpVersion}"</code></pre>
 <p>Now we just need to implement the <code>resolve</code> function to complete the GraphQL part.</p>
 </div>
 <div class="paragraph">
-<p>The GraphQL Lib library provides functionality for creating a reactive processor for GraphQL publish streams using the <code>createPublishProcessor</code> function from the <code>graphql-rx.js</code> file. It also allows creating a subscriber via the <code>createSubscriber</code> function to handle operations such as subscribe, publish, connection, next, complete, etc., by processing push events to subscribers.</p>
+<p>The GraphQL Library provides functionality for creating a reactive processor for GraphQL publish streams using the <code>createPublishProcessor</code> function from the <code>graphql-rx.js</code> file. It also allows creating a subscriber via the <code>createSubscriber</code> function to handle operations such as subscribe, publish, connection, next, complete, etc., by processing push events to subscribers.</p>
 </div>
 <div class="paragraph">
 <p>You can include the library as follows:</p>
@@ -828,7 +828,7 @@ To execute a note creation or deletion request in GraphiQL while a Subscription 
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-06-29 05:59:04 UTC
+Last updated 2026-08-11 07:39:42 UTC
 </div>
 </div>
 </body>
