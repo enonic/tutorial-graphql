@@ -10,27 +10,27 @@ Create, build and deploy an application based on a starter
 
 The expression "There's an app for that" fits well with Enonic. When you created the sandbox, several applications were automatically installed (based on the `Essentials` template), which extended the platform's capabilities.
 
-https://developer.enonic.com/docs/xp/stable/apps[Enonic apps^] are used to ship everything from content models to code and platform extensions, which you will soon discover.
+https://developer.enonic.com/docs/xp/stable/apps[Enonic apps] are used to ship everything from content models to code and platform extensions, which you will soon discover.
 
 
 == Create an app
 
 *Open a new terminal window* and create your first Enonic app by running this command:
 
-  enonic create com.example.myapp -r tutorial-graphql -s mysandbox
+  enonic create com.enonic.app.graphql -r tutorial-graphql -s mysandbox
 
 This command will:
 
 * use the GitHub repo `github.com/enonic/tutorial-graphql` as a starter
-* to create an app called `com.example.myapp`
-* in the directory `myapp` setting version number to `1.0.0`
+* to create an app called `com.enonic.app.graphql`
+* in the directory `graphql` setting version number to `1.0.0`
 * and link it to `mysandbox` which you created earlier
 
-TIP: A pre-compiled standard version of this app is also available on *TODO* https://market.enonic.com/vendors/enonic/introduction[Enonic Market^].
+NOTE: The app name becomes part of every URL your API is served from, so the later chapters assume you used `com.enonic.app.graphql` exactly. If you choose a different name, substitute it wherever the tutorial writes `com.enonic.app.graphql`.
 
 === Project structure
 
-Inside the `myapp` directory, you should now have a file structure looking something like this:
+Inside the `graphql` directory, you should now have a file structure looking something like this:
 
 .Selected files from the app code:
 [source,files]
@@ -57,7 +57,7 @@ gradle.properties <6>
 
 Assuming `mysandbox` is still running in another Terminal window, run these commands:
 
-  cd myapp
+  cd graphql
   enonic dev
 
 The last command (`dev`) will build the app, deploy it to `mysandbox`, and start continuously watching for changes in the source code, automatically deploying the changes without you having to rebuild/redeploy the app after each change.

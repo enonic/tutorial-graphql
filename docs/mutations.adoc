@@ -81,7 +81,7 @@ Here, we use arguments for the `createNote` and `deleteNote` fields, and we also
 In general, if a field name matches the corresponding property in the source object and the value should be returned as-is, the `resolve` function can be omitted.
 
 Also, notice how we reference the `Note` object in these fields.
-To specify the field type, we use the `graphQlLib.reference` function.
+To specify the field type, we use the `graphQlLib.reference` function, one of the type helpers described in the https://developer.enonic.com/docs/graphql-library[GraphQL Library documentation].
 
 NOTE: You could also directly use the `noteType` variable, which was initialized when creating the `Note` type. However, using `graphQlLib.reference` is preferred, especially for larger schemas.
 
@@ -112,11 +112,46 @@ Here is the complete example implementation of schema.js. You can also see the i
 include::{sourcedir}/samples/mutation-schema.js[]
 ----
 
-NOTE: For simplicity, we use a plain JavaScript object as our data store.
+NOTE: For simplicity, we use a plain JavaScript object as our data store. Notes therefore live in the memory of one server: they are lost when the application is redeployed or the sandbox restarts, and they are not shared between nodes in a cluster. A real application would persist them with https://developer.enonic.com/docs/xp/stable/api/lib-content[lib-content] or https://developer.enonic.com/docs/xp/stable/api/lib-node[lib-node] instead.
 
 The image below shows the result of a `createNote` mutation executed in the GraphiQL UI.
 
 image::mutation-playground.png["Query Playground in action", width="1024px"]
+
+== Using variables
+
+Writing argument values straight into the operation works, but clients normally send them separately as variables.
+Declare the variables in the operation, then supply their values with the request:
+
+[source,graphql]
+----
+mutation CreateNote($title: String!, $content: String!) {
+    createNote(title: $title, content: $content) {
+        id
+        createdAt
+    }
+}
+----
+
+[source,json]
+----
+{
+  "title": "Shopping list",
+  "content": "Coffee, milk, bread"
+}
+----
+
+In GraphiQL, the operation goes in the editor and the values in the btn:[Variables] pane at the bottom.
+Over HTTP they travel in the `variables` property of the request body, which our controller already forwards to `execute()`:
+
+[source,bash]
+----
+curl -X POST "http://localhost:8080/api/com.enonic.app.graphql:graphql" \
+  -H "Content-Type: application/json" \
+  -d '{"query":"mutation CreateNote($title: String!, $content: String!) { createNote(title: $title, content: $content) { id } }","variables":{"title":"Shopping list","content":"Coffee, milk, bread"}}'
+----
+
+TIP: Note the single quotes around the payload. They keep the shell from expanding `+$title+` and `+$content+` before cURL ever sees them.
 
 == Summary
 
@@ -125,3 +160,8 @@ In this section, we covered:
 - How to add a mutation to a GraphQL schema
 - How to use arguments in GraphQL type fields
 - How to register GraphQL types in the dictionary to enable referencing them using the `reference` function
+- How to pass argument values as variables
+
+== Coming up
+
+In the final chapter you'll add <<subscriptions#, subscriptions>>, so clients are told about new and deleted notes as they happen.

@@ -64,13 +64,18 @@ router.get('/?', (req) => {
 
 router.post('/?', (req) => {
     const body = JSON.parse(req.body);
-    const operation = body.query || body.mutation;
 
-    if (!operation) {
-        throw new Error('`query` or `mutation` param is missing.');
+    if (!body.query) {
+        return {
+            status: 400,
+            contentType: 'application/json',
+            body: {
+                errors: [{message: 'Missing `query` in request body.'}]
+            },
+        };
     }
 
-    const result = graphQlLib.execute(graphQLSchema, operation, body.variables);
+    const result = graphQlLib.execute(graphQLSchema, body.query, body.variables);
     return {
         contentType: 'application/json',
         body: result,
@@ -79,6 +84,11 @@ router.post('/?', (req) => {
 
 exports.webSocketEvent = function (socketEvent) {
     if (!socketEvent) {
+        return;
+    }
+
+    if (socketEvent.type === 'close') {
+        cancelSessionSubscriptions(socketEvent.session.id);
         return;
     }
 
@@ -92,7 +102,7 @@ exports.webSocketEvent = function (socketEvent) {
         } else if (message.type === 'subscribe') {
             handleSubscribeMessage(sessionId, message);
         } else if (message.type === 'complete') {
-            cancelSubscription(sessionId);
+            cancelSubscription(sessionId, message.id);
         } else {
             log.debug(`Unknown message type ${message.type}`);
         }
@@ -101,12 +111,18 @@ exports.webSocketEvent = function (socketEvent) {
 
 const graphQlSubscribers = {};
 
+function subscriberKey(sessionId, operationId) {
+    return `${sessionId}|${operationId}`;
+}
+
 function handleSubscribeMessage(sessionId, message) {
     const payload = message.payload;
 
     const result = graphQlLib.execute(graphQLSchema, payload.query, payload.variables);
 
     if (result.data && typeof result.data.subscribe === 'function') {
+        cancelSubscription(sessionId, message.id);
+
         const subscriber = graphQlRxLib.createSubscriber({
             onNext: (payload) => {
                 webSocketLib.send(sessionId, JSON.stringify({
@@ -116,15 +132,27 @@ function handleSubscribeMessage(sessionId, message) {
                 }));
             }
         });
-        graphQlSubscribers[sessionId] = subscriber;
+        graphQlSubscribers[subscriberKey(sessionId, message.id)] = subscriber;
         result.data.subscribe(subscriber);
     }
 }
 
-function cancelSubscription(sessionId) {
-    const subscriber = graphQlSubscribers[sessionId];
+function cancelSubscription(sessionId, operationId) {
+    const key = subscriberKey(sessionId, operationId);
+    const subscriber = graphQlSubscribers[key];
     if (subscriber) {
-        delete graphQlSubscribers[sessionId];
+        delete graphQlSubscribers[key];
         subscriber.cancelSubscription();
     }
+}
+
+function cancelSessionSubscriptions(sessionId) {
+    const prefix = `${sessionId}|`;
+    Object.keys(graphQlSubscribers)
+        .filter((key) => key.indexOf(prefix) === 0)
+        .forEach((key) => {
+            const subscriber = graphQlSubscribers[key];
+            delete graphQlSubscribers[key];
+            subscriber.cancelSubscription();
+        });
 }

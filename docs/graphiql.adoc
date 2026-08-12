@@ -34,6 +34,11 @@ Add the necessary packages to support the GraphiQL user interface:
 <5> `react`	a peer dependency for all `@graphiql/*` packages. Needed to render the UI.
 <6> `react-dom`	React's DOM renderer.
 
+Replace each `<version>` with the version you want to use.
+Running the following command adds all six at their current versions and writes them into `package.json` for you:
+
+  npm install @graphiql/react @graphiql/toolkit graphiql graphql-ws react react-dom
+
 - Declare backend dependencies in `build.gradle`. Add dependencies required to serve static files, render the GraphiQL markup, and handle HTTP requests in the controller:
 
 .build.gradle
@@ -53,7 +58,7 @@ dependencies {
 <3>	`lib-static` allows serving static resources (JavaScript, CSS, images, etc.) from the application.
 <4>	`lib-router` provides a lightweight server-side router for handling HTTP requests with route-based logic. Useful for implementing custom endpoints (e.g. `/graphql`, `/graphiql` and etc).
 
-NOTE: Full Webpack and Gradle configuration is omitted here. You can view the complete code https://github.com/enonic/tutorial-graphql[here^].
+NOTE: The starter you created your app from already contains the Webpack and Gradle configuration that bundles these assets, so there is nothing to set up here. To see how it works, open `webpack.config.js` and `build.gradle` in your project.
 
 We are now ready to proceed with the implementation.
 
@@ -164,6 +169,10 @@ image::query-playground.png["Query Playground in action", width="1024px"]
 In this example, we covered:
 
 - How to add the GraphiQL UI to our application.
-- How to implement an API with multiple endpoints using https://market.enonic.com/vendors/enonic/router-lib[lib-router^].
-- How to serve static resources using https://market.enonic.com/vendors/enonic/lib-static[lib-static^].
-- How to generate the apiUrl using https://developer.enonic.com/docs/xp/stable/api/lib-portal[lib-portal^].
+- How to implement an API with multiple endpoints using https://market.enonic.com/vendors/enonic/router-lib[lib-router].
+- How to serve static resources using https://market.enonic.com/vendors/enonic/lib-static[lib-static].
+- How to generate the apiUrl using https://developer.enonic.com/docs/xp/stable/api/lib-portal[lib-portal].
+
+== Coming up
+
+In the next chapter you'll extend the schema with <<mutations#, mutations>> so clients can change data, not just read it.

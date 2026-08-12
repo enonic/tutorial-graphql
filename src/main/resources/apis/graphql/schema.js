@@ -57,21 +57,21 @@ const rootQueryType = schemaGenerator.createObjectType({
     },
 });
 
+const noteProcessor = graphQlRxLib.createPublishProcessor();
+
+eventLib.listener({
+    type: 'custom.note.*',
+    callback: (event) => {
+        noteProcessor.onNext(event);
+    }
+});
+
 const rootSubscriptionType = schemaGenerator.createObjectType({
     name: 'Subscription',
     fields: {
         event: {
             type: graphQlLib.Json,
-            resolve: (env) => {
-                const processor = graphQlRxLib.createPublishProcessor();
-                eventLib.listener({
-                    type: 'custom.note.*',
-                    callback: (event) => {
-                        processor.onNext(event);
-                    }
-                });
-                return processor;
-            },
+            resolve: () => noteProcessor,
         }
     }
 });

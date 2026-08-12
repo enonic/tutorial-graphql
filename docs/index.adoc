@@ -12,8 +12,15 @@ This guide will show you how to:
 
 * set up a local development environment
 * create an Enonic app
-* build your own GraphQL API using the GraphQL library
+* build your own GraphQL API using the GraphQL Library
 * access and use the GraphQL API
+
+This tutorial builds an API of your own design, with your own types and resolvers.
+If what you need is a ready-made GraphQL API for querying CMS content, you want https://developer.enonic.com/docs/guillotine[Guillotine] instead.
+
+Two building blocks do the work.
+The https://developer.enonic.com/docs/graphql-library[GraphQL Library] defines the schema and executes operations against it, and a https://developer.enonic.com/docs/code/stable/web/apis[universal API] serves that schema over HTTP, deciding where the endpoint is mounted and who is allowed to reach it.
+You will create both in the <<graphql#,Hello GraphQL>> chapter, then build on them through mutations and subscriptions.
 
 image::ready-set-code.svg["Ready...Set...Code!", width=720px]
 

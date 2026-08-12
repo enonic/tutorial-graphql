@@ -22,6 +22,9 @@ include "com.enonic.lib:lib-graphql:<version>"
 
 == Define GraphQL API
 
+An Enonic XP application exposes its own HTTP endpoints as https://developer.enonic.com/docs/code/stable/web/apis[universal APIs].
+The library builds and executes the schema; the universal API is what makes it reachable over HTTP.
+
 To create our GraphQL API, we need to create a `graphql` directory inside `/src/main/resources/apis`.
 Then, we must add a descriptor file named `graphql.yaml` and a controller file named `graphql.js`.
 
@@ -32,6 +35,11 @@ include::{sourcedir}/src/main/resources/apis/graphql/graphql.yaml[]
 ----
 
 In the descriptor, we define which user roles will have access to the API, whether it should be mounted under `/api`, and optionally provide a `title` and `description`.
+
+APIs are not mounted anywhere by default, so `mount` and `allow` are what make this one reachable at all.
+Be aware that `allow` controls who may call the API and nothing more — it does not limit what a resolver returns.
+This tutorial allows everyone, which is fine for a local sandbox.
+A real API would name a narrower principal here and check permissions inside the resolvers that read or write data, using the context value passed to `execute()` to see who is calling.
 
 == Define schema
 
@@ -108,7 +116,7 @@ This method will handle incoming client requests and pass them to the GraphQL en
 const graphQlLib = require('/lib/graphql');
 const graphQLSchema = require('./schema');
 
-exports.post = (req) => {
+exports.POST = (req) => {
     const body = JSON.parse(req.body);
     const result = graphQlLib.execute(graphQLSchema, body.query, body.variables);
     return {
@@ -117,6 +125,9 @@ exports.post = (req) => {
     };
 };
 ----
+
+The export name is the HTTP method: XP looks for an export matching the request's method, so `POST` handles our GraphQL requests.
+A special `all` export catches any method without a handler of its own, which we will use in the next chapter to serve several endpoints from one API.
 
 The complete example of the `schema.js` is shown below.
 
@@ -179,4 +190,39 @@ As a result of executing this command, you should see a response similar to the 
 ----
 
 Great! We now have a working example of a simple GraphQL API.
-In the following sections, we will learn how to define more advanced schemas using custom types, mutations, and other GraphQL features.
+
+== Handling errors
+
+Not every request succeeds, and GraphQL reports failures in the response body rather than through the HTTP status code.
+Ask for a field the schema does not define:
+
+[source,bash]
+----
+curl -X POST "http://localhost:8080/api/com.enonic.app.graphql:graphql" -H "Content-Type: application/json" -d "{ \"query\": \"{ notAField }\" }"
+----
+
+The query never runs, and the response carries an `errors` array instead of `data`:
+
+[source,json]
+----
+{
+   "errors":[
+      {
+         "errorType":"ValidationError",
+         "message":"Validation error of type FieldUndefined: Field 'notAField' in type 'Query' is undefined"
+      }
+   ]
+}
+----
+
+NOTE: The wording of `message` comes from the GraphQL engine and may change between versions. Match on `errorType` rather than on the message text.
+
+A failing resolver behaves differently.
+The field it serves resolves to `null`, the rest of the query still returns its values, and the response then contains *both* `data` and `errors`.
+Clients must therefore check `errors` even when `data` is present — a `200` response does not mean everything succeeded.
+
+The completed application also guards the request itself, returning `400` with an `errors` array when the body has no `query` property, so malformed requests fail in the same shape clients already handle.
+
+== Coming up
+
+In the next chapter you'll add a <<graphiql#, GraphiQL playground>> so you can explore the schema in the browser instead of through cURL.

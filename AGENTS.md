@@ -87,7 +87,7 @@ Because this is a tutorial, sequential steps are numbered in `docs/menu.json` us
 
 * Use `image::filename.ext[alt text, width=...]` for block images stored in `docs/media/`.
 * Use relative cross-document links such as `<<graphql#,GraphQL API>>` so links remain version-aware on the developer portal.
-* Use source blocks with the correct language (`js`, `ts`, `json`, `yaml`, `bash`, `html`, or `less`) and callouts when individual lines need explanation.
+* Use source blocks with the correct language (`js`, `ts`, `json`, `yaml`, `bash`, `html`, `less`, `kotlin` for Gradle snippets, or `graphql` for operations) and callouts when individual lines need explanation.
 * Keep `include::{sourcedir}...[]` paths relative to the including document and verify the included file actually represents that point in the tutorial.
 * Do not use the `^` suffix in link labels. Readers should choose whether links open in a new tab.
 * Be careful with underscores in inline AsciiDoc. Outside source blocks, wrap identifiers, paths, or URL patterns containing `_` in single-plus passthrough, for example `+connection_init+`. Combine passthrough with monospace when needed: `` `+connection_init+` ``.
