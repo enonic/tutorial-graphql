@@ -466,26 +466,42 @@ This API should allow users to add new notes, view individual notes, delete note
 <h2 id="defining_the_note_type"><a class="link" href="#defining_the_note_type">Defining the Note type</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
+<p>The type below uses more of the library than the schema we built in the previous chapter, so start by extending the import:</p>
+</div>
+<div class="listingblock">
+<div class="title">src/main/resources/apis/graphql/schema.ts</div>
+<div class="content">
+<pre class="highlight"><code class="language-ts" data-lang="ts">import {
+    GraphQLID,
+    GraphQLString,
+    list,
+    newSchemaGenerator,
+    nonNull,
+    reference
+} from '/lib/graphql';</code></pre>
+</div>
+</div>
+<div class="paragraph">
 <p>First, we need to define a <code>Note</code> type that describes the structure of a note object.
 Here&#8217;s a basic example:</p>
 </div>
 <div class="listingblock">
-<div class="title">src/main/resources/apis/graphql/schema.js</div>
+<div class="title">src/main/resources/apis/graphql/schema.ts</div>
 <div class="content">
-<pre class="highlight"><code class="language-js" data-lang="js">const noteType = schemaGenerator.createObjectType({
+<pre class="highlight"><code class="language-ts" data-lang="ts">const noteType = schemaGenerator.createObjectType({
     name: 'Note',
     fields: {
         id: {
-            type: graphQlLib.nonNull(graphQlLib.GraphQLID),
+            type: nonNull(GraphQLID),
         },
         title: {
-            type: graphQlLib.nonNull(graphQlLib.GraphQLString),
+            type: nonNull(GraphQLString),
         },
         content: {
-            type: graphQlLib.GraphQLString,
+            type: GraphQLString,
         },
         createdAt: {
-            type: graphQlLib.nonNull(graphQlLib.GraphQLString),
+            type: nonNull(GraphQLString),
         }
     }
 });</code></pre>
@@ -508,25 +524,25 @@ The only difference is that the mutation type must be assigned to the <code>muta
 For the Notes API, we will include mutations for creating and deleting notes:</p>
 </div>
 <div class="listingblock">
-<div class="title">src/main/resources/apis/graphql/schema.js</div>
+<div class="title">src/main/resources/apis/graphql/schema.ts</div>
 <div class="content">
-<pre class="highlight"><code class="language-js" data-lang="js">const rootMutationType = schemaGenerator.createObjectType({
+<pre class="highlight"><code class="language-ts" data-lang="ts">const rootMutationType = schemaGenerator.createObjectType({
     name: 'Mutation',
     fields: {
         createNote: {
-            type: graphQlLib.reference('Note'),
+            type: reference('Note'),
             args: {
-                title: graphQlLib.nonNull(graphQlLib.GraphQLString),
-                content: graphQlLib.nonNull(graphQlLib.GraphQLString),
+                title: nonNull(GraphQLString),
+                content: nonNull(GraphQLString),
             },
             resolve: (env) =&gt; {
                 // Creates the note and returns it as the result.
             }
         },
         deleteNote: {
-            type: graphQlLib.reference('Note'),
+            type: reference('Note'),
             args: {
-                id: graphQlLib.nonNull(graphQlLib.GraphQLID),
+                id: nonNull(GraphQLID),
             },
             resolve: (env) =&gt; {
                 // Removes the note and returns it as the result.
@@ -543,7 +559,7 @@ In general, if a field name matches the corresponding property in the source obj
 </div>
 <div class="paragraph">
 <p>Also, notice how we reference the <code>Note</code> object in these fields.
-To specify the field type, we use the <code>graphQlLib.reference</code> function, one of the type helpers described in the <a href="https://developer.enonic.com/docs/graphql-library">GraphQL Library documentation</a>.</p>
+To specify the field type, we use the <code>reference</code> function, one of the type helpers described in the <a href="https://developer.enonic.com/docs/graphql-library">GraphQL Library documentation</a>.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -552,7 +568,7 @@ To specify the field type, we use the <code>graphQlLib.reference</code> function
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-You could also directly use the <code>noteType</code> variable, which was initialized when creating the <code>Note</code> type. However, using <code>graphQlLib.reference</code> is preferred, especially for larger schemas.
+You could also directly use the <code>noteType</code> variable, which was initialized when creating the <code>Note</code> type. However, using <code>reference</code> is preferred, especially for larger schemas.
 </td>
 </tr>
 </table>
@@ -561,9 +577,9 @@ You could also directly use the <code>noteType</code> variable, which was initia
 <p>Now, let’s see how the <code>rootMutationType</code> is used when creating the schema:</p>
 </div>
 <div class="listingblock">
-<div class="title">src/main/resources/apis/graphql/schema.js</div>
+<div class="title">src/main/resources/apis/graphql/schema.ts</div>
 <div class="content">
-<pre class="highlight"><code class="language-js" data-lang="js">const graphQLSchema = schemaGenerator.createSchema({
+<pre class="highlight"><code class="language-ts" data-lang="ts">const graphQLSchema = schemaGenerator.createSchema({
     query: rootQueryType, <i class="conum" data-value="1"></i><b>(1)</b>
     mutation: rootMutationType, <i class="conum" data-value="2"></i><b>(2)</b>
     dictionary: [noteType] <i class="conum" data-value="3"></i><b>(3)</b>
@@ -599,31 +615,45 @@ You could also directly use the <code>noteType</code> variable, which was initia
 </table>
 </div>
 <div class="paragraph">
-<p>Here is the complete example implementation of schema.js. You can also see the implementation of the <code>getNote</code> and <code>getNotes</code> fields for the root <code>Query</code> type, which we omitted earlier since their implementation follows the same approach as the fields described in this section.</p>
+<p>Here is the complete example implementation of schema.ts. You can also see the implementation of the <code>getNote</code> and <code>getNotes</code> fields for the root <code>Query</code> type, which we omitted earlier since their implementation follows the same approach as the fields described in this section.</p>
 </div>
 <div class="listingblock">
-<div class="title">/src/main/resources/apis/graphql/schema.js</div>
+<div class="title">/src/main/resources/apis/graphql/schema.ts</div>
 <div class="content">
-<pre class="highlight"><code class="language-js" data-lang="js">const graphQlLib = require('/lib/graphql');
+<pre class="highlight"><code class="language-ts" data-lang="ts">import {
+    GraphQLID,
+    GraphQLString,
+    list,
+    newSchemaGenerator,
+    nonNull,
+    reference
+} from '/lib/graphql';
 
-const schemaGenerator = graphQlLib.newSchemaGenerator();
+const schemaGenerator = newSchemaGenerator();
 
-const storage = {};
+interface Note {
+    id: string;
+    title: string;
+    content: string;
+    createdAt: string;
+}
+
+const storage: Record&lt;string, Note&gt; = {};
 
 const noteType = schemaGenerator.createObjectType({
     name: 'Note',
     fields: {
         id: {
-            type: graphQlLib.nonNull(graphQlLib.GraphQLID),
+            type: nonNull(GraphQLID),
         },
         title: {
-            type: graphQlLib.nonNull(graphQlLib.GraphQLString),
+            type: nonNull(GraphQLString),
         },
         content: {
-            type: graphQlLib.GraphQLString,
+            type: GraphQLString,
         },
         createdAt: {
-            type: graphQlLib.nonNull(graphQlLib.GraphQLString)
+            type: nonNull(GraphQLString)
         }
     }
 });
@@ -632,31 +662,19 @@ const rootQueryType = schemaGenerator.createObjectType({
     name: 'Query',
     fields: {
         serverTime: {
-            type: graphQlLib.GraphQLString,
-            resolve: (env) =&gt; {
-                return new Date().toISOString();
-            }
+            type: GraphQLString,
+            resolve: () =&gt; new Date().toISOString()
         },
         getNote: {
-            type: graphQlLib.reference('Note'),
+            type: reference('Note'),
             args: {
-                id: graphQlLib.nonNull(graphQlLib.GraphQLID),
+                id: nonNull(GraphQLID),
             },
-            resolve: (env) =&gt; {
-                return storage[env.args.id];
-            },
+            resolve: (env) =&gt; storage[(env.args as {id: string}).id],
         },
         getNotes: {
-            type: graphQlLib.list(graphQlLib.reference('Note')),
-            resolve: (env) =&gt; {
-                const result = [];
-                for (let key in storage) {
-                    if (storage.hasOwnProperty(key)) {
-                        result.push(storage[key]);
-                    }
-                }
-                return result;
-            }
+            type: list(reference('Note')),
+            resolve: () =&gt; Object.keys(storage).map((key) =&gt; storage[key])
         }
     },
 });
@@ -665,16 +683,17 @@ const rootMutationType = schemaGenerator.createObjectType({
     name: 'Mutation',
     fields: {
         createNote: {
-            type: graphQlLib.reference('Note'),
+            type: reference('Note'),
             args: {
-                title: graphQlLib.nonNull(graphQlLib.GraphQLString),
-                content: graphQlLib.nonNull(graphQlLib.GraphQLString),
+                title: nonNull(GraphQLString),
+                content: nonNull(GraphQLString),
             },
             resolve: (env) =&gt; {
-                const note = {
+                const args = env.args as {title: string; content: string};
+                const note: Note = {
                     id: Math.random().toString(36).substring(2, 15),
-                    title: env.args.title,
-                    content: env.args.content,
+                    title: args.title,
+                    content: args.content,
                     createdAt: new Date().toISOString(),
                 };
                 storage[note.id] = note;
@@ -682,12 +701,12 @@ const rootMutationType = schemaGenerator.createObjectType({
             }
         },
         deleteNote: {
-            type: graphQlLib.reference('Note'),
+            type: reference('Note'),
             args: {
-                id: graphQlLib.nonNull(graphQlLib.GraphQLID),
+                id: nonNull(GraphQLID),
             },
             resolve: (env) =&gt; {
-                const id = env.args.id;
+                const id = (env.args as {id: string}).id;
                 const note = storage[id];
                 delete storage[id];
                 return note;
@@ -702,7 +721,7 @@ const graphQLSchema = schemaGenerator.createSchema({
     dictionary: [noteType]
 });
 
-module.exports = graphQLSchema;</code></pre>
+export default graphQLSchema;</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -758,7 +777,7 @@ Over HTTP they travel in the <code>variables</code> property of the request body
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">curl -X POST "http://localhost:8080/api/com.enonic.app.graphql:graphql" \
+<pre class="highlight"><code class="language-bash" data-lang="bash">curl -X POST "http://localhost:8080/api/com.example.gqltutorial:graphql" \
   -H "Content-Type: application/json" \
   -d '{"query":"mutation CreateNote($title: String!, $content: String!) { createNote(title: $title, content: $content) { id } }","variables":{"title":"Shopping list","content":"Coffee, milk, bread"}}'</code></pre>
 </div>
@@ -812,7 +831,7 @@ Note the single quotes around the payload. They keep the shell from expanding <c
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-08-12 12:43:10 UTC
+Last updated 2026-08-12 15:44:50 UTC
 </div>
 </div>
 </body>

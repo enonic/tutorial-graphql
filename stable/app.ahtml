@@ -479,7 +479,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>enonic create com.enonic.app.graphql -r tutorial-graphql -s mysandbox</pre>
+<pre>enonic create com.example.gqltutorial -r starter-ts -s mysandbox</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -488,18 +488,30 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="ulist">
 <ul>
 <li>
-<p>use the GitHub repo <code>github.com/enonic/tutorial-graphql</code> as a starter</p>
+<p>use the GitHub repo <code>github.com/enonic/starter-ts</code> as a starter</p>
 </li>
 <li>
-<p>to create an app called <code>com.enonic.app.graphql</code></p>
+<p>to create an app called <code>com.example.gqltutorial</code></p>
 </li>
 <li>
-<p>in the directory <code>graphql</code> setting version number to <code>1.0.0</code></p>
+<p>in the directory <code>gqltutorial</code> setting version number to <code>1.0.0</code></p>
 </li>
 <li>
 <p>and link it to <code>mysandbox</code> which you created earlier</p>
 </li>
 </ul>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<code>starter-ts</code> is Enonic&#8217;s maintained TypeScript starter. Starting from a maintained starter rather than from a tutorial repository means you begin with an empty, well-configured application and build the API yourself — which is the point of this guide.
+</td>
+</tr>
+</table>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -508,7 +520,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-The app name becomes part of every URL your API is served from, so the later chapters assume you used <code>com.enonic.app.graphql</code> exactly. If you choose a different name, substitute it wherever the tutorial writes <code>com.enonic.app.graphql</code>.
+App names matter. XP will not run two apps with the same name in a single instance, so every Enonic tutorial uses a name of its own — this one is <code>com.example.gqltutorial</code>. The name also becomes part of every URL your API is served from, and the rest of the tutorial writes it out in full. If you choose a different name, substitute it wherever that appears.
 </td>
 </tr>
 </table>
@@ -516,49 +528,72 @@ The app name becomes part of every URL your API is served from, so the later cha
 <div class="sect2">
 <h3 id="project_structure"><a class="link" href="#project_structure">Project structure</a></h3>
 <div class="paragraph">
-<p>Inside the <code>graphql</code> directory, you should now have a file structure looking something like this:</p>
+<p>Inside the <code>gqltutorial</code> directory, you should now have a file structure looking something like this:</p>
 </div>
 <div class="listingblock">
 <div class="title">Selected files from the app code:</div>
 <div class="content">
-<pre class="highlight"><code class="language-files" data-lang="files">docs/ <i class="conum" data-value="1"></i><b>(1)</b>
-samples/ <i class="conum" data-value="2"></i><b>(2)</b>
-src/
+<pre class="highlight"><code class="language-files" data-lang="files">src/
  main/
   resources/
-   assets <i class="conum" data-value="3"></i><b>(3)</b>
-   apis <i class="conum" data-value="4"></i><b>(4)</b>
-   enonic.yaml <i class="conum" data-value="5"></i><b>(5)</b>
-gradle.properties <i class="conum" data-value="6"></i><b>(6)</b></code></pre>
+   apis/ <i class="conum" data-value="1"></i><b>(1)</b>
+   assets/ <i class="conum" data-value="2"></i><b>(2)</b>
+   main.ts <i class="conum" data-value="3"></i><b>(3)</b>
+   enonic.yaml <i class="conum" data-value="4"></i><b>(4)</b>
+   tsconfig.json <i class="conum" data-value="5"></i><b>(5)</b>
+ jest/ <i class="conum" data-value="6"></i><b>(6)</b>
+build.gradle <i class="conum" data-value="7"></i><b>(7)</b>
+package.json <i class="conum" data-value="8"></i><b>(8)</b>
+tsdown.config.ts <i class="conum" data-value="9"></i><b>(9)</b>
+gradle.properties <i class="conum" data-value="10"></i><b>(10)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>The documentation you are reading now</td>
+<td>Server-side APIs. Empty for now — this is where the GraphQL API goes.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Code samples that will be used in this guide</td>
+<td>The starter&#8217;s example client-side file. We will not use this folder; the API serves its files from <code>static/</code> instead, for reasons covered in the <a href="graphiql.ahtml">GraphiQL chapter</a>.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>Client-side assets</td>
+<td>Runs when the application loads. Not needed for this guide.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>Server-side APIs</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="5"></i><b>5</b></td>
 <td>Application descriptor</td>
 </tr>
 <tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>TypeScript configuration for the server-side code</td>
+</tr>
+<tr>
 <td><i class="conum" data-value="6"></i><b>6</b></td>
-<td>App name and other settings</td>
+<td>Test setup, ready for tests you add later</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td>Java and XP library dependencies</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="8"></i><b>8</b></td>
+<td>Node dependencies and the build, lint and test scripts</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="9"></i><b>9</b></td>
+<td>Bundles both the server-side and client-side TypeScript</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="10"></i><b>10</b></td>
+<td>App name, version and the required XP version</td>
 </tr>
 </table>
+</div>
+<div class="paragraph">
+<p>The application builds and deploys as it stands — it just does not do anything yet.</p>
 </div>
 </div>
 </div>
@@ -571,7 +606,7 @@ gradle.properties <i class="conum" data-value="6"></i><b>(6)</b></code></pre>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>cd graphql
+<pre>cd gqltutorial
 enonic dev</pre>
 </div>
 </div>
@@ -612,7 +647,7 @@ enonic dev</pre>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-08-12 12:43:10 UTC
+Last updated 2026-08-12 15:44:50 UTC
 </div>
 </div>
 </body>

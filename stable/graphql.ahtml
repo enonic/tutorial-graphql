@@ -486,7 +486,7 @@ The library builds and executes the schema; the universal API is what makes it r
 </div>
 <div class="paragraph">
 <p>To create our GraphQL API, we need to create a <code>graphql</code> directory inside <code>/src/main/resources/apis</code>.
-Then, we must add a descriptor file named <code>graphql.yaml</code> and a controller file named <code>graphql.js</code>.</p>
+Then, we must add a descriptor file named <code>graphql.yaml</code> and a controller file named <code>graphql.ts</code>.</p>
 </div>
 <div class="listingblock">
 <div class="title">/src/main/resources/apis/graphql/graphql.yaml</div>
@@ -516,21 +516,24 @@ A real API would name a narrower principal here and check permissions inside the
 <div class="sectionbody">
 <div class="paragraph">
 <p>Now we can focus on developing the GraphQL schema.
-To do this, we need to import the GraphQL Library, as shown below.</p>
+Our server-side code is TypeScript, so we import what we need from the library by name.</p>
 </div>
 <div class="listingblock">
-<div class="title">/src/main/resources/apis/graphql/schema.js</div>
+<div class="title">/src/main/resources/apis/graphql/schema.ts</div>
 <div class="content">
-<pre class="highlight"><code class="language-js" data-lang="js">const graphQlLib = require('/lib/graphql');</code></pre>
+<pre class="highlight"><code class="language-ts" data-lang="ts">import {GraphQLString, newSchemaGenerator} from '/lib/graphql';</code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p>XP resolves <code>/lib/graphql</code> at runtime from the JAR we added to <code>build.gradle</code>, so this import is not a relative path into <code>node_modules</code> — it is the library as the platform sees it.</p>
 </div>
 <div class="paragraph">
 <p>After that, we need to obtain an instance of <code>schemaGenerator</code> in order to define <code>types</code>, <code>input types</code>, the <code>schema</code>, <code>unions</code>, <code>enums</code>, <code>interfaces</code>, and more.</p>
 </div>
 <div class="listingblock">
-<div class="title">/src/main/resources/apis/graphql/schema.js</div>
+<div class="title">/src/main/resources/apis/graphql/schema.ts</div>
 <div class="content">
-<pre class="highlight"><code class="language-js" data-lang="js">const schemaGenerator = graphQlLib.newSchemaGenerator();</code></pre>
+<pre class="highlight"><code class="language-ts" data-lang="ts">const schemaGenerator = newSchemaGenerator();</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -542,16 +545,14 @@ This will allow us to see how a schema is defined and how to get the response wh
 This type serves as the entry point for all read operations in the GraphQL API and will contain the fields that clients can query.</p>
 </div>
 <div class="listingblock">
-<div class="title">/src/main/resources/apis/graphql/schema.js</div>
+<div class="title">/src/main/resources/apis/graphql/schema.ts</div>
 <div class="content">
-<pre class="highlight"><code class="language-js" data-lang="js">const rootQueryType = schemaGenerator.createObjectType({ <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-ts" data-lang="ts">const rootQueryType = schemaGenerator.createObjectType({ <i class="conum" data-value="1"></i><b>(1)</b>
     name: 'Query',
     fields: {
         serverTime: { <i class="conum" data-value="2"></i><b>(2)</b>
-            type: graphQlLib.GraphQLString,  <i class="conum" data-value="3"></i><b>(3)</b>
-            resolve: (env) =&gt; { <i class="conum" data-value="4"></i><b>(4)</b>
-                return new Date().toISOString();
-            }
+            type: GraphQLString,  <i class="conum" data-value="3"></i><b>(3)</b>
+            resolve: () =&gt; new Date().toISOString() <i class="conum" data-value="4"></i><b>(4)</b>
         },
     },
 });</code></pre>
@@ -585,13 +586,13 @@ This function is executed when the field is queried and returns the current serv
 The schema ties together the root Query type (and optionally Mutation and Subscription types) and serves as the core configuration for the GraphQL API.</p>
 </div>
 <div class="listingblock">
-<div class="title">/src/main/resources/apis/graphql/schema.js</div>
+<div class="title">/src/main/resources/apis/graphql/schema.ts</div>
 <div class="content">
-<pre class="highlight"><code class="language-js" data-lang="js">const graphQLSchema = schemaGenerator.createSchema({ <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-ts" data-lang="ts">const graphQLSchema = schemaGenerator.createSchema({ <i class="conum" data-value="1"></i><b>(1)</b>
     query: rootQueryType,
 });
 
-module.exports = graphQLSchema; <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
+export default graphQLSchema; <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -611,19 +612,20 @@ module.exports = graphQLSchema; <i class="conum" data-value="2"></i><b>(2)</b></
 This method will handle incoming client requests and pass them to the GraphQL engine for execution.</p>
 </div>
 <div class="listingblock">
-<div class="title">/src/main/resources/apis/graphql/graphql.js</div>
+<div class="title">/src/main/resources/apis/graphql/graphql.ts</div>
 <div class="content">
-<pre class="highlight"><code class="language-js" data-lang="js">const graphQlLib = require('/lib/graphql');
-const graphQLSchema = require('./schema');
+<pre class="highlight"><code class="language-ts" data-lang="ts">import type {Request, Response} from '@enonic-types/core';
+import {execute} from '/lib/graphql';
+import graphQLSchema from './schema';
 
-exports.POST = (req) =&gt; {
-    const body = JSON.parse(req.body);
-    const result = graphQlLib.execute(graphQLSchema, body.query, body.variables);
+export function POST(req: Request): Response {
+    const body = JSON.parse(req.body as string) as {query: string; variables?: unknown};
+    const result = execute(graphQLSchema, body.query, body.variables);
     return {
         contentType: 'application/json',
         body: result,
     };
-};</code></pre>
+}</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -631,23 +633,25 @@ exports.POST = (req) =&gt; {
 A special <code>all</code> export catches any method without a handler of its own, which we will use in the next chapter to serve several endpoints from one API.</p>
 </div>
 <div class="paragraph">
-<p>The complete example of the <code>schema.js</code> is shown below.</p>
+<p><code>Request</code> and <code>Response</code> come from <code>@enonic-types/core</code>, the package that types the XP runtime.
+It is a development dependency only — nothing from it exists at runtime.</p>
+</div>
+<div class="paragraph">
+<p>The complete example of the <code>schema.ts</code> is shown below.</p>
 </div>
 <div class="listingblock">
-<div class="title">/src/main/resources/apis/graphql/schema.js</div>
+<div class="title">/src/main/resources/apis/graphql/schema.ts</div>
 <div class="content">
-<pre class="highlight"><code class="language-js" data-lang="js">const graphQlLib = require('/lib/graphql');
+<pre class="highlight"><code class="language-ts" data-lang="ts">import {GraphQLString, newSchemaGenerator} from '/lib/graphql';
 
-const schemaGenerator = graphQlLib.newSchemaGenerator();
+const schemaGenerator = newSchemaGenerator();
 
 const rootQueryType = schemaGenerator.createObjectType({
     name: 'Query',
     fields: {
         serverTime: {
-            type: graphQlLib.GraphQLString,
-            resolve: (env) =&gt; {
-                return new Date().toISOString();
-            }
+            type: GraphQLString,
+            resolve: () =&gt; new Date().toISOString()
         },
     },
 });
@@ -656,7 +660,7 @@ const graphQLSchema = schemaGenerator.createSchema({
     query: rootQueryType,
 });
 
-module.exports = graphQLSchema;</code></pre>
+export default graphQLSchema;</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -677,11 +681,11 @@ As a result, the GraphQL API will be available at the following endpoint:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>In our case, since the <code>appName</code> is <code>com.enonic.app.graphql</code> and the <code>apiKey</code> is <code>graphql</code>, the endpoint becomes:</p>
+<p>In our case, since the <code>appName</code> is <code>com.example.gqltutorial</code> and the <code>apiKey</code> is <code>graphql</code>, the endpoint becomes:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>/api/com.enonic.app.graphql:graphql</pre>
+<pre>/api/com.example.gqltutorial:graphql</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -690,7 +694,7 @@ It is assumed that cURL is already installed on your system.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">curl -X POST "http://localhost:8080/api/com.enonic.app.graphql:graphql" -H "Content-Type: application/json" -d "{ \"query\": \"{ serverTime }\" }"</code></pre>
+<pre class="highlight"><code class="language-bash" data-lang="bash">curl -X POST "http://localhost:8080/api/com.example.gqltutorial:graphql" -H "Content-Type: application/json" -d "{ \"query\": \"{ serverTime }\" }"</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -719,7 +723,7 @@ Ask for a field the schema does not define:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">curl -X POST "http://localhost:8080/api/com.enonic.app.graphql:graphql" -H "Content-Type: application/json" -d "{ \"query\": \"{ notAField }\" }"</code></pre>
+<pre class="highlight"><code class="language-bash" data-lang="bash">curl -X POST "http://localhost:8080/api/com.example.gqltutorial:graphql" -H "Content-Type: application/json" -d "{ \"query\": \"{ notAField }\" }"</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -770,7 +774,7 @@ Clients must therefore check <code>errors</code> even when <code>data</code> is 
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-08-12 12:43:10 UTC
+Last updated 2026-08-12 15:44:50 UTC
 </div>
 </div>
 </body>

@@ -442,6 +442,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
 <li><a href="#adding_graphiql_to_the_application">Adding GraphiQL to the application</a></li>
+<li><a href="#where_the_client_files_go">Where the client files go</a></li>
 <li><a href="#creating_the_graphiql_ui_page">Creating the GraphiQL UI Page</a></li>
 <li><a href="#implementing_the_graphql_controller">Implementing the GraphQL Controller</a></li>
 <li><a href="#summary">Summary</a></li>
@@ -561,17 +562,52 @@ Running the following command adds all six at their current versions and writes 
 </tr>
 </table>
 </div>
-<div class="admonitionblock note">
+</div>
+</div>
+<div class="sect1">
+<h2 id="where_the_client_files_go"><a class="link" href="#where_the_client_files_go">Where the client files go</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Enonic XP has two libraries for serving files out of an application, and they expect different folders.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a href="https://developer.enonic.com/docs/lib-asset">lib-asset</a></dt>
+<dd>
+<p>Serves <code>src/main/resources/assets/</code>, with fingerprinted URLs and immutable cache headers. Convenient, but it works only for sites, webapps and admin tools.</p>
+</dd>
+<dt class="hdlist1"><a href="https://market.enonic.com/vendors/enonic/static-asset-lib">lib-static</a></dt>
+<dd>
+<p>Serves whichever folder you point it at, <code>src/main/resources/static/</code> by convention. It works anywhere, including from an API.</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>Our GraphQL API is a <a href="https://developer.enonic.com/docs/code/stable/web/apis">universal API</a>, and lib-asset explicitly does not support serving assets from one.
+So we use lib-static, and our client files belong in <code>static/</code>.</p>
+</div>
+<div class="admonitionblock important">
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-note" title="Note"></i>
+<i class="fa icon-important" title="Important"></i>
 </td>
 <td class="content">
-The starter you created your app from already contains the Webpack and Gradle configuration that bundles these assets, so there is nothing to set up here. To see how it works, open <code>webpack.config.js</code> and <code>build.gradle</code> in your project.
+The folder name is not cosmetic. <code>assets/</code> is lib-asset&#8217;s convention; putting files there and serving them with lib-static is the kind of mismatch that confuses the next person to read the code.
 </td>
 </tr>
 </table>
+</div>
+<div class="paragraph">
+<p>Create the folder now — it is where the browser-side code and styles will live:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>src/main/resources/static/</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The build bundles everything under <code>static/</code> into <code>build/resources/main/static/</code>, which is what ends up in the application and what lib-static reads.</p>
 </div>
 <div class="paragraph">
 <p>We are now ready to proceed with the implementation.</p>
@@ -600,7 +636,7 @@ The starter you created your app from already contains the Webpack and Gradle co
 &lt;body&gt;
 &lt;div class="app-graphql-container"&gt;
     &lt;div id="graphiql-container-wrapper" data-config-handler-url="{{handlerUrl}}"&gt;&lt;/div&gt;
-    &lt;script src="{{playgroundScript}}"&gt;&lt;/script&gt;
+    &lt;script type="module" src="{{playgroundScript}}"&gt;&lt;/script&gt;
 &lt;/div&gt;
 &lt;/body&gt;
 &lt;/html&gt;</code></pre>
@@ -615,7 +651,7 @@ The starter you created your app from already contains the Webpack and Gradle co
 <p><code>handleUrl</code> the target URL for sending GraphQL requests</p>
 </li>
 <li>
-<p><code>playgroundCss</code> and <code>playgroundScript</code> the base path for loading static assets such as CSS and JavaScript required to render the GraphiQL interface.</p>
+<p><code>playgroundCss</code> and <code>playgroundScript</code> the URLs of the stylesheet and script that render the GraphiQL interface</p>
 </li>
 </ul>
 </div>
@@ -623,7 +659,7 @@ The starter you created your app from already contains the Webpack and Gradle co
 <p>To initialize and render the GraphiQL React component, add the following code:</p>
 </div>
 <div class="listingblock">
-<div class="title">src/main/resources/assets/js/playground.tsx</div>
+<div class="title">src/main/resources/static/js/playground.tsx</div>
 <div class="content">
 <pre class="highlight"><code class="language-ts" data-lang="ts">import * as React from 'react';
 import {createRoot} from 'react-dom/client';
@@ -632,22 +668,35 @@ import {createGraphiQLFetcher} from '@graphiql/toolkit';
 
 const container = document.getElementById('graphiql-container-wrapper');
 
+if (!container) {
+    throw new Error('Could not find the element #graphiql-container-wrapper');
+}
+
+const handlerUrl = container.dataset.configHandlerUrl;
+
+if (!handlerUrl) {
+    throw new Error('Missing the data-config-handler-url attribute');
+}
+
 const fetcher = createGraphiQLFetcher({
-    url: container.dataset.configHandlerUrl,
+    url: handlerUrl,
 });
 
 createRoot(container).render(&lt;GraphiQL fetcher={fetcher}/&gt;);</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>and add custom styles to customize the appearance</p>
+<p>The two guards matter.
+<code>getElementById()</code> returns <code>null</code> when the element is missing, and <code>dataset</code> returns <code>undefined</code> for an attribute that is not there.
+Failing immediately with a clear message beats passing <code>undefined</code> to the fetcher and debugging a confusing request later.</p>
+</div>
+<div class="paragraph">
+<p>Then add custom styles to control the appearance:</p>
 </div>
 <div class="listingblock">
-<div class="title">src/main/resources/assets/styles/playground.less</div>
+<div class="title">src/main/resources/static/styles/playground.css</div>
 <div class="content">
-<pre class="highlight"><code class="language-less" data-lang="less">@import "graphiql/style.css";
-
-html, body {
+<pre class="highlight"><code class="language-css" data-lang="css">html, body {
   height: 100%;
   margin: 0;
 }
@@ -661,6 +710,9 @@ html, body {
 }</code></pre>
 </div>
 </div>
+<div class="paragraph">
+<p>The GraphiQL stylesheet itself is imported from <code>playground.tsx</code> rather than linked separately, so the build emits one stylesheet containing both it and the rules above.</p>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -668,57 +720,60 @@ html, body {
 <div class="sectionbody">
 <div class="paragraph">
 <p>Now we need to update our controller to handle GraphQL requests and render the GraphiQL UI.
-To achieve this, the following changes are required:</p>
+The API has to answer on three different paths, so the single <code>POST</code> export from the previous chapter is replaced by an <code>all</code> export that hands every request to a router:</p>
 </div>
 <div class="listingblock">
-<div class="title">/src/main/resources/apis/graphql/graphql.js</div>
+<div class="title">/src/main/resources/apis/graphql/graphql.ts</div>
 <div class="content">
-<pre class="highlight"><code class="language-js" data-lang="js">const portalLib = require('/lib/xp/portal');
-const graphQlLib = require('/lib/graphql');
-const mustacheLib = require('/lib/mustache');
-const staticLib = require('/lib/enonic/static');
-const router = require('/lib/router')();
-const graphQLSchema = require('./schema');
+<pre class="highlight"><code class="language-ts" data-lang="ts">import type {Request, Response} from '@enonic-types/core';
+import {apiUrl} from '/lib/xp/portal';
+import {execute} from '/lib/graphql';
+import {render} from '/lib/mustache';
+import {mappedRelativePath, requestHandler, RESPONSE_CACHE_CONTROL} from '/lib/enonic/static';
+import newRouter from '/lib/router';
+import graphQLSchema from './schema';
 
-exports.all = (req) =&gt; { <i class="conum" data-value="1"></i><b>(1)</b>
+const router = newRouter();
+
+export function all(req: Request): Response { <i class="conum" data-value="1"></i><b>(1)</b>
     return router.dispatch(req);
-};
+}
 
-router.get(`/_static/{path:.*}`, (request) =&gt; { <i class="conum" data-value="2"></i><b>(2)</b>
-    return staticLib.requestHandler(
-        request,
+router.get('/_static/{path:.*}', (req) =&gt; { <i class="conum" data-value="2"></i><b>(2)</b>
+    return requestHandler(
+        req,
         {
-            cacheControl: () =&gt; staticLib.RESPONSE_CACHE_CONTROL.SAFE,
+            cacheControl: () =&gt; RESPONSE_CACHE_CONTROL.SAFE,
             index: false,
-            root: '/assets',
-            relativePath: staticLib.mappedRelativePath('/_static/'),
+            root: '/static', <i class="conum" data-value="3"></i><b>(3)</b>
+            relativePath: mappedRelativePath('/_static/'), <i class="conum" data-value="4"></i><b>(4)</b>
         }
     );
 });
 
-router.get('/?', (req) =&gt; { <i class="conum" data-value="3"></i><b>(3)</b>
+router.get('/?', () =&gt; { <i class="conum" data-value="5"></i><b>(5)</b>
     const view = resolve('graphql.html');
 
-    const apiUrl = portalLib.apiUrl({
+    const handlerUrl = apiUrl({
         api: 'graphql'
     });
 
     const params = {
-        handlerUrl: apiUrl,
-        playgroundCss: `${apiUrl}/_static/styles/playground.css`,
-        playgroundScript: `${apiUrl}/_static/js/playground.js`,
+        handlerUrl: handlerUrl,
+        playgroundCss: `${handlerUrl}/_static/style.css`, <i class="conum" data-value="6"></i><b>(6)</b>
+        playgroundScript: `${handlerUrl}/_static/js/playground.mjs`,
     };
 
     return {
         status: 200,
         contentType: 'text/html',
-        body: mustacheLib.render(view, params)
+        body: render(view, params)
     };
 });
 
-router.post('/?', (req) =&gt; { <i class="conum" data-value="4"></i><b>(4)</b>
-    const body = JSON.parse(req.body);
-    const result = graphQlLib.execute(graphQLSchema, body.query, body.variables);
+router.post('/?', (req) =&gt; { <i class="conum" data-value="7"></i><b>(7)</b>
+    const body = JSON.parse(req.body as string) as {query: string; variables?: unknown};
+    const result = execute(graphQLSchema, body.query, body.variables);
     return {
         contentType: 'application/json',
         body: result,
@@ -734,20 +789,32 @@ router.post('/?', (req) =&gt; { <i class="conum" data-value="4"></i><b>(4)</b>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Define an endpoint for serving static resources, e.g. <code>/api/com.enonic.app.graphql:graphql/_/static/&lt;path&gt;</code>.</td>
+<td>Define an endpoint for serving static resources, e.g. <code>/api/com.example.gqltutorial:graphql/_static/js/playground.mjs</code>.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>Define an endpoint to serve the GraphiQL UI.</td>
+<td>Point lib-static at the <code>static/</code> folder in the built application.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Strip the <code>/_static/</code> prefix from the request before looking the file up, so the URL prefix and the folder stay independent.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>Define an endpoint to serve the GraphiQL UI.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>These are the names the build emits: one bundled stylesheet at the root of <code>static/</code>, and the script as an ES module beside it. The <code>.mjs</code> extension is why <code>graphql.html</code> loads it with <code>&lt;script type="module"&gt;</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
 <td>Define an endpoint to handle GraphQL requests.</td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
-<p>The GraphiQL UI should now be accessible at the endpoint GET <a href="http://localhost:8080/api/com.enonic.app.graphql:graphql" class="bare">http://localhost:8080/api/com.enonic.app.graphql:graphql</a>.</p>
+<p>The GraphiQL UI should now be accessible at the endpoint GET <a href="http://localhost:8080/api/com.example.gqltutorial:graphql" class="bare">http://localhost:8080/api/com.example.gqltutorial:graphql</a>.</p>
 </div>
 <div class="imageblock">
 <div class="content">
@@ -766,6 +833,9 @@ router.post('/?', (req) =&gt; { <i class="conum" data-value="4"></i><b>(4)</b>
 <ul>
 <li>
 <p>How to add the GraphiQL UI to our application.</p>
+</li>
+<li>
+<p>Why an API serves its client files from <code>static/</code> with lib-static, rather than from <code>assets/</code> with lib-asset.</p>
 </li>
 <li>
 <p>How to implement an API with multiple endpoints using <a href="https://market.enonic.com/vendors/enonic/router-lib">lib-router</a>.</p>
@@ -791,7 +861,7 @@ router.post('/?', (req) =&gt; { <i class="conum" data-value="4"></i><b>(4)</b>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-08-12 12:43:10 UTC
+Last updated 2026-08-12 15:44:50 UTC
 </div>
 </div>
 </body>
