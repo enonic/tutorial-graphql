@@ -445,6 +445,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#define_graphql_api">Define GraphQL API</a></li>
 <li><a href="#define_schema">Define schema</a></li>
 <li><a href="#test_graphql_api">Test GraphQL API</a></li>
+<li><a href="#handling_errors">Handling errors</a></li>
+<li><a href="#coming_up">Coming up</a></li>
 </ul>
 </div>
 </div>
@@ -479,6 +481,10 @@ Its documentation describes every function and constant used in this tutorial.</
 <h2 id="define_graphql_api"><a class="link" href="#define_graphql_api">Define GraphQL API</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
+<p>An Enonic XP application exposes its own HTTP endpoints as <a href="https://developer.enonic.com/docs/code/stable/web/apis">universal APIs</a>.
+The library builds and executes the schema; the universal API is what makes it reachable over HTTP.</p>
+</div>
+<div class="paragraph">
 <p>To create our GraphQL API, we need to create a <code>graphql</code> directory inside <code>/src/main/resources/apis</code>.
 Then, we must add a descriptor file named <code>graphql.yaml</code> and a controller file named <code>graphql.js</code>.</p>
 </div>
@@ -496,6 +502,12 @@ allow:
 </div>
 <div class="paragraph">
 <p>In the descriptor, we define which user roles will have access to the API, whether it should be mounted under <code>/api</code>, and optionally provide a <code>title</code> and <code>description</code>.</p>
+</div>
+<div class="paragraph">
+<p>APIs are not mounted anywhere by default, so <code>mount</code> and <code>allow</code> are what make this one reachable at all.
+Be aware that <code>allow</code> controls who may call the API and nothing more — it does not limit what a resolver returns.
+This tutorial allows everyone, which is fine for a local sandbox.
+A real API would name a narrower principal here and check permissions inside the resolvers that read or write data, using the context value passed to <code>execute()</code> to see who is calling.</p>
 </div>
 </div>
 </div>
@@ -604,7 +616,7 @@ This method will handle incoming client requests and pass them to the GraphQL en
 <pre class="highlight"><code class="language-js" data-lang="js">const graphQlLib = require('/lib/graphql');
 const graphQLSchema = require('./schema');
 
-exports.post = (req) =&gt; {
+exports.POST = (req) =&gt; {
     const body = JSON.parse(req.body);
     const result = graphQlLib.execute(graphQLSchema, body.query, body.variables);
     return {
@@ -613,6 +625,10 @@ exports.post = (req) =&gt; {
     };
 };</code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p>The export name is the HTTP method: XP looks for an export matching the request&#8217;s method, so <code>POST</code> handles our GraphQL requests.
+A special <code>all</code> export catches any method without a handler of its own, which we will use in the next chapter to serve several endpoints from one API.</p>
 </div>
 <div class="paragraph">
 <p>The complete example of the <code>schema.js</code> is shown below.</p>
@@ -690,15 +706,71 @@ It is assumed that cURL is already installed on your system.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>Great! We now have a working example of a simple GraphQL API.
-In the following sections, we will learn how to define more advanced schemas using custom types, mutations, and other GraphQL features.</p>
+<p>Great! We now have a working example of a simple GraphQL API.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="handling_errors"><a class="link" href="#handling_errors">Handling errors</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Not every request succeeds, and GraphQL reports failures in the response body rather than through the HTTP status code.
+Ask for a field the schema does not define:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-bash" data-lang="bash">curl -X POST "http://localhost:8080/api/com.enonic.app.graphql:graphql" -H "Content-Type: application/json" -d "{ \"query\": \"{ notAField }\" }"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The query never runs, and the response carries an <code>errors</code> array instead of <code>data</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-json" data-lang="json">{
+   "errors":[
+      {
+         "errorType":"ValidationError",
+         "message":"Validation error of type FieldUndefined: Field 'notAField' in type 'Query' is undefined"
+      }
+   ]
+}</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The wording of <code>message</code> comes from the GraphQL engine and may change between versions. Match on <code>errorType</code> rather than on the message text.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>A failing resolver behaves differently.
+The field it serves resolves to <code>null</code>, the rest of the query still returns its values, and the response then contains <strong>both</strong> <code>data</code> and <code>errors</code>.
+Clients must therefore check <code>errors</code> even when <code>data</code> is present — a <code>200</code> response does not mean everything succeeded.</p>
+</div>
+<div class="paragraph">
+<p>The completed application also guards the request itself, returning <code>400</code> with an <code>errors</code> array when the body has no <code>query</code> property, so malformed requests fail in the same shape clients already handle.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="coming_up"><a class="link" href="#coming_up">Coming up</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In the next chapter you&#8217;ll add a <a href="graphiql.ahtml">GraphiQL playground</a> so you can explore the schema in the browser instead of through cURL.</p>
 </div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-08-11 07:39:42 UTC
+Last updated 2026-08-12 12:43:10 UTC
 </div>
 </div>
 </body>

@@ -468,12 +468,21 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>create an Enonic app</p>
 </li>
 <li>
-<p>build your own GraphQL API using the GraphQL library</p>
+<p>build your own GraphQL API using the GraphQL Library</p>
 </li>
 <li>
 <p>access and use the GraphQL API</p>
 </li>
 </ul>
+</div>
+<div class="paragraph">
+<p>This tutorial builds an API of your own design, with your own types and resolvers.
+If what you need is a ready-made GraphQL API for querying CMS content, you want <a href="https://developer.enonic.com/docs/guillotine">Guillotine</a> instead.</p>
+</div>
+<div class="paragraph">
+<p>Two building blocks do the work.
+The <a href="https://developer.enonic.com/docs/graphql-library">GraphQL Library</a> defines the schema and executes operations against it, and a <a href="https://developer.enonic.com/docs/code/stable/web/apis">universal API</a> serves that schema over HTTP, deciding where the endpoint is mounted and who is allowed to reach it.
+You will create both in the <a href="graphql.ahtml">Hello GraphQL</a> chapter, then build on them through mutations and subscriptions.</p>
 </div>
 <div class="imageblock">
 <div class="content">
@@ -488,7 +497,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-08-11 07:39:42 UTC
+Last updated 2026-08-12 12:43:10 UTC
 </div>
 </div>
 </body>

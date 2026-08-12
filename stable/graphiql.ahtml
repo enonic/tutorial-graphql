@@ -445,6 +445,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#creating_the_graphiql_ui_page">Creating the GraphiQL UI Page</a></li>
 <li><a href="#implementing_the_graphql_controller">Implementing the GraphQL Controller</a></li>
 <li><a href="#summary">Summary</a></li>
+<li><a href="#coming_up">Coming up</a></li>
 </ul>
 </div>
 </div>
@@ -508,16 +509,25 @@ Add the necessary packages to support the GraphiQL user interface:</p>
 </tr>
 <tr>
 <td><i class="conum" data-value="6"></i><b>6</b></td>
-<td><code>react-dom</code>	React&#8217;s DOM renderer.
+<td><code>react-dom</code>	React&#8217;s DOM renderer.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Replace each <code>&lt;version&gt;</code> with the version you want to use.
+Running the following command adds all six at their current versions and writes them into <code>package.json</code> for you:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>npm install @graphiql/react @graphiql/toolkit graphiql graphql-ws react react-dom</pre>
+</div>
+</div>
 <div class="ulist">
 <ul>
 <li>
 <p>Declare backend dependencies in <code>build.gradle</code>. Add dependencies required to serve static files, render the GraphiQL markup, and handle HTTP requests in the controller:</p>
 </li>
 </ul>
-</div></td>
-</tr>
-</table>
 </div>
 <div class="listingblock">
 <div class="title">build.gradle</div>
@@ -558,7 +568,7 @@ Add the necessary packages to support the GraphiQL user interface:</p>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-Full Webpack and Gradle configuration is omitted here. You can view the complete code <a href="https://github.com/enonic/tutorial-graphql" target="_blank" rel="noopener">here</a>.
+The starter you created your app from already contains the Webpack and Gradle configuration that bundles these assets, so there is nothing to set up here. To see how it works, open <code>webpack.config.js</code> and <code>build.gradle</code> in your project.
 </td>
 </tr>
 </table>
@@ -758,22 +768,30 @@ router.post('/?', (req) =&gt; { <i class="conum" data-value="4"></i><b>(4)</b>
 <p>How to add the GraphiQL UI to our application.</p>
 </li>
 <li>
-<p>How to implement an API with multiple endpoints using <a href="https://market.enonic.com/vendors/enonic/router-lib" target="_blank" rel="noopener">lib-router</a>.</p>
+<p>How to implement an API with multiple endpoints using <a href="https://market.enonic.com/vendors/enonic/router-lib">lib-router</a>.</p>
 </li>
 <li>
-<p>How to serve static resources using <a href="https://market.enonic.com/vendors/enonic/lib-static" target="_blank" rel="noopener">lib-static</a>.</p>
+<p>How to serve static resources using <a href="https://market.enonic.com/vendors/enonic/lib-static">lib-static</a>.</p>
 </li>
 <li>
-<p>How to generate the apiUrl using <a href="https://developer.enonic.com/docs/xp/stable/api/lib-portal" target="_blank" rel="noopener">lib-portal</a>.</p>
+<p>How to generate the apiUrl using <a href="https://developer.enonic.com/docs/xp/stable/api/lib-portal">lib-portal</a>.</p>
 </li>
 </ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="coming_up"><a class="link" href="#coming_up">Coming up</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In the next chapter you&#8217;ll extend the schema with <a href="mutations.ahtml">mutations</a> so clients can change data, not just read it.</p>
 </div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-08-11 07:39:42 UTC
+Last updated 2026-08-12 12:43:10 UTC
 </div>
 </div>
 </body>

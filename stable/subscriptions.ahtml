@@ -443,6 +443,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <ul class="sectlevel1">
 <li><a href="#root_subscription_graphql_type">Root Subscription GraphQL type</a></li>
 <li><a href="#extend_graphql_api">Extend GraphQL API</a></li>
+<li><a href="#where_to_go_next">Where to go next</a></li>
 </ul>
 </div>
 </div>
@@ -453,7 +454,10 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>On this page, we will explore how to add <code>Subscriptions</code>, which enable receiving real-time updates from a GraphQL server using long-lived requests.</p>
 </div>
 <div class="paragraph">
-<p>We will use the official <code>graphql-transport-ws</code> protocol from the GraphQL Foundation, as defined in the <a href="https://github.com/graphql/graphql-over-http/blob/main/rfcs/GraphQLOverWebSocket.md" target="_blank" rel="noopener">GraphQL over WebSocket specification</a>.</p>
+<p>We will use the official <code>graphql-transport-ws</code> protocol from the GraphQL Foundation, as defined in the <a href="https://github.com/graphql/graphql-over-http/blob/main/rfcs/GraphQLOverWebSocket.md">GraphQL over WebSocket specification</a>.
+We choose a WebSocket because our client is GraphiQL, and standard GraphQL clients speak this protocol.
+An API can serve subscriptions over <a href="https://developer.enonic.com/docs/code/stable/web/sse">SSE</a> instead when the consumer is your own code rather than a standard client, which needs less machinery than the handshake below.
+The <code>/lib/graphql-rx</code> page of the <a href="https://developer.enonic.com/docs/graphql-library">GraphQL Library documentation</a> shows that variant.</p>
 </div>
 <div class="paragraph">
 <p>To achieve this, we need to:</p>
@@ -544,30 +548,47 @@ include "com.enonic.xp:lib-websocket:${xpVersion}"</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>In the resolve function, we will create a processor and subscribe to events matching <code>custom.note.*</code>. The implementation of the <code>resolve</code> function will then look as follows:</p>
+<p>The resolver&#8217;s job is to return a processor that publishes the events we care about.
+Create the processor and the event listener once, at module level, and let the resolver hand out the same processor every time.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+Do not create them inside the resolver. It runs on every subscribe, so a processor and listener built there would be registered again for each client and never removed, leaking a listener per subscription.
+</td>
+</tr>
+</table>
 </div>
 <div class="listingblock">
 <div class="title">/src/main/resources/apis/graphql/schema.js</div>
 <div class="content">
-<pre class="highlight"><code class="language-js" data-lang="js">const rootSubscriptionType = schemaGenerator.createObjectType({
+<pre class="highlight"><code class="language-js" data-lang="js">const noteProcessor = graphQlRxLib.createPublishProcessor();
+
+eventLib.listener({
+    type: 'custom.note.*',
+    callback: (event) =&gt; {
+        noteProcessor.onNext(event);
+    }
+});
+
+const rootSubscriptionType = schemaGenerator.createObjectType({
     name: 'Subscription',
     fields: {
         event: {
             type: graphQlLib.Json,
-            resolve: (env) =&gt; {
-                const processor = graphQlRxLib.createPublishProcessor();
-                eventLib.listener({
-                    type: 'custom.note.*',
-                    callback: (event) =&gt; {
-                        processor.onNext(event);
-                    }
-                });
-                return processor;
-            },
+            resolve: () =&gt; noteProcessor,
         }
     }
 });</code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p>A single processor serves every subscriber.
+When two subscription fields need different slices of the same stream, call <code>filter()</code> on the processor instead of creating another one.</p>
 </div>
 <div class="paragraph">
 <p>To enable our <code>Subscription</code> to receive real messages, let&#8217;s add event publishing for <code>note.created</code> and <code>note.deleted</code> within the resolve functions of the <code>createNote</code> and <code>deleteNote</code> Mutation fields, respectively. Below is an example for <code>createNote</code>. For <code>deleteNote</code>, the implementation will be similar, except the <code>type</code> will be <code>note.deleted</code>.</p>
@@ -593,7 +614,7 @@ include "com.enonic.xp:lib-websocket:${xpVersion}"</code></pre>
 <h2 id="extend_graphql_api"><a class="link" href="#extend_graphql_api">Extend GraphQL API</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Now we need to add <a href="https://developer.enonic.com/docs/xp/stable/framework/websocket" target="_blank" rel="noopener">WebSocket</a> support to the controller of our GraphQL API.</p>
+<p>Now we need to add <a href="https://developer.enonic.com/docs/code/stable/web/websocket">WebSocket</a> support to the controller of our GraphQL API.</p>
 </div>
 <div class="paragraph">
 <p>To do this, we need to:</p>
@@ -642,6 +663,11 @@ include "com.enonic.xp:lib-websocket:${xpVersion}"</code></pre>
         return;
     }
 
+    if (socketEvent.type === 'close') { <i class="conum" data-value="1"></i><b>(1)</b>
+        cancelSessionSubscriptions(socketEvent.session.id);
+        return;
+    }
+
     if (socketEvent.type === 'message') {
         const message = JSON.parse(socketEvent.message);
         const sessionId = socketEvent.session.id;
@@ -652,13 +678,25 @@ include "com.enonic.xp:lib-websocket:${xpVersion}"</code></pre>
         } else if (message.type === 'subscribe') {
             handleSubscribeMessage(sessionId, message);
         } else if (message.type === 'complete') {
-            cancelSubscription(sessionId);
+            cancelSubscription(sessionId, message.id); <i class="conum" data-value="2"></i><b>(2)</b>
         } else {
             log.debug(`Unknown message type ${message.type}`);
         }
     }
 };</code></pre>
 </div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>A client that simply goes away never sends <code>complete</code>, so the <code>close</code> event is what stops its subscriptions. Without this, every closed browser tab leaves a live subscription behind.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>A single socket can run several operations at once, each with its own <code>id</code>, so cancelling takes the operation id as well as the session.</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
 <p>Let&#8217;s take a look at the implementation of the <code>handleSubscribeMessage</code> function, which handles messages of type <code>subscribe</code>.
@@ -668,12 +706,20 @@ We detect a subscription result by checking for that <code>subscribe</code> meth
 <div class="listingblock">
 <div class="title">/src/main/resources/apis/graphql/graphql.js</div>
 <div class="content">
-<pre class="highlight"><code class="language-js" data-lang="js">function handleSubscribeMessage(sessionId, message) {
+<pre class="highlight"><code class="language-js" data-lang="js">const graphQlSubscribers = {};
+
+function subscriberKey(sessionId, operationId) {
+    return `${sessionId}|${operationId}`;
+}
+
+function handleSubscribeMessage(sessionId, message) {
     const payload = message.payload;
 
     const result = graphQlLib.execute(graphQLSchema, payload.query, payload.variables);
 
     if (result.data &amp;&amp; typeof result.data.subscribe === 'function') {
+        cancelSubscription(sessionId, message.id); <i class="conum" data-value="1"></i><b>(1)</b>
+
         const subscriber = graphQlRxLib.createSubscriber({
             onNext: (payload) =&gt; {
                 webSocketLib.send(sessionId, JSON.stringify({
@@ -683,27 +729,48 @@ We detect a subscription result by checking for that <code>subscribe</code> meth
                 }));
             }
         });
-        graphQlSubscribers[sessionId] = subscriber;
+        graphQlSubscribers[subscriberKey(sessionId, message.id)] = subscriber;
         result.data.subscribe(subscriber);
     }
 }</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>where <code>subscriber</code> sends the data to the client via WebSocket in the format expected by the <a href="https://github.com/graphql/graphql-over-http/blob/main/rfcs/GraphQLOverWebSocket.md#next" target="_blank" rel="noopener">GraphQL over WebSocket protocol</a>.</p>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Cancels anything already running under the same operation id, so a client that re-subscribes does not leave the previous subscriber delivering in the background.</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
-<p>When the operation completes or terminates due to an error, the subscription must be canceled:</p>
+<p>where <code>subscriber</code> sends the data to the client via WebSocket in the format expected by the <a href="https://github.com/graphql/graphql-over-http/blob/main/rfcs/GraphQLOverWebSocket.md#next">GraphQL over WebSocket protocol</a>.</p>
+</div>
+<div class="paragraph">
+<p>When an operation completes, and when the socket closes, the subscriptions must be cancelled.
+Cancelling releases the subscriber so the processor stops delivering to a client that is no longer listening:</p>
 </div>
 <div class="listingblock">
 <div class="title">/src/main/resources/apis/graphql/graphql.js</div>
 <div class="content">
-<pre class="highlight"><code class="language-js" data-lang="js">function cancelSubscription(sessionId) {
-    const subscriber = graphQlSubscribers[sessionId];
+<pre class="highlight"><code class="language-js" data-lang="js">function cancelSubscription(sessionId, operationId) {
+    const key = subscriberKey(sessionId, operationId);
+    const subscriber = graphQlSubscribers[key];
     if (subscriber) {
-        delete graphQlSubscribers[sessionId];
+        delete graphQlSubscribers[key];
         subscriber.cancelSubscription();
     }
+}
+
+function cancelSessionSubscriptions(sessionId) {
+    const prefix = `${sessionId}|`;
+    Object.keys(graphQlSubscribers)
+        .filter((key) =&gt; key.indexOf(prefix) === 0)
+        .forEach((key) =&gt; {
+            const subscriber = graphQlSubscribers[key];
+            delete graphQlSubscribers[key];
+            subscriber.cancelSubscription();
+        });
 }</code></pre>
 </div>
 </div>
@@ -825,10 +892,34 @@ To execute a note creation or deletion request in GraphiQL while a Subscription 
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="where_to_go_next"><a class="link" href="#where_to_go_next">Where to go next</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>You now have a complete GraphQL API: a schema with queries, mutations and subscriptions, served from a universal API, with a GraphiQL playground in front of it.</p>
+</div>
+<div class="paragraph">
+<p>Before building anything real on top of it, revisit the shortcuts this tutorial took:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Notes are kept in memory. Persist them with <a href="https://developer.enonic.com/docs/xp/stable/api/lib-content">lib-content</a> or <a href="https://developer.enonic.com/docs/xp/stable/api/lib-node">lib-node</a>.</p>
+</li>
+<li>
+<p>The API allows <code>role:system.everyone</code>. Narrow the <code>allow</code> list in <code>graphql.yaml</code>, and authorize inside the resolvers using the context passed to <code>execute()</code>.</p>
+</li>
+<li>
+<p>Only a small part of the library is used here. The <a href="https://developer.enonic.com/docs/graphql-library">GraphQL Library documentation</a> also covers interfaces, unions, enums, input types and Relay-style connections.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-08-11 07:39:42 UTC
+Last updated 2026-08-12 12:43:10 UTC
 </div>
 </div>
 </body>

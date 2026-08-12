@@ -460,7 +460,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="install_cli"><a class="link" href="#install_cli">Install CLI</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The <a href="https://developer.enonic.com/docs/enonic-cli" target="_blank" rel="noopener">Enonic Command Line Interface</a> is an essential tool for developers working with Enonic.</p>
+<p>The <a href="https://developer.enonic.com/docs/enonic-cli">Enonic Command Line Interface</a> is an essential tool for developers working with Enonic.</p>
 </div>
 <div class="paragraph">
 <p>If you have <code>npm</code> on your device, run this command:</p>
@@ -471,7 +471,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div class="paragraph">
-<p>If not, here are some <a href="https://developer.enonic.com/start" target="_blank" rel="noopener">alternative ways to install Enonic CLI</a></p>
+<p>If not, here are some <a href="https://developer.enonic.com/start">alternative ways to install Enonic CLI</a></p>
 </div>
 <div class="paragraph">
 <p>To verify that the CLI has been installed, run <code>enonic -v</code>. This should output the version of your installed CLI.</p>
@@ -497,7 +497,7 @@ To upgrade, use <code>enonic latest</code>. If there are new versions you will s
 <h2 id="create_a_sandbox"><a class="link" href="#create_a_sandbox">Create a sandbox</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>A <a href="https://developer.enonic.com/docs/xp/stable/development/sandboxes" target="_blank" rel="noopener">sandbox</a> is a local development instance of the platform - Enonic XP. Create and start a sandbox called <code>mysandbox</code> by running this command in your terminal:</p>
+<p>A <a href="https://developer.enonic.com/docs/xp/stable/development/sandboxes">sandbox</a> is a local development instance of the platform - Enonic XP. Create and start a sandbox called <code>mysandbox</code> by running this command in your terminal:</p>
 </div>
 <div class="literalblock">
 <div class="content">
@@ -522,7 +522,7 @@ To upgrade, use <code>enonic latest</code>. If there are new versions you will s
 <h2 id="sandbox_admin"><a class="link" href="#sandbox_admin">Sandbox Admin</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Let&#8217;s have a look at the Sandbox' web interface - aka XP admin. Open <a href="http://localhost:8080" target="_blank" rel="noopener">http://localhost:8080</a> in your browser (or just click the link).</p>
+<p>Let&#8217;s have a look at the Sandbox' web interface - aka XP admin. Open <a href="http://localhost:8080">http://localhost:8080</a> in your browser (or just click the link).</p>
 </div>
 <div class="paragraph">
 <p>You should now see the XP boot page:</p>
@@ -534,7 +534,7 @@ To upgrade, use <code>enonic latest</code>. If there are new versions you will s
 <div class="title">Figure 1. XP Boot page</div>
 </div>
 <div class="paragraph">
-<p>The boot page provides an overview of the sandbox, including installed application, as well as the <a href="https://developer.enonic.com/docs/xp/stable/deployment/config" target="_blank" rel="noopener">standard configuration files</a>.</p>
+<p>The boot page provides an overview of the sandbox, including installed application, as well as the <a href="https://developer.enonic.com/docs/xp/stable/deployment/config">standard configuration files</a>.</p>
 </div>
 <div class="paragraph">
 <p>Click <b class="button">Log In as Guest</b> to open the XP admin dashboard. You should now see something like this:</p>
@@ -573,7 +573,7 @@ If things don&#8217;t look exactly the same, don&#8217;t worry. In every new ver
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-08-11 07:39:42 UTC
+Last updated 2026-08-12 12:43:10 UTC
 </div>
 </div>
 </body>
