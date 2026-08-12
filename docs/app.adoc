@@ -17,47 +17,59 @@ https://developer.enonic.com/docs/xp/stable/apps[Enonic apps] are used to ship e
 
 *Open a new terminal window* and create your first Enonic app by running this command:
 
-  enonic create com.enonic.app.graphql -r tutorial-graphql -s mysandbox
+  enonic create com.example.gqltutorial -r starter-ts -s mysandbox
 
 This command will:
 
-* use the GitHub repo `github.com/enonic/tutorial-graphql` as a starter
-* to create an app called `com.enonic.app.graphql`
-* in the directory `graphql` setting version number to `1.0.0`
+* use the GitHub repo `github.com/enonic/starter-ts` as a starter
+* to create an app called `com.example.gqltutorial`
+* in the directory `gqltutorial` setting version number to `1.0.0`
 * and link it to `mysandbox` which you created earlier
 
-NOTE: The app name becomes part of every URL your API is served from, so the later chapters assume you used `com.enonic.app.graphql` exactly. If you choose a different name, substitute it wherever the tutorial writes `com.enonic.app.graphql`.
+TIP: `starter-ts` is Enonic's maintained TypeScript starter. Starting from a maintained starter rather than from a tutorial repository means you begin with an empty, well-configured application and build the API yourself — which is the point of this guide.
+
+NOTE: App names matter. XP will not run two apps with the same name in a single instance, so every Enonic tutorial uses a name of its own — this one is `com.example.gqltutorial`. The name also becomes part of every URL your API is served from, and the rest of the tutorial writes it out in full. If you choose a different name, substitute it wherever that appears.
 
 === Project structure
 
-Inside the `graphql` directory, you should now have a file structure looking something like this:
+Inside the `gqltutorial` directory, you should now have a file structure looking something like this:
 
 .Selected files from the app code:
 [source,files]
 ----
-docs/ <1>
-samples/ <2>
 src/
  main/
   resources/
-   assets <3>
-   apis <4>
-   enonic.yaml <5>
-gradle.properties <6>
+   apis/ <1>
+   assets/ <2>
+   main.ts <3>
+   enonic.yaml <4>
+   tsconfig.json <5>
+ jest/ <6>
+build.gradle <7>
+package.json <8>
+tsdown.config.ts <9>
+gradle.properties <10>
 ----
 
-<1> The documentation you are reading now
-<2> Code samples that will be used in this guide
-<3> Client-side assets
-<4> Server-side APIs
-<5> Application descriptor
-<6> App name and other settings
+<1> Server-side APIs. Empty for now — this is where the GraphQL API goes.
+<2> The starter's example client-side file. We will not use this folder; the API serves its files from `static/` instead, for reasons covered in the <<graphiql#, GraphiQL chapter>>.
+<3> Runs when the application loads. Not needed for this guide.
+<4> Application descriptor
+<5> TypeScript configuration for the server-side code
+<6> Test setup, ready for tests you add later
+<7> Java and XP library dependencies
+<8> Node dependencies and the build, lint and test scripts
+<9> Bundles both the server-side and client-side TypeScript
+<10> App name, version and the required XP version
+
+The application builds and deploys as it stands — it just does not do anything yet.
 
 == Build and deploy
 
 Assuming `mysandbox` is still running in another Terminal window, run these commands:
 
-  cd graphql
+  cd gqltutorial
   enonic dev
 
 The last command (`dev`) will build the app, deploy it to `mysandbox`, and start continuously watching for changes in the source code, automatically deploying the changes without you having to rebuild/redeploy the app after each change.

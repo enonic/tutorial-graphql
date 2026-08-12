@@ -3,15 +3,20 @@
   "version": "1.0.0-SNAPSHOT",
   "description": "Tutorial GraphQL",
   "license": "Apache-2.0 license",
+  "private": true,
   "repository": {
     "type": "git",
     "url": "https://github.com/enonic/tutorial-graphql"
   },
   "scripts": {
-    "build": "webpack --color",
-    "lint": "eslint . --cache",
-    "lint:quiet": "eslint . --quiet --cache",
-    "fix": "eslint . --fix"
+    "build": "tsdown",
+    "check": "concurrently -c auto -g --timings npm:check:types npm:lint",
+    "check:types": "concurrently --kill-others-on-fail -g -r --timings npm:check:types:*",
+    "check:types:static": "tsc --noEmit -p src/main/resources/static/tsconfig.json",
+    "check:types:server": "tsc --noEmit -p src/main/resources/tsconfig.json",
+    "cov": "jest --no-cache --coverage",
+    "lint": "eslint --cache",
+    "test": "jest --no-cache"
   },
   "dependencies": {
     "@graphiql/react": "0.37.6",
@@ -22,30 +27,26 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@enonic-types/core": "^8.0.4",
+    "@enonic-types/global": "^8.0.4",
+    "@enonic-types/lib-event": "^8.0.4",
+    "@enonic-types/lib-portal": "^8.0.4",
+    "@enonic-types/lib-static": "^3.0.0",
+    "@enonic-types/lib-websocket": "^8.0.4",
+    "@eslint/js": "^10.0.1",
+    "@swc/core": "^1.15.47",
+    "@tsdown/css": "^0.22.14",
+    "@types/node": "^26.0.0",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.1",
-    "@typescript-eslint/parser": "^8.60.1",
-    "circular-dependency-plugin": "^5.2.2",
-    "copy-webpack-plugin": "^14.0.0",
-    "css-loader": "^7.1.4",
-    "css-minimizer-webpack-plugin": "^8.0.0",
-    "eslint": "^10.4.1",
-    "less": "^4.6.4",
-    "less-loader": "^13.0.0",
-    "mini-css-extract-plugin": "^2.10.2",
-    "postcss": "^8.5.15",
-    "postcss-loader": "^8.2.1",
-    "source-map-loader": "^5.0.0",
-    "style-loader": "^4.0.0",
-    "terser-webpack-plugin": "^5.6.1",
-    "ts-loader": "^9.6.0",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.60.1",
-    "webpack": "^5.107.2",
-    "webpack-cli": "^7.0.3"
-  },
-  "engines": {
-    "node": ">= 24.15.0",
-    "npm": ">= 11.12.1"
+    "concurrently": "^10.0.4",
+    "eslint": "^10.7.0",
+    "glob": "^13.0.6",
+    "jest-environment-jsdom": "^30.4.1",
+    "ts-jest": "^29.4.11",
+    "ts-node": "^10.9.2",
+    "tsdown": "^0.22.14",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.63.0"
   }
 }

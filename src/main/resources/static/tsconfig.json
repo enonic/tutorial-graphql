@@ -1,0 +1,33 @@
+{
+  // This file configures TypeScript for client-side static resources.
+
+  // Read more about tsconfig.json at:
+  // https://www.typescriptlang.org/tsconfig
+
+  "files": [
+    "css.d.ts"
+  ],
+
+  "include": [
+    "./**/*.ts",
+    "./**/*.tsx",
+  ],
+
+  "exclude": [
+    "./**/*.d.ts",
+  ],
+
+  "compilerOptions": {
+    "lib": [
+      "DOM", // console, document, window, etc...
+      "ES2020",
+    ],
+
+    // The GraphiQL playground in this app is a React component.
+    "jsx": "react",
+    "esModuleInterop": true,
+    "moduleResolution": "bundler",
+    "module": "preserve",
+    "skipLibCheck": true,
+  },
+}

@@ -12,26 +12,41 @@ This API should allow users to add new notes, view individual notes, delete note
 
 == Defining the Note type
 
+The type below uses more of the library than the schema we built in the previous chapter, so start by extending the import:
+
+.src/main/resources/apis/graphql/schema.ts
+[source,ts]
+----
+import {
+    GraphQLID,
+    GraphQLString,
+    list,
+    newSchemaGenerator,
+    nonNull,
+    reference
+} from '/lib/graphql';
+----
+
 First, we need to define a `Note` type that describes the structure of a note object.
 Here's a basic example:
 
-.src/main/resources/apis/graphql/schema.js
-[source,js]
+.src/main/resources/apis/graphql/schema.ts
+[source,ts]
 ----
 const noteType = schemaGenerator.createObjectType({
     name: 'Note',
     fields: {
         id: {
-            type: graphQlLib.nonNull(graphQlLib.GraphQLID),
+            type: nonNull(GraphQLID),
         },
         title: {
-            type: graphQlLib.nonNull(graphQlLib.GraphQLString),
+            type: nonNull(GraphQLString),
         },
         content: {
-            type: graphQlLib.GraphQLString,
+            type: GraphQLString,
         },
         createdAt: {
-            type: graphQlLib.nonNull(graphQlLib.GraphQLString),
+            type: nonNull(GraphQLString),
         }
     }
 });
@@ -47,26 +62,26 @@ The only difference is that the mutation type must be assigned to the `mutation`
 Let's define the root `Mutation` type to specify which operations can modify the data.
 For the Notes API, we will include mutations for creating and deleting notes:
 
-.src/main/resources/apis/graphql/schema.js
-[source,js]
+.src/main/resources/apis/graphql/schema.ts
+[source,ts]
 ----
 const rootMutationType = schemaGenerator.createObjectType({
     name: 'Mutation',
     fields: {
         createNote: {
-            type: graphQlLib.reference('Note'),
+            type: reference('Note'),
             args: {
-                title: graphQlLib.nonNull(graphQlLib.GraphQLString),
-                content: graphQlLib.nonNull(graphQlLib.GraphQLString),
+                title: nonNull(GraphQLString),
+                content: nonNull(GraphQLString),
             },
             resolve: (env) => {
                 // Creates the note and returns it as the result.
             }
         },
         deleteNote: {
-            type: graphQlLib.reference('Note'),
+            type: reference('Note'),
             args: {
-                id: graphQlLib.nonNull(graphQlLib.GraphQLID),
+                id: nonNull(GraphQLID),
             },
             resolve: (env) => {
                 // Removes the note and returns it as the result.
@@ -81,14 +96,14 @@ Here, we use arguments for the `createNote` and `deleteNote` fields, and we also
 In general, if a field name matches the corresponding property in the source object and the value should be returned as-is, the `resolve` function can be omitted.
 
 Also, notice how we reference the `Note` object in these fields.
-To specify the field type, we use the `graphQlLib.reference` function, one of the type helpers described in the https://developer.enonic.com/docs/graphql-library[GraphQL Library documentation].
+To specify the field type, we use the `reference` function, one of the type helpers described in the https://developer.enonic.com/docs/graphql-library[GraphQL Library documentation].
 
-NOTE: You could also directly use the `noteType` variable, which was initialized when creating the `Note` type. However, using `graphQlLib.reference` is preferred, especially for larger schemas.
+NOTE: You could also directly use the `noteType` variable, which was initialized when creating the `Note` type. However, using `reference` is preferred, especially for larger schemas.
 
 Now, let’s see how the `rootMutationType` is used when creating the schema:
 
-.src/main/resources/apis/graphql/schema.js
-[source,js]
+.src/main/resources/apis/graphql/schema.ts
+[source,ts]
 ----
 const graphQLSchema = schemaGenerator.createSchema({
     query: rootQueryType, // <1>
@@ -104,12 +119,12 @@ const graphQLSchema = schemaGenerator.createSchema({
 NOTE: `dictionary` is also necessary to ensure that objects referenced via `reference` are properly resolved and included in the schema.
 
 
-Here is the complete example implementation of schema.js. You can also see the implementation of the `getNote` and `getNotes` fields for the root `Query` type, which we omitted earlier since their implementation follows the same approach as the fields described in this section.
+Here is the complete example implementation of schema.ts. You can also see the implementation of the `getNote` and `getNotes` fields for the root `Query` type, which we omitted earlier since their implementation follows the same approach as the fields described in this section.
 
-./src/main/resources/apis/graphql/schema.js
-[source,js]
+./src/main/resources/apis/graphql/schema.ts
+[source,ts]
 ----
-include::{sourcedir}/samples/mutation-schema.js[]
+include::{sourcedir}/samples/mutation-schema.ts[]
 ----
 
 NOTE: For simplicity, we use a plain JavaScript object as our data store. Notes therefore live in the memory of one server: they are lost when the application is redeployed or the sandbox restarts, and they are not shared between nodes in a cluster. A real application would persist them with https://developer.enonic.com/docs/xp/stable/api/lib-content[lib-content] or https://developer.enonic.com/docs/xp/stable/api/lib-node[lib-node] instead.
@@ -146,7 +161,7 @@ Over HTTP they travel in the `variables` property of the request body, which our
 
 [source,bash]
 ----
-curl -X POST "http://localhost:8080/api/com.enonic.app.graphql:graphql" \
+curl -X POST "http://localhost:8080/api/com.example.gqltutorial:graphql" \
   -H "Content-Type: application/json" \
   -d '{"query":"mutation CreateNote($title: String!, $content: String!) { createNote(title: $title, content: $content) { id } }","variables":{"title":"Shopping list","content":"Coffee, milk, bread"}}'
 ----

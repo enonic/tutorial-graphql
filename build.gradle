@@ -1,67 +1,105 @@
 plugins {
-    id 'com.enonic.xp.app'
-    id 'com.github.node-gradle.node' version '7.1.0'
+  id 'com.enonic.xp.app'
+  id 'com.github.node-gradle.node' version '7.1.0'
 }
 
-apply from: "$rootDir/gradle/env.gradle"
-apply from: "$rootDir/gradle/node.gradle"
-
 dependencies {
-    implementation xplibs.api.core
-    implementation xplibs.api.portal
+  include "com.enonic.xp:lib-portal:${xpVersion}"
+  include "com.enonic.xp:lib-event:${xpVersion}"
+  include "com.enonic.xp:lib-websocket:${xpVersion}"
 
-    include xplibs.portal
-    include xplibs.event
-    include xplibs.websocket
+  // https://market.enonic.com/vendors/enonic/graphql-lib
+  include 'com.enonic.lib:lib-graphql:3.0.0'
 
-    include "com.enonic.lib:lib-graphql:3.0.0"
-    include "com.enonic.lib:lib-mustache:3.0.0-B1"
-    include "com.enonic.lib:lib-static:3.0.0"
-    include "com.enonic.lib:lib-router:4.0.0"
+  // https://market.enonic.com/vendors/enonic/mustache-lib
+  include 'com.enonic.lib:lib-mustache:3.0.0'
+
+  // https://market.enonic.com/vendors/enonic/static-asset-lib
+  include 'com.enonic.lib:lib-static:3.0.0'
+
+  // https://market.enonic.com/vendors/enonic/router-lib
+  include 'com.enonic.lib:lib-router:4.0.0'
 }
 
 repositories {
-    mavenLocal()
-    mavenCentral()
-    xp.enonicRepo( 'dev' )
+  mavenLocal()
+  mavenCentral()
+  xp.enonicRepo()
 }
 
 node {
-    version = '24.15.0'
-    download = true
+  // Whether to download and install a specific Node.js version or not
+  // If false, it will use the globally installed Node.js
+  // If true, it will download node using above parameters
+  // Note that npm is bundled with Node.js
+  download = true
+
+  // Version of node to download and install (only used if download is true)
+  // It will be unpacked in the workDir
+  version = '24.11.0'
 }
 
-tasks.register( 'lint', NpmTask ) {
-    group 'verification'
-    dependsOn( npmInstall )
-    args = ['run', 'lint:quiet']
-    inputs.files fileTree( dir: 'src', include: '**/*.ts' )
+processResources {
+  exclude '**/.gitkeep'
+  exclude '**/*.json'
+  exclude '**/*.ts'
+  exclude '**/*.tsx'
+  exclude '**/*.less'
 }
 
-tasks.register( 'webpack', NpmTask ) {
-    dependsOn( npmInstall )
-    environment = ['NODE_ENV': nodeEnvironment()]
-    description = 'Build UI resources (ts, css, etc).'
-    args = ['run', 'build']
-    inputs.dir "src/main"
-    inputs.file 'webpack.config.js'
-    outputs.dir layout.buildDirectory.dir( "resources/main" )
+tasks.register('npmBuild', NpmTask) {
+  args = [
+    'run',
+    '--silent',
+    'build'
+  ]
+  dependsOn npmInstall
+  environment = [
+    'FORCE_COLOR': 'true',
+    'LOG_LEVEL_FROM_GRADLE': gradle.startParameter.logLevel.toString(),
+    'NODE_ENV': project.hasProperty('dev') || project.hasProperty('development') ? 'development' : 'production'
+  ]
+  inputs.dir 'src/main/resources'
+  inputs.file 'tsdown.config.ts'
+  outputs.dir 'build/resources/main'
+  outputs.upToDateWhen { false }
 }
 
-check.dependsOn( lint )
+jar.dependsOn npmBuild
+
+tasks.register('npmCheck', NpmTask) {
+  dependsOn npmInstall
+  args = [
+    'run',
+    'check'
+  ]
+  environment = [
+    'FORCE_COLOR': 'true',
+  ]
+}
+
+check.dependsOn npmCheck
+
+tasks.register('npmTest', NpmTask) {
+  args = [
+    'run',
+    'test'
+  ]
+  dependsOn npmInstall
+  environment = [
+    'FORCE_COLOR': 'true',
+  ]
+  inputs.dir 'src/jest'
+  outputs.dir 'coverage'
+  outputs.upToDateWhen { false }
+}
+
+test.dependsOn npmTest
+
+tasks.withType(Copy).configureEach {
+  includeEmptyDirs = false
+}
 
 jar {
-    exclude 'assets/**/*.tsx'
-    exclude 'assets/**/*.less'
-    exclude 'assets/styles/graphiql.min.css'
-    exclude 'assets/**/styles/*.js'
-
-    if ( isProd() )
-    {
-        exclude 'assets/**/*.map'
-    }
-
-    outputs.dir layout.buildDirectory.dir( "resources/main" )
-
-    dependsOn( webpack )
+  outputs.dir layout.buildDirectory.dir( "resources/main" )
 }

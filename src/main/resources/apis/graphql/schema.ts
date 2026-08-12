@@ -1,25 +1,40 @@
-const graphQlLib = require('/lib/graphql');
-const graphQlRxLib = require('/lib/graphql-rx');
-const eventLib = require('/lib/xp/event');
+import {
+    GraphQLID,
+    GraphQLString,
+    Json,
+    list,
+    newSchemaGenerator,
+    nonNull,
+    reference
+} from '/lib/graphql';
+import {createPublishProcessor} from '/lib/graphql-rx';
+import {listener, send} from '/lib/xp/event';
 
-const schemaGenerator = graphQlLib.newSchemaGenerator();
+const schemaGenerator = newSchemaGenerator();
 
-const storage = {};
+interface Note {
+    id: string;
+    title: string;
+    content: string;
+    createdAt: string;
+}
+
+const storage: Record<string, Note> = {};
 
 const noteType = schemaGenerator.createObjectType({
     name: 'Note',
     fields: {
         id: {
-            type: graphQlLib.nonNull(graphQlLib.GraphQLID),
+            type: nonNull(GraphQLID),
         },
         title: {
-            type: graphQlLib.nonNull(graphQlLib.GraphQLString),
+            type: nonNull(GraphQLString),
         },
         content: {
-            type: graphQlLib.GraphQLString,
+            type: GraphQLString,
         },
         createdAt: {
-            type: graphQlLib.nonNull(graphQlLib.GraphQLString)
+            type: nonNull(GraphQLString)
         }
     }
 });
@@ -28,38 +43,26 @@ const rootQueryType = schemaGenerator.createObjectType({
     name: 'Query',
     fields: {
         serverTime: {
-            type: graphQlLib.GraphQLString,
-            resolve: (env) => {
-                return new Date().toISOString();
-            }
+            type: GraphQLString,
+            resolve: () => new Date().toISOString()
         },
         getNote: {
-            type: graphQlLib.reference('Note'),
+            type: reference('Note'),
             args: {
-                id: graphQlLib.nonNull(graphQlLib.GraphQLID),
+                id: nonNull(GraphQLID),
             },
-            resolve: (env) => {
-                return storage[env.args.id];
-            },
+            resolve: (env) => storage[(env.args as {id: string}).id],
         },
         getNotes: {
-            type: graphQlLib.list(graphQlLib.reference('Note')),
-            resolve: (env) => {
-                const result = [];
-                for (let key in storage) {
-                    if (storage.hasOwnProperty(key)) {
-                        result.push(storage[key]);
-                    }
-                }
-                return result;
-            }
+            type: list(reference('Note')),
+            resolve: () => Object.keys(storage).map((key) => storage[key])
         }
     },
 });
 
-const noteProcessor = graphQlRxLib.createPublishProcessor();
+const noteProcessor = createPublishProcessor();
 
-eventLib.listener({
+listener({
     type: 'custom.note.*',
     callback: (event) => {
         noteProcessor.onNext(event);
@@ -70,7 +73,7 @@ const rootSubscriptionType = schemaGenerator.createObjectType({
     name: 'Subscription',
     fields: {
         event: {
-            type: graphQlLib.Json,
+            type: Json,
             resolve: () => noteProcessor,
         }
     }
@@ -80,21 +83,22 @@ const rootMutationType = schemaGenerator.createObjectType({
     name: 'Mutation',
     fields: {
         createNote: {
-            type: graphQlLib.reference('Note'),
+            type: reference('Note'),
             args: {
-                title: graphQlLib.nonNull(graphQlLib.GraphQLString),
-                content: graphQlLib.nonNull(graphQlLib.GraphQLString),
+                title: nonNull(GraphQLString),
+                content: nonNull(GraphQLString),
             },
             resolve: (env) => {
-                const note = {
+                const args = env.args as {title: string; content: string};
+                const note: Note = {
                     id: Math.random().toString(36).substring(2, 15),
-                    title: env.args.title,
-                    content: env.args.content,
+                    title: args.title,
+                    content: args.content,
                     createdAt: new Date().toISOString(),
                 };
                 storage[note.id] = note;
 
-                eventLib.send({
+                send({
                     type: 'note.created',
                     distributed: true,
                     data: {
@@ -106,16 +110,16 @@ const rootMutationType = schemaGenerator.createObjectType({
             }
         },
         deleteNote: {
-            type: graphQlLib.reference('Note'),
+            type: reference('Note'),
             args: {
-                id: graphQlLib.nonNull(graphQlLib.GraphQLID),
+                id: nonNull(GraphQLID),
             },
             resolve: (env) => {
-                const id = env.args.id;
+                const id = (env.args as {id: string}).id;
                 const note = storage[id];
                 delete storage[id];
 
-                eventLib.send({
+                send({
                     type: 'note.deleted',
                     distributed: true,
                     data: {
@@ -136,4 +140,4 @@ const graphQLSchema = schemaGenerator.createSchema({
     dictionary: [noteType]
 });
 
-module.exports = graphQLSchema;
+export default graphQLSchema;
