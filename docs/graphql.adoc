@@ -193,6 +193,11 @@ As a result of executing this command, you should see a response similar to the 
 
 Great! We now have a working example of a simple GraphQL API.
 
+The endpoint is an ordinary HTTP POST endpoint that takes a GraphQL request body, so any GraphQL client works against it — Postman, Insomnia, Altair, a standalone GraphiQL, or an IDE plugin.
+This tutorial uses cURL so every step can be verified from a terminal.
+
+TIP: Clients that offer schema autocompletion get it through GraphQL introspection, which the library supports out of the box. Nothing needs enabling for a client to discover the types and fields you define.
+
 == Handling errors
 
 Not every request succeeds, and GraphQL reports failures in the response body rather than through the HTTP status code.
@@ -227,4 +232,4 @@ The completed application also guards the request itself, returning `400` with a
 
 == Coming up
 
-In the next chapter you'll add a <<graphiql#, GraphiQL playground>> so you can explore the schema in the browser instead of through cURL.
+In the next chapter you'll extend the schema with <<mutations#, mutations>> so clients can change data, not just read it.

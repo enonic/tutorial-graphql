@@ -6,26 +6,27 @@
 
 On this page, we will explore how to add `Subscriptions`, which enable receiving real-time updates from a GraphQL server using long-lived requests.
 
-We will use the official `graphql-transport-ws` protocol from the GraphQL Foundation, as defined in the https://github.com/graphql/graphql-over-http/blob/main/rfcs/GraphQLOverWebSocket.md[GraphQL over WebSocket specification].
-We choose a WebSocket because our client is GraphiQL, and standard GraphQL clients speak this protocol.
-An API can serve subscriptions over https://developer.enonic.com/docs/code/stable/web/sse[SSE] instead when the consumer is your own code rather than a standard client, which needs less machinery than the handshake below.
-The `/lib/graphql-rx` page of the https://developer.enonic.com/docs/graphql-library[GraphQL Library documentation] shows that variant.
+A subscription differs from a query in what the engine gives back.
+Where a query resolves to a value, a subscription resolves to a *publisher* that emits a result every time something happens.
+GraphQL itself says nothing about how those results reach the client — that is the transport's job, and XP offers two: https://developer.enonic.com/docs/code/stable/web/sse[SSE] and https://developer.enonic.com/docs/code/stable/web/websocket[WebSocket].
+
+We will use SSE. It is a plain HTTP GET that stays open, so it needs no handshake and can be watched with cURL.
 
 To achieve this, we need to:
 
-1. Add the necessary libraries for working with WebSockets and Events provided by the Enonic Platform.
+1. Add the necessary libraries for events and SSE provided by the Enonic Platform.
 2. Create a GraphQL Subscription type and add it to our GraphQL schema.
-3. Add WebSocket support to our API.
+3. Stream the subscription results from the API.
 
 == Root Subscription GraphQL type
 
-First of all, we should add the `lib-websocket` and the `lib-event` dependencies to the `build.gradle` file.
+First of all, we should add the `lib-event` and the `lib-sse` dependencies to the `build.gradle` file.
 
 .build.gradle
 [source,kotlin]
 ----
 include "com.enonic.xp:lib-event:${xpVersion}"
-include "com.enonic.xp:lib-websocket:${xpVersion}"
+include "com.enonic.xp:lib-sse:${xpVersion}"
 ----
 
 Creating a `Subscription` type is no different from creating a regular GraphQL Object type. In our example, for simplicity, we will use a field called `event` with the type `Json`.
@@ -38,7 +39,7 @@ const rootSubscriptionType = schemaGenerator.createObjectType({
     fields: {
         event: {
             type: Json,
-            resolve: (env) => {
+            resolve: () => {
                 // Implementation
             },
         }
@@ -126,241 +127,141 @@ send({
 
 The GraphQL part is ready.
 
-== Extend GraphQL API
+== Stream the results
 
-Now we need to add https://developer.enonic.com/docs/code/stable/web/websocket[WebSocket] support to the controller of our GraphQL API.
+An SSE stream is opened by returning an `sse` object from a `GET` handler.
+Our API already exports `POST` for queries and mutations; `GET` becomes the subscription stream, and XP picks the handler by request method.
 
-To do this, we need to:
-
-- Add an endpoint that will handle HTTP WebSocket requests
-- Add a WebSocket event listener
-- Generate a WebSocket URL and configure the WebSocket client for the GraphQL fetcher
-
-We will add an events endpoint to our controller as follows:
+The subscription document arrives as a query parameter, and we store it in `attributes` — per-connection state that XP hands back on every event for that connection:
 
 ./src/main/resources/apis/graphql/graphql.ts
 [source,ts]
 ----
-router.get('/events', (req) => {
-    if (!req.webSocket) {
+import {send} from '/lib/xp/sse';
+
+interface StreamAttributes {
+    query: string;
+}
+
+export function GET(req: Request): Response {
+    const query = req.params.query;
+
+    if (!query) {
         return {
-            status: 404
+            status: 400,
+            contentType: 'application/json',
+            body: {
+                errors: [{message: 'Missing `query` parameter.'}]
+            },
         };
     }
+
     return {
-        webSocket: {
-            subProtocols: ['graphql-transport-ws']
+        sse: {
+            attributes: {query: query}, // <1>
+            retry: 5000, // <2>
         }
     };
-});
+}
 ----
 
-and add a WebSocket event handler:
+<1> Carries the subscription document to the `sseEvent` handler. The handler receives no request, so without this there would be no way to know what the client asked for — short of keeping a map of connections, which is the bookkeeping we want to avoid.
+<2> How long the client should wait before reconnecting, in milliseconds.
+
+Opening the stream does not run the subscription. That happens when XP fires the `open` event, which is also where we get the `clientId` needed to send anything back:
 
 ./src/main/resources/apis/graphql/graphql.ts
 [source,ts]
 ----
-interface WebSocketEvent {
-    type: string;
-    message?: string;
-    session: {id: string};
-}
+const subscribers: Record<string, Subscriber> = {};
 
-interface SubscribeMessage {
-    type: string;
-    id: string;
-    payload: {query: string; variables?: unknown};
-}
-
-export function webSocketEvent(socketEvent: WebSocketEvent): void {
-    if (!socketEvent) {
+export function sseEvent(event: SseEvent<StreamAttributes>): void {
+    if (event.type === 'open') {
+        openSubscription(event.clientId, event.attributes as StreamAttributes);
         return;
     }
 
-    if (socketEvent.type === 'close') { // <1>
-        cancelSessionSubscriptions(socketEvent.session.id);
-        return;
-    }
-
-    if (socketEvent.type === 'message') {
-        const message = JSON.parse(socketEvent.message as string) as SubscribeMessage;
-        const sessionId = socketEvent.session.id;
-        if (message.type === 'connection_init') {
-            webSocketSend(sessionId, JSON.stringify({
-                type: 'connection_ack'
-            }));
-        } else if (message.type === 'subscribe') {
-            handleSubscribeMessage(sessionId, message);
-        } else if (message.type === 'complete') {
-            cancelSubscription(sessionId, message.id); // <2>
-        } else {
-            log.debug(`Unknown message type ${message.type}`);
-        }
+    if (event.type === 'close') { // <1>
+        cancelSubscription(event.clientId);
     }
 }
-----
 
-<1> A client that simply goes away never sends `complete`, so the `close` event is what stops its subscriptions. Without this, every closed browser tab leaves a live subscription behind.
-<2> A single socket can run several operations at once, each with its own `id`, so cancelling takes the operation id as well as the session.
+function openSubscription(clientId: string, attributes: StreamAttributes): void {
+    const result = execute(graphQLSchema, attributes.query);
+    const publisher = result.data as Publisher | undefined; // <2>
 
-Let's take a look at the implementation of the `handleSubscribeMessage` function, which handles messages of type `subscribe`.
-Within this function, a GraphQL query is executed. For a subscription, its `data` property is a reactive `Publisher` (an `org.reactivestreams.Publisher`) that exposes a `subscribe` method.
-We detect a subscription result by checking for that `subscribe` method, and then register a subscriber.
-
-./src/main/resources/apis/graphql/graphql.ts
-[source,ts]
-----
-import type {Subscriber} from '/lib/graphql-rx';
-
-const graphQlSubscribers: Record<string, Subscriber> = {};
-
-function subscriberKey(sessionId: string, operationId: string): string {
-    return `${sessionId}|${operationId}`;
-}
-
-function handleSubscribeMessage(sessionId: string, message: SubscribeMessage): void {
-    const payload = message.payload;
-
-    const result = execute(graphQLSchema, payload.query, payload.variables);
-    const data = result.data as {subscribe?: (subscriber: Subscriber) => void} | undefined; // <1>
-
-    if (data && typeof data.subscribe === 'function') {
-        cancelSubscription(sessionId, message.id); // <2>
-
-        const subscriber = createSubscriber({
-            onNext: (event) => {
-                webSocketSend(sessionId, JSON.stringify({
-                    type: 'next',
-                    id: message.id,
-                    payload: event,
-                }));
-            }
+    if (!publisher || typeof publisher.subscribe !== 'function') {
+        send({
+            clientId: clientId,
+            message: {event: 'error', data: JSON.stringify(result)}
         });
-        graphQlSubscribers[subscriberKey(sessionId, message.id)] = subscriber;
-        data.subscribe(subscriber);
+        return;
     }
+
+    const subscriber = createSubscriber({
+        onNext: (executionResult) => { // <3>
+            send({
+                clientId: clientId,
+                message: {event: 'next', data: JSON.stringify(executionResult)}
+            });
+        }
+    });
+
+    subscribers[clientId] = subscriber;
+    publisher.subscribe(subscriber);
 }
-----
 
-<1> `execute()` types `data` as the result of any operation, so we narrow it before checking for `subscribe`.
-<2> Cancels anything already running under the same operation id, so a client that re-subscribes does not leave the previous subscriber delivering in the background.
-
-where `subscriber` sends the data to the client via WebSocket in the format expected by the https://github.com/graphql/graphql-over-http/blob/main/rfcs/GraphQLOverWebSocket.md#next[GraphQL over WebSocket protocol].
-
-When an operation completes, and when the socket closes, the subscriptions must be cancelled.
-Cancelling releases the subscriber so the processor stops delivering to a client that is no longer listening:
-
-./src/main/resources/apis/graphql/graphql.ts
-[source,ts]
-----
-function cancelSubscription(sessionId: string, operationId: string): void {
-    const key = subscriberKey(sessionId, operationId);
-    const subscriber = graphQlSubscribers[key];
+function cancelSubscription(clientId: string): void {
+    const subscriber = subscribers[clientId];
     if (subscriber) {
-        delete graphQlSubscribers[key];
+        delete subscribers[clientId];
         subscriber.cancelSubscription();
     }
 }
-
-function cancelSessionSubscriptions(sessionId: string): void {
-    const prefix = `${sessionId}|`;
-    Object.keys(graphQlSubscribers)
-        .filter((key) => key.indexOf(prefix) === 0)
-        .forEach((key) => {
-            const subscriber = graphQlSubscribers[key];
-            delete graphQlSubscribers[key];
-            subscriber.cancelSubscription();
-        });
-}
 ----
 
-As the final step, we need to generate a URL for the events API and assign it to the dataFetcher.
+<1> `close` is terminal and fires after `timeout` and `error` as well, so it is the one place a subscription needs cancelling. Without it, a client that simply goes away leaves the processor delivering to nobody.
+<2> For a subscription, `execute()` returns a publisher as `data` instead of a result object. A query or mutation sent to this endpoint would not, which is what the check below reports.
+<3> Each event is a complete execution result — the same shape a query returns — so a client parses it the same way.
 
-./src/main/resources/apis/graphql/graphql.ts
-[source,ts]
+== Test the subscription
+
+Open the stream in one terminal. cURL's `-N` disables buffering so events appear as they arrive, and `--data-urlencode` saves us encoding the document by hand:
+
+[source,bash]
 ----
-router.get('/?', () => {
-    const view = resolve('graphql.html');
-
-    const handlerUrl = apiUrl({
-        api: 'graphql'
-    });
-
-    const eventsUrl = apiUrl({ // <1>
-        api: 'graphql',
-        type: 'websocket'
-    });
-
-    const params = {
-        handlerUrl: handlerUrl,
-        eventsUrl: `${eventsUrl}/events`, // <2>
-        playgroundCss: `${handlerUrl}/_static/style.css`,
-        playgroundScript: `${handlerUrl}/_static/js/playground.mjs`,
-    };
-
-    return {
-        status: 200,
-        contentType: 'text/html',
-        body: render(view, params)
-    };
-});
+curl -N --get "http://localhost:8080/api/com.example.gqltutorial:graphql" \
+  --data-urlencode 'query=subscription { event }'
 ----
 
-<1> Generates Events API URL
-<2> Passes the `eventsUrl` to the rendering
+The connection stays open with no output yet. In a second terminal, create a note:
 
-./src/main/resources/apis/graphql/graphql.html
-[source,html]
+[source,bash]
 ----
-<div id="graphiql-container-wrapper" data-config-handler-url="{{handlerUrl}}" data-config-events-url="{{eventsUrl}}"></div>
-----
-
-.src/main/resources/static/js/playground.tsx
-[source,ts]
-----
-const eventsUrl = container.dataset.configEventsUrl; // <1>
-
-if (!handlerUrl || !eventsUrl) {
-    throw new Error('Missing data-config-handler-url or data-config-events-url');
-}
-
-const fetcher = createGraphiQLFetcher({
-    url: handlerUrl,
-    wsClient: createClient({ // <2>
-        url: eventsUrl, // <3>
-    }),
-});
+curl -X POST "http://localhost:8080/api/com.example.gqltutorial:graphql" \
+  -H "Content-Type: application/json" \
+  -d '{"query":"mutation { createNote(title: \"My Note\", content: \"Brief content\") { id } }"}'
 ----
 
-<1> Read the WebSocket endpoint from the `data-config-events-url` attribute on the container element.
-<2> Create a WebSocket client for handling GraphQL subscriptions.
-<3> Point that client at the events endpoint.
+The first terminal receives an event:
 
-The guard matters: `dataset` returns `undefined` for an attribute that is not there, and the fetcher requires a URL.
-Failing here with a clear message beats letting an `undefined` URL surface later as a confusing connection error.
+[source]
+----
+retry:5000
 
-Now everything is ready — after deploying the changes, subscriptions should be available in our GraphQL schema.
+event:next
+data:{"data":{"event":{"type":"custom.note.created","timestamp":1752491906282,"localOrigin":true,"distributed":true,"data":{"note":{"id":"2g6inpt0ybexu","title":"My Note","content":"Brief content","createdAt":"2026-08-13T11:18:26.281Z"}}}}}
+----
 
-In this screenshot, you can see that the Subscriptions have been successfully added to the GraphQL schema. To execute a `subscription`, you need to set the `operationName` to `subscription` and specify the field to return the result — in our case, it is `event`.
+Delete a note and a second event arrives. Stop the stream with kbd:[Ctrl+C]; the `close` event fires and the subscription is cancelled server-side.
 
-image::subscription-before-run.png["Query Playground - Subscription before run", width="1024px"]
-
-After executing the request, you should see a spinner - this indicates that the long-lived request was successfully sent. In the browser's developer tools under the Network tab, for the GET request to `ws://localhost:8080/api/com.example.gqltutorial:graphql/events`, you can also verify that the connection between the client and server was successfully established and that a `subscribe` message was received.
-
-image::subscription-running.png["Query Playground - Subscription is running", width="1024px"]
-
-Now we can, for example, create a new note to receive a new event for the subscription, as shown in the screenshot below.
-
-image::subscription-got-message.png["Query Playground - Subscription got a message", width="1024px"]
-
-NOTE: To execute a note creation or deletion request in GraphiQL while a Subscription request is running, perform it in a separate browser tab — otherwise, the current Subscription request will be terminated.
-
+NOTE: Standard GraphQL clients subscribe over a WebSocket using the `graphql-transport-ws` protocol rather than over SSE, because it lets one connection carry several operations chosen by the client. The `+/lib/graphql-rx+` page of the https://developer.enonic.com/docs/graphql-library[GraphQL Library documentation] covers that variant. The schema side is identical — only the transport changes.
 
 That's it! In this chapter, we explored how to add Subscriptions and subscribe to real-time events using the capabilities of the Enonic Platform.
 
 == Where to go next
 
-You now have a complete GraphQL API: a schema with queries, mutations and subscriptions, served from a universal API, with a GraphiQL playground in front of it.
+You now have a complete GraphQL API: a schema with queries, mutations and subscriptions, served over HTTP from a universal API.
 
 Before building anything real on top of it, revisit the shortcuts this tutorial took:
 

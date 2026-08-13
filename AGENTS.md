@@ -4,7 +4,7 @@ This repository contains the hands-on Enonic GraphQL tutorial and the working En
 
 ## Scope and Audience
 
-The tutorial teaches developers how to build a custom GraphQL API on Enonic XP with `lib-graphql`, expose it through an XP API, add a GraphiQL client, and implement mutations and subscriptions. It is primarily aimed at Enonic developers, but should remain understandable to developers who know JavaScript or GraphQL and are new to XP.
+The tutorial teaches developers how to build a custom GraphQL API on Enonic XP with `lib-graphql`, expose it through an XP universal API, and implement mutations and subscriptions. It is primarily aimed at Enonic developers, but should remain understandable to developers who know JavaScript or GraphQL and are new to XP.
 
 This repository does **not** document Guillotine, Enonic's ready-made headless GraphQL API for CMS content. Keep the distinction between a custom API built with `lib-graphql` and a Guillotine content API explicit.
 
@@ -13,10 +13,10 @@ This repository does **not** document Guillotine, Enonic's ready-made headless G
 This is a combined tutorial and sample application:
 
 * `docs/` contains the AsciiDoc tutorial published on Enonic's developer portal.
-* `src/main/resources/` contains the completed XP application, including its API implementation and browser assets.
+* `src/main/resources/` contains the completed XP application. It is server-side only — there is no client-side code.
 * `samples/` contains intermediate code used by tutorial chapters before the application reaches its final state.
 
-The tutorial is a sequential story whose navigation is defined by `docs/menu.json`: environment setup, application creation, the first GraphQL query, GraphiQL, mutations, and subscriptions.
+The tutorial is a sequential story whose navigation is defined by `docs/menu.json`: environment setup, application creation, the first GraphQL query, mutations, and subscriptions.
 
 The library's own API reference is **not** maintained here. It lives in the `lib-graphql` repository and is published at https://developer.enonic.com/docs/graphql-library. Link to it instead of restating function signatures in the tutorial.
 
@@ -40,7 +40,7 @@ When referring to separately documented products or libraries, give enough local
 * **Guillotine:** Enonic's headless GraphQL API for querying CMS content. Mention it only when relevant and do not present it as the library or custom API built by this tutorial.
 * **Enonic XP:** Link to the XP documentation for platform APIs, application structure, API descriptors, WebSockets, events, deployment, and other lower-level concerns.
 * **Enonic CLI:** Link to its documentation for sandbox, project, build, and deployment commands.
-* **GraphQL and GraphiQL:** Link to their official documentation for general protocol, schema-language, IDE, and client behavior; keep this tutorial focused on the Enonic integration.
+* **GraphQL:** Link to the official documentation for general protocol and schema-language behaviour; keep this tutorial focused on the Enonic integration. The tutorial does not build or teach a UI — client tooling is mentioned only in passing.
 
 Do not force links to open in a new tab. Avoid the AsciiDoc `^` suffix on link labels.
 
@@ -48,21 +48,21 @@ Do not force links to open in a new tab. Avoid the AsciiDoc `^` suffix on link l
 
 The application is teaching material first. Prefer clear, compact implementations that demonstrate the concept at hand while remaining correct and secure enough for the stated scope.
 
-* XP server code lives in `src/main/resources/apis/graphql/`. `graphql.yaml` is the XP 8 API descriptor, `graphql.js` handles HTTP and WebSocket traffic, and `schema.js` defines the GraphQL schema.
-* Browser code lives in `src/main/resources/assets/`. TypeScript/React and Less are bundled by Webpack into `build/resources/main/assets/`.
-* XP server-side JavaScript runs in the XP runtime and uses CommonJS (`require`, `module.exports`, and exported XP handlers). Do not replace it with browser or Node-only APIs.
+* XP server code lives in `src/main/resources/apis/graphql/`. `graphql.yaml` is the XP 8 API descriptor, `graphql.ts` handles the HTTP and SSE endpoints, and `schema.ts` defines the GraphQL schema. Both are TypeScript, bundled by tsdown.
+* Declarations for libraries that publish no `@enonic-types` package are maintained in `src/main/resources/types/` and wired up through `paths` in `src/main/resources/tsconfig.json`. Keep them in step with the versions in `build.gradle`.
+* Server code is TypeScript compiled to CommonJS for the XP runtime. Import XP libraries by their runtime path (`+/lib/xp/sse+`, `+/lib/graphql+`) and export handlers named after the HTTP method. Do not introduce browser or Node-only APIs.
 * Keep the API's declared access and mounts in `graphql.yaml` aligned with the URLs and security claims in the tutorial.
 * The final schema intentionally uses in-memory storage to keep the mutation example small. Do not describe it as persistent or production-ready.
-* Subscriptions use XP events, WebSockets, `lib-graphql-rx`, and the `graphql-transport-ws` protocol. Changes across the schema, controller, GraphiQL fetcher, HTML data attributes, and subscription chapter must remain coordinated.
+* Subscriptions use XP events, `lib-graphql-rx`, and SSE. A subscription is executed on the SSE `open` event and cancelled on `close`; the subscription document is carried from the `GET` handler to that event through `sse.attributes`. Changes across the schema, controller, and subscription chapter must remain coordinated.
 * Keep dependency versions aligned across `build.gradle`, `package.json`, `package-lock.json`, and documentation examples. Documentation may use an explicit `<version>` placeholder when teaching dependency setup, but surrounding prose must make that clear.
 
 ## Build, Test, and Lint
 
-The Gradle build is the primary validation path and also builds the browser bundle.
+The Gradle build is the primary validation path.
 
-* `./gradlew build` builds and packages the complete XP application, including npm installation, linting, and Webpack assets.
+* `./gradlew build` builds and packages the complete XP application, including npm installation, type-checking, linting and tests.
 * `./gradlew check` runs the configured verification tasks, including TypeScript linting.
-* `npm run build` builds only the browser assets with Webpack.
+* `npm run build` runs tsdown alone; `npm run check` runs type-checking and linting.
 * `npm run lint` runs ESLint over the TypeScript sources.
 * `enonic dev` builds, deploys, and watches the application in the linked local sandbox used by the tutorial.
 
@@ -87,7 +87,7 @@ Because this is a tutorial, sequential steps are numbered in `docs/menu.json` us
 
 * Use `image::filename.ext[alt text, width=...]` for block images stored in `docs/media/`.
 * Use relative cross-document links such as `<<graphql#,GraphQL API>>` so links remain version-aware on the developer portal.
-* Use source blocks with the correct language (`js`, `ts`, `json`, `yaml`, `bash`, `html`, `less`, `kotlin` for Gradle snippets, or `graphql` for operations) and callouts when individual lines need explanation.
+* Use source blocks with the correct language (`js`, `ts`, `json`, `yaml`, `bash`, `html`, `kotlin` for Gradle snippets, or `graphql` for operations) and callouts when individual lines need explanation.
 * Keep `include::{sourcedir}...[]` paths relative to the including document and verify the included file actually represents that point in the tutorial.
 * Do not use the `^` suffix in link labels. Readers should choose whether links open in a new tab.
 * Be careful with underscores in inline AsciiDoc. Outside source blocks, wrap identifiers, paths, or URL patterns containing `_` in single-plus passthrough, for example `+connection_init+`. Combine passthrough with monospace when needed: `` `+connection_init+` ``.

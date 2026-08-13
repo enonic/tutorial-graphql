@@ -4,11 +4,8 @@ import {defineConfig} from 'tsdown';
 
 
 const SRC = 'src/main/resources';
-const SRC_STATIC = `${SRC}/static`;
 const DST = 'build/resources/main';
-const DST_STATIC = `${DST}/static`;
 
-const dev = process.env.NODE_ENV === 'development';
 const logLevel: 'silent' | 'info' = ['QUIET', 'WARN'].includes(process.env.LOG_LEVEL_FROM_GRADLE || '') ? 'silent' : 'info';
 
 // Enonic XP loads each controller/service/task by its resource path, so every
@@ -21,34 +18,13 @@ function entries(dir: string, exts: string, ignore: string[] = []): Record<strin
   );
 }
 
-const serverEntry = entries(SRC, '{ts,js}', [`${SRC_STATIC}/**`, `${SRC}/types/**`]);
-
-// Monaco's language services run in web workers. Rolldown leaves the bare
-// specifiers in `new Worker(new URL(...))` untouched, so each worker is built
-// as its own entry and referenced by relative URL from playground.tsx.
-const staticEntry = {
-  ...entries(SRC_STATIC, '{tsx,ts,jsx,js}', [`${SRC_STATIC}/**/*.d.ts`]),
-  'js/editor.worker': 'monaco-editor/esm/vs/editor/editor.worker.js',
-  'js/json.worker': 'monaco-editor/esm/vs/language/json/json.worker.js',
-  'js/graphql.worker': 'monaco-graphql/esm/graphql.worker.js',
-};
+const serverEntry = entries(SRC, '{ts,js}', [`${SRC}/**/*.d.ts`, `${SRC}/types/**`]);
 
 // XP runtime libraries are provided by the platform — never bundle them.
 const xpExternal = [
-  '/lib/cache',
-  '/lib/enonic/static',
-  /^\/lib\/guillotine/,
   '/lib/graphql',
   '/lib/graphql-connection',
   '/lib/graphql-rx',
-  '/lib/http-client',
-  '/lib/license',
-  '/lib/mustache',
-  '/lib/router',
-  '/lib/util',
-  '/lib/vanilla',
-  '/lib/text-encoding',
-  '/lib/thymeleaf',
   /^\/lib\/xp\//,
 ];
 
@@ -74,13 +50,13 @@ const nashornEs5 = {
 };
 
 export default defineConfig([
-  ...(Object.keys(serverEntry).length ? [{
+  {
     entry: serverEntry,
     outDir: DST,
     format: 'cjs' as const,
     target: 'es2015', // Rolldown/oxc floor; nashornEs5 plugin re-lowers to es5 for Nashorn
     platform: 'neutral' as const,
-    clean: false, // outDir also holds Gradle-copied resources + the static/ subfolder
+    clean: false, // outDir also holds Gradle-copied resources
     dts: false, // d.ts files are useless at runtime
     minify: false, // minifying server files makes debugging harder
     sourcemap: false,
@@ -96,19 +72,5 @@ export default defineConfig([
     outputOptions: {
       chunkFileNames: '_chunks/[name]-[hash].js', // avoid chunk-name collisions
     },
-  }] : []),
-  ...(Object.keys(staticEntry).length ? [{
-    entry: staticEntry,
-    outDir: DST_STATIC,
-    format: 'esm' as const,
-    target: 'es2020',
-    platform: 'browser' as const,
-    clean: false,
-    dts: false,
-    minify: !dev,
-    sourcemap: !dev,
-    logLevel,
-    deps: {alwaysBundle: [/.*/]}, // the browser bundle must be self-contained
-    tsconfig: `${SRC_STATIC}/tsconfig.json`,
-  }] : []),
+  },
 ]);

@@ -53,7 +53,7 @@ gradle.properties <10>
 ----
 
 <1> Server-side APIs. Empty for now — this is where the GraphQL API goes.
-<2> The starter's example client-side file. We will not use this folder; the API serves its files from `static/` instead, for reasons covered in the <<graphiql#, GraphiQL chapter>>.
+<2> The starter's example client-side file. This guide builds a server-side API only, so we will not use this folder.
 <3> Runs when the application loads. Not needed for this guide.
 <4> Application descriptor
 <5> TypeScript configuration for the server-side code

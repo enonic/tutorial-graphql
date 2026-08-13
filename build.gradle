@@ -4,21 +4,11 @@ plugins {
 }
 
 dependencies {
-  include "com.enonic.xp:lib-portal:${xpVersion}"
   include "com.enonic.xp:lib-event:${xpVersion}"
-  include "com.enonic.xp:lib-websocket:${xpVersion}"
+  include "com.enonic.xp:lib-sse:${xpVersion}"
 
   // https://market.enonic.com/vendors/enonic/graphql-lib
   include 'com.enonic.lib:lib-graphql:3.0.0'
-
-  // https://market.enonic.com/vendors/enonic/mustache-lib
-  include 'com.enonic.lib:lib-mustache:3.0.0'
-
-  // https://market.enonic.com/vendors/enonic/static-asset-lib
-  include 'com.enonic.lib:lib-static:3.0.0'
-
-  // https://market.enonic.com/vendors/enonic/router-lib
-  include 'com.enonic.lib:lib-router:4.0.0'
 }
 
 repositories {
@@ -44,7 +34,6 @@ processResources {
   exclude '**/*.json'
   exclude '**/*.ts'
   exclude '**/*.tsx'
-  exclude '**/*.less'
 }
 
 tasks.register('npmBuild', NpmTask) {

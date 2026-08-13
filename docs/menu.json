@@ -13,15 +13,11 @@
         "document": "graphql"
       },
       {
-        "title": "4 - GraphiQL",
-        "document": "graphiql"
-      },
-      {
-        "title": "5 - Mutations",
+        "title": "4 - Mutations",
         "document": "mutations"
       },
       {
-        "title": "6 - Subscriptions",
+        "title": "5 - Subscriptions",
         "document": "subscriptions"
       }
     ]

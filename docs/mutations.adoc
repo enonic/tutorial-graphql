@@ -129,9 +129,36 @@ include::{sourcedir}/samples/mutation-schema.ts[]
 
 NOTE: For simplicity, we use a plain JavaScript object as our data store. Notes therefore live in the memory of one server: they are lost when the application is redeployed or the sandbox restarts, and they are not shared between nodes in a cluster. A real application would persist them with https://developer.enonic.com/docs/xp/stable/api/lib-content[lib-content] or https://developer.enonic.com/docs/xp/stable/api/lib-node[lib-node] instead.
 
-The image below shows the result of a `createNote` mutation executed in the GraphiQL UI.
+Mutations travel over the same endpoint as queries — they are sent in the `query` property of the request body, exactly like a query:
 
-image::mutation-playground.png["Query Playground in action", width="1024px"]
+[source,bash]
+----
+curl -X POST "http://localhost:8080/api/com.example.gqltutorial:graphql" \
+  -H "Content-Type: application/json" \
+  -d '{"query":"mutation { createNote(title: \"My Note\", content: \"Brief content\") { id title createdAt } }"}'
+----
+
+[source,json]
+----
+{
+   "data":{
+      "createNote":{
+         "id":"4oj8mwaojlc9z",
+         "title":"My Note",
+         "createdAt":"2026-08-13T11:06:29.426Z"
+      }
+   }
+}
+----
+
+Fetch it back with `getNote`, or list everything with `getNotes`:
+
+[source,bash]
+----
+curl -X POST "http://localhost:8080/api/com.example.gqltutorial:graphql" \
+  -H "Content-Type: application/json" \
+  -d '{"query":"{ getNotes { id title } }"}'
+----
 
 == Using variables
 
@@ -156,8 +183,8 @@ mutation CreateNote($title: String!, $content: String!) {
 }
 ----
 
-In GraphiQL, the operation goes in the editor and the values in the btn:[Variables] pane at the bottom.
-Over HTTP they travel in the `variables` property of the request body, which our controller already forwards to `execute()`:
+The values travel in the `variables` property of the request body, which our controller already forwards to `execute()`.
+Most GraphQL clients have a separate pane for them:
 
 [source,bash]
 ----
