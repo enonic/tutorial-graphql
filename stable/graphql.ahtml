@@ -712,6 +712,22 @@ It is assumed that cURL is already installed on your system.</p>
 <div class="paragraph">
 <p>Great! We now have a working example of a simple GraphQL API.</p>
 </div>
+<div class="paragraph">
+<p>The endpoint is an ordinary HTTP POST endpoint that takes a GraphQL request body, so any GraphQL client works against it — Postman, Insomnia, Altair, a standalone GraphiQL, or an IDE plugin.
+This tutorial uses cURL so every step can be verified from a terminal.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Clients that offer schema autocompletion get it through GraphQL introspection, which the library supports out of the box. Nothing needs enabling for a client to discover the types and fields you define.
+</td>
+</tr>
+</table>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -767,14 +783,14 @@ Clients must therefore check <code>errors</code> even when <code>data</code> is 
 <h2 id="coming_up"><a class="link" href="#coming_up">Coming up</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>In the next chapter you&#8217;ll add a <a href="graphiql.ahtml">GraphiQL playground</a> so you can explore the schema in the browser instead of through cURL.</p>
+<p>In the next chapter you&#8217;ll extend the schema with <a href="mutations.ahtml">mutations</a> so clients can change data, not just read it.</p>
 </div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-08-12 15:44:50 UTC
+Last updated 2026-08-13 21:24:15 UTC
 </div>
 </div>
 </body>

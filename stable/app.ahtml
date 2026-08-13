@@ -556,7 +556,7 @@ gradle.properties <i class="conum" data-value="10"></i><b>(10)</b></code></pre>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>The starter&#8217;s example client-side file. We will not use this folder; the API serves its files from <code>static/</code> instead, for reasons covered in the <a href="graphiql.ahtml">GraphiQL chapter</a>.</td>
+<td>The starter&#8217;s example client-side file. This guide builds a server-side API only, so we will not use this folder.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
@@ -647,7 +647,7 @@ enonic dev</pre>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-08-12 15:44:50 UTC
+Last updated 2026-08-13 21:24:15 UTC
 </div>
 </div>
 </body>

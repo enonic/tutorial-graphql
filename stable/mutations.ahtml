@@ -737,11 +737,36 @@ For simplicity, we use a plain JavaScript object as our data store. Notes theref
 </table>
 </div>
 <div class="paragraph">
-<p>The image below shows the result of a <code>createNote</code> mutation executed in the GraphiQL UI.</p>
+<p>Mutations travel over the same endpoint as queries — they are sent in the <code>query</code> property of the request body, exactly like a query:</p>
 </div>
-<div class="imageblock">
+<div class="listingblock">
 <div class="content">
-<img src="media/mutation-playground.png" alt="Query Playground in action" width="1024px">
+<pre class="highlight"><code class="language-bash" data-lang="bash">curl -X POST "http://localhost:8080/api/com.example.gqltutorial:graphql" \
+  -H "Content-Type: application/json" \
+  -d '{"query":"mutation { createNote(title: \"My Note\", content: \"Brief content\") { id title createdAt } }"}'</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-json" data-lang="json">{
+   "data":{
+      "createNote":{
+         "id":"4oj8mwaojlc9z",
+         "title":"My Note",
+         "createdAt":"2026-08-13T11:06:29.426Z"
+      }
+   }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Fetch it back with <code>getNote</code>, or list everything with <code>getNotes</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-bash" data-lang="bash">curl -X POST "http://localhost:8080/api/com.example.gqltutorial:graphql" \
+  -H "Content-Type: application/json" \
+  -d '{"query":"{ getNotes { id title } }"}'</code></pre>
 </div>
 </div>
 </div>
@@ -772,8 +797,8 @@ Declare the variables in the operation, then supply their values with the reques
 </div>
 </div>
 <div class="paragraph">
-<p>In GraphiQL, the operation goes in the editor and the values in the <b class="button">Variables</b> pane at the bottom.
-Over HTTP they travel in the <code>variables</code> property of the request body, which our controller already forwards to <code>execute()</code>:</p>
+<p>The values travel in the <code>variables</code> property of the request body, which our controller already forwards to <code>execute()</code>.
+Most GraphQL clients have a separate pane for them:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -831,7 +856,7 @@ Note the single quotes around the payload. They keep the shell from expanding <c
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-08-12 15:44:50 UTC
+Last updated 2026-08-13 21:24:15 UTC
 </div>
 </div>
 </body>
