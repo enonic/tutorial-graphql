@@ -1,0 +1,18 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+
+  // An array of glob patterns indicating the files that should not be linted.
+  "ignorePatterns": [
+    "src/jest/server/setupFile.ts",
+    "src/**/*.js"
+  ],
+
+  "rules": {
+    "no-unused-vars": [
+      "warn",
+      {
+        "argsIgnorePattern": "^_"
+      }
+    ]
+  }
+}

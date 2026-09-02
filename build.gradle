@@ -4,11 +4,18 @@ plugins {
 }
 
 dependencies {
-  include "com.enonic.xp:lib-event:${xpVersion}"
-  include "com.enonic.xp:lib-sse:${xpVersion}"
+  // ─────────────────────────────────────────────────────────────────────────
+  // Libraries bundled with Enonic XP (versioned by xpVersion via the xplibs catalog)
+  // ─────────────────────────────────────────────────────────────────────────
+  include xplibs.event
+  include xplibs.sse
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Libraries from the Enonic Market (versions in gradle/libs.versions.toml)
+  // ─────────────────────────────────────────────────────────────────────────
 
   // https://market.enonic.com/vendors/enonic/graphql-lib
-  include 'com.enonic.lib:lib-graphql:3.0.0'
+  include libs.graphql
 }
 
 repositories {
@@ -46,7 +53,7 @@ tasks.register('npmBuild', NpmTask) {
   environment = [
     'FORCE_COLOR': 'true',
     'LOG_LEVEL_FROM_GRADLE': gradle.startParameter.logLevel.toString(),
-    'NODE_ENV': project.hasProperty('dev') || project.hasProperty('development') ? 'development' : 'production'
+    'NODE_ENV': project.findProperty('env') == 'dev' ? 'development' : 'production'
   ]
   inputs.dir 'src/main/resources'
   inputs.file 'tsdown.config.ts'

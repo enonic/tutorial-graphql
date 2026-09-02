@@ -14,7 +14,7 @@
     "check:types": "concurrently --kill-others-on-fail -g -r --timings npm:check:types:*",
     "check:types:server": "tsc --noEmit -p src/main/resources/tsconfig.json",
     "cov": "jest --no-cache --coverage",
-    "lint": "eslint --cache",
+    "lint": "oxlint src",
     "test": "jest --no-cache"
   },
   "devDependencies": {
@@ -22,17 +22,15 @@
     "@enonic-types/global": "^8.0.4",
     "@enonic-types/lib-event": "^8.0.4",
     "@enonic-types/lib-sse": "^8.0.4",
-    "@eslint/js": "^10.0.1",
     "@swc/core": "^1.15.47",
+    "@swc/jest": "^0.2.39",
     "@types/node": "^26.0.0",
     "concurrently": "^10.0.4",
-    "eslint": "^10.7.0",
     "glob": "^13.0.6",
+    "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
-    "ts-jest": "^29.4.11",
-    "ts-node": "^10.9.2",
+    "oxlint": "^1.79.0",
     "tsdown": "^0.22.14",
-    "typescript": "^6.0.3",
-    "typescript-eslint": "^8.63.0"
+    "typescript": "^7.0.2"
   }
 }

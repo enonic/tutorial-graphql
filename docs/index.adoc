@@ -1,4 +1,4 @@
-= Introduction to Enonic GraphQL API
+ = Introduction to Enonic GraphQL API
 :toc: right
 :experimental:
 :imagesdir: media/
@@ -8,20 +8,43 @@ A hands-on introduction to developing a GraphQL API.
 
 == Introduction
 
-This guide will show you how to:
+GraphQL lets a client ask for exactly the data it needs, in a single request, against a schema it can discover for itself.
+This guide builds one from scratch on Enonic XP: a small Notes API with queries, mutations and live updates, in five short chapters.
 
-* set up a local development environment
-* create an Enonic app
-* build your own GraphQL API using the GraphQL Library
-* access and use the GraphQL API
+By the end you will have:
 
-This tutorial builds an API of your own design, with your own types and resolvers.
-If what you need is a ready-made GraphQL API for querying CMS content, you want https://developer.enonic.com/docs/guillotine[Guillotine] instead.
+* a local development environment and a running Enonic application
+* a GraphQL schema with your own object types and resolvers
+* mutations that change data, and a subscription that streams events the moment they happen
+* an endpoint you can drive from cURL, or from whichever GraphQL client you prefer
 
-Two building blocks do the work.
-The https://developer.enonic.com/docs/graphql-library[GraphQL Library] defines the schema and executes operations against it, and a https://developer.enonic.com/docs/code/stable/web/apis[universal API] serves that schema over HTTP, deciding where the endpoint is mounted and who is allowed to reach it.
-You will create both in the <<graphql#,Hello GraphQL>> chapter, then build on them through mutations and subscriptions.
+Everything here is server-side — there is no UI to build, and every step ends with a command you can run to see it work.
+
+=== What you will be working with
+
+Two building blocks do the job, and it is worth knowing which does what.
+
+The https://developer.enonic.com/docs/graphql-library[GraphQL Library] is where your API takes shape.
+It defines the schema — the types, fields and resolvers that describe your data — and executes incoming operations against it.
+
+A https://developer.enonic.com/docs/code/stable/web/apis[universal API] is what makes that schema reachable.
+It is XP's way of exposing an HTTP endpoint from an application: you declare where it is mounted and who may call it, and XP routes matching requests to your code.
+Without one, a schema is just an object in memory.
+
+You will create both in the <<graphql#, Hello GraphQL>> chapter, then build on them through mutations and subscriptions.
+
+NOTE: This tutorial builds an API of your own design, with your own types and resolvers. If what you need is a ready-made GraphQL API for querying CMS content, you want https://developer.enonic.com/docs/guillotine[Guillotine] instead.
 
 image::ready-set-code.svg["Ready...Set...Code!", width=720px]
 
 The first step is to <<setup#, crank up the development environment>>.
+
+== Deep dive
+
+This tutorial uses a small part of the library — enough to get a working API and no more.
+
+The full reference covers the rest: every scalar, object and input type, interfaces, unions and enums, Relay-style connections for paging, and the publishers behind subscriptions. It lives at
+
+https://developer.enonic.com/docs/graphql-library
+
+and documents the library's three modules — `+/lib/graphql+` for schemas, types and execution, `+/lib/graphql-connection+` for cursor-based paging, and `+/lib/graphql-rx+` for subscriptions.

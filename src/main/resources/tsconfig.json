@@ -17,6 +17,12 @@
     // A series of entries which re-map imports to lookup locations relative
     // to the baseUrl if set, or to the tsconfig file itself otherwise.
     "paths": {
+      // Explicit per-library entries (rather than only the "/lib/xp/*"
+      // wildcard) let the IDE's auto-import suggest the runtime-correct
+      // "/lib/xp/<name>" specifiers. Add an entry when installing a new
+      // @enonic-types/lib-* package.
+      "/lib/xp/event": ["../../../node_modules/@enonic-types/lib-event/event"],
+      "/lib/xp/sse": ["../../../node_modules/@enonic-types/lib-sse/sse"],
       "/lib/xp/*": ["../../../node_modules/@enonic-types/lib-*"],
       "/lib/graphql": ["./types/graphql"],
       "/lib/graphql-rx": ["./types/graphql-rx"],
