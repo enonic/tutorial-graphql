@@ -218,7 +218,9 @@ The query never runs, and the response carries an `errors` array instead of `dat
    "errors":[
       {
          "errorType":"ValidationError",
-         "message":"Validation error of type FieldUndefined: Field 'notAField' in type 'Query' is undefined"
+         "message":"Validation error (FieldUndefined@[notAField]) : Field 'notAField' in type 'Query' is undefined",
+         "locations":[{"line":1,"column":3}],
+         "validationErrorType":"FieldUndefined"
       }
    ]
 }
