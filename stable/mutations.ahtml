@@ -765,7 +765,7 @@ export interface Note {
 
 const NOTES = 'notes';
 
-const cache = newCache&lt;Record&lt;string, Note&gt;&gt;({size: 10, expire: 0});
+const cache = newCache&lt;Record&lt;string, Note&gt;&gt;({name: 'notes', size: 10});
 
 function notes(): Record&lt;string, Note&gt; {
     return cache.get(NOTES, () =&gt; ({}));
@@ -809,13 +809,16 @@ export function remove(id: string): Note | undefined {
 </div>
 </div>
 <div class="paragraph">
-<p>Two details are worth pointing out.</p>
+<p>Three details are worth pointing out.</p>
 </div>
 <div class="paragraph">
-<p>The cache is created at module level, not inside a function, because a cache created per call would be empty on every call.</p>
+<p><strong>The cache is named.</strong> That makes it application-wide, shared by every script context, which is the only reason it can be created at module level: an unnamed cache is created once <strong>per context</strong>, so entries written in one would be missing in another. A named cache also copies values in and out rather than holding them by reference, which is why <code>create</code> and <code>remove</code> write the map back with <code>put</code> instead of relying on having mutated it.</p>
 </div>
 <div class="paragraph">
-<p>And the library has no way to iterate its entries, so a single key holds a map of all notes rather than one entry per note. <code>expire: 0</code> keeps them until the application is reloaded.</p>
+<p><strong>A single key holds the whole map.</strong> The library cannot iterate its entries, so there is no way to implement <code>getNotes</code> from one entry per note.</p>
+</div>
+<div class="paragraph">
+<p><strong>Notes outlive a redeploy.</strong> A named cache survives a script reload, and with no <code>expire</code> set its entries live until the application is stopped, uninstalled or reconfigured — so notes you create will still be there after <code>enonic project deploy</code>.</p>
 </div>
 <div class="admonitionblock important">
 <table>
@@ -824,7 +827,19 @@ export function remove(id: string): Note | undefined {
 <i class="fa icon-important" title="Important"></i>
 </td>
 <td class="content">
-This is a single-server store. Each node in a cluster would keep its own copy, so requests would return different notes depending on where they landed. An application that needs to survive a restart, or to run on more than one node, should use <a href="https://developer.enonic.com/docs/xp/stable/api/lib-node">lib-node</a> or a grid library instead.
+This is still a single-server store. Each node in a cluster keeps its own cache, so requests would return different notes depending on where they landed. An application that needs to run on more than one node, or to survive the application being stopped, should use <a href="https://developer.enonic.com/docs/xp/stable/api/lib-node">lib-node</a> or a grid library instead.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="Caution"></i>
+</td>
+<td class="content">
+Never keep application state in a module-level variable — a plain object or array holding your data. XP gives no guarantee that a module is instantiated once, so such a variable is not reliably shared. A named cache is safe because the variable holds a <strong>handle</strong> to shared storage rather than the data itself.
 </td>
 </tr>
 </table>
@@ -981,7 +996,7 @@ Note the single quotes around the payload. They keep the shell from expanding <c
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-02 10:35:35 UTC
+Last updated 2026-09-02 10:42:21 UTC
 </div>
 </div>
 </body>
