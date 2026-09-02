@@ -9,7 +9,7 @@ export interface Note {
 
 const NOTES = 'notes';
 
-const cache = newCache<Record<string, Note>>({size: 10, expire: 0});
+const cache = newCache<Record<string, Note>>({name: 'notes', size: 10});
 
 function notes(): Record<string, Note> {
     return cache.get(NOTES, () => ({}));

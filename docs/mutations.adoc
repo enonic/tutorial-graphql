@@ -149,13 +149,17 @@ Then create the module the resolvers call:
 include::{sourcedir}/samples/notes-store.ts[]
 ----
 
-Two details are worth pointing out.
+Three details are worth pointing out.
 
-The cache is created at module level, not inside a function, because a cache created per call would be empty on every call.
+**The cache is named.** That makes it application-wide, shared by every script context, which is the only reason it can be created at module level: an unnamed cache is created once *per context*, so entries written in one would be missing in another. A named cache also copies values in and out rather than holding them by reference, which is why `create` and `remove` write the map back with `put` instead of relying on having mutated it.
 
-And the library has no way to iterate its entries, so a single key holds a map of all notes rather than one entry per note. `expire: 0` keeps them until the application is reloaded.
+**A single key holds the whole map.** The library cannot iterate its entries, so there is no way to implement `getNotes` from one entry per note.
 
-IMPORTANT: This is a single-server store. Each node in a cluster would keep its own copy, so requests would return different notes depending on where they landed. An application that needs to survive a restart, or to run on more than one node, should use https://developer.enonic.com/docs/xp/stable/api/lib-node[lib-node] or a grid library instead.
+**Notes outlive a redeploy.** A named cache survives a script reload, and with no `expire` set its entries live until the application is stopped, uninstalled or reconfigured — so notes you create will still be there after `enonic project deploy`.
+
+IMPORTANT: This is still a single-server store. Each node in a cluster keeps its own cache, so requests would return different notes depending on where they landed. An application that needs to run on more than one node, or to survive the application being stopped, should use https://developer.enonic.com/docs/xp/stable/api/lib-node[lib-node] or a grid library instead.
+
+CAUTION: Never keep application state in a module-level variable — a plain object or array holding your data. XP gives no guarantee that a module is instantiated once, so such a variable is not reliably shared. A named cache is safe because the variable holds a *handle* to shared storage rather than the data itself.
 
 Mutations travel over the same endpoint as queries — they are sent in the `query` property of the request body, exactly like a query:
 

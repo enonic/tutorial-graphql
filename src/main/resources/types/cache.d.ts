@@ -14,4 +14,11 @@ export interface Cache<T> {
     getSize(): number;
 }
 
-export declare function newCache<T>(params: {size: number; expire: number}): Cache<T>;
+export interface CacheParams {
+    /** Names the cache, making it application-wide and shared by every script context. */
+    name?: string;
+    size?: number;
+    expire?: number;
+}
+
+export declare function newCache<T>(params: CacheParams): Cache<T>;
