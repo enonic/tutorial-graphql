@@ -481,10 +481,13 @@ This guide builds one from scratch on Enonic XP: a small Notes API with queries,
 <p>a GraphQL schema with your own object types and resolvers</p>
 </li>
 <li>
-<p>mutations that change data, and a subscription that streams events the moment they happen</p>
+<p>mutations that change data</p>
 </li>
 <li>
 <p>an endpoint you can drive from cURL, or from whichever GraphQL client you prefer</p>
+</li>
+<li>
+<p>and, as an optional last step, a subscription that streams events as they happen</p>
 </li>
 </ul>
 </div>
@@ -551,7 +554,7 @@ This tutorial builds an API of your own design, with your own types and resolver
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-02 08:58:13 UTC
+Last updated 2026-09-02 09:41:01 UTC
 </div>
 </div>
 </body>
