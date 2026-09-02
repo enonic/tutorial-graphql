@@ -1,4 +1,4 @@
-= Mutation
+= Mutations
 :toc: right
 :experimental:
 :imagesdir: media/

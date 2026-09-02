@@ -1,4 +1,4 @@
-= GraphQL API
+= Hello GraphQL
 :toc: right
 :experimental:
 :imagesdir: media/
@@ -8,7 +8,7 @@ In this section, we will go through an example of how to create a custom GraphQL
 
 == GraphQL Library
 
-In order to build your own GraphQL API using the Enonic XP Platform, you should use the https://developer.enonic.com/docs/graphql-library[GraphQL Library].
+In order to build your own GraphQL API on Enonic XP, you should use the https://developer.enonic.com/docs/graphql-library[GraphQL Library].
 This library makes it easy to build custom types and manage the schema lifecycle.
 Its documentation describes every function and constant used in this tutorial.
 
@@ -17,8 +17,23 @@ First of all, we should add the https://developer.enonic.com/docs/graphql-librar
 .build.gradle
 [source,kotlin]
 ----
-include "com.enonic.lib:lib-graphql:<version>"
+include libs.graphql
 ----
+
+The starter declares dependencies through two version catalogs, so no version appears in `build.gradle` itself.
+Libraries from the Enonic Market, like this one, are listed in `gradle/libs.versions.toml` and referenced as `libs.<name>`:
+
+.gradle/libs.versions.toml
+[source,toml]
+----
+[versions]
+graphql = "3.0.0"
+
+[libraries]
+graphql = { module = "com.enonic.lib:lib-graphql", version.ref = "graphql" }
+----
+
+Libraries that ship with XP are referenced as `xplibs.<name>` and need no entry at all — they follow the `xpVersion` in `gradle.properties`. We will use one of those in a later chapter.
 
 == Define GraphQL API
 

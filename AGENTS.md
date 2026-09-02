@@ -85,7 +85,9 @@ When changing only prose, validate JSON files and inspect includes, cross-refere
 
 The documentation build maps source documents to routes based on their paths and menu entries. Add every new reader-facing page to `docs/menu.json`, and keep version configuration in `docs/versions.json` valid. The `latest` field is a JSON boolean in this repository.
 
-Because this is a tutorial, sequential steps are numbered in `docs/menu.json` using the `"<n> - <Title>"` title format, as in Enonic's other tutorials. The numbers live only in the menu titles; a page's own `=` heading stays unnumbered. Pages outside the sequence are left unnumbered. When inserting, removing, or reordering a step, renumber the remaining entries so the sequence stays unbroken, and check that no prose refers to a step by its old number.
+Because this is a tutorial, sequential steps are numbered in `docs/menu.json` using the `"<n> - <Title>"` title format, as in Enonic's other tutorials. The numbers live only in the menu titles; a page's own `=` heading stays unnumbered. When inserting, removing, or reordering a step, renumber the remaining entries so the sequence stays unbroken, and check that no prose refers to a step by its old number.
+
+`docs/index.adoc` is mounted first, unnumbered, as "Introduction". It is not a step, but it must appear in the menu: the developer portal highlights the current page in the sidebar, so a reader on the front page would otherwise see a menu with nothing selected and no indication of where they are. Any page outside the numbered sequence is likewise left unnumbered.
 
 ## AsciiDoc Conventions
 

@@ -14,7 +14,7 @@ If you have `npm` on your device, run this command:
 
   npm install -g @enonic/cli
 
-If not, here are some https://developer.enonic.com/start[alternative ways to install Enonic CLI]
+If not, here are some https://developer.enonic.com/start[alternative ways to install Enonic CLI].
 
 To verify that the CLI has been installed, run `enonic -v`. This should output the version of your installed CLI.
 
@@ -24,31 +24,31 @@ TIP: To upgrade, use `enonic latest`. If there are new versions you will see ins
 
 == Create a sandbox
 
-A https://developer.enonic.com/docs/xp/stable/development/sandboxes[sandbox] is a local development instance of the platform - Enonic XP. Create and start a sandbox called `mysandbox` by running this command in your terminal:
+A https://developer.enonic.com/docs/xp/stable/development/sandboxes[sandbox] is a local development instance of the platform — Enonic XP. Create and start a sandbox called `mysandbox` by running this command in your terminal:
 
   enonic sandbox create mysandbox -t essentials -f
 
-NOTE: `-f` flag will force using the most recent release of Enonic XP and automatically start the sandbox.
+NOTE: The `-f` flag accepts the default answer to every prompt, which selects the most recent release of Enonic XP and starts the sandbox.
 
 == Sandbox Admin
 
-Let's have a look at the Sandbox' web interface - aka XP admin. Open http://localhost:8080[http://localhost:8080] in your browser (or just click the link).
+Let's have a look at the sandbox's web interface — also known as XP admin. Open http://localhost:8080[http://localhost:8080] in your browser (or just click the link).
 
 You should now see the XP boot page:
 
 .XP Boot page
 image::xp-boot.png[The XP boot page, 1085w]
 
-The boot page provides an overview of the sandbox, including installed application, as well as the https://developer.enonic.com/docs/xp/stable/deployment/config[standard configuration files].
+The boot page provides an overview of the sandbox, including installed applications, as well as the https://developer.enonic.com/docs/xp/stable/deployment/config[standard configuration files].
 
 Click btn:[Log In as Guest] to open the XP admin dashboard. You should now see something like this:
 
 .The XP admin dashboard
 image::xp-dashboard.png[The XP admin dashboard, 1727w]
 
-You are now on the admin dashboard. The right hand menu (aka `XP menu`) enables navigation between admin tools. Admin tools may be injected as extensions via applications.
+You are now on the admin dashboard. The right-hand menu (the `XP menu`) enables navigation between admin tools. Admin tools may be injected as extensions via applications.
 
-NOTE: If things don't look exactly the same, don't worry. In every new version of XP the background picture gets updated. Also, admin dashboard is automatically localized - based on your browsers preferred language.
+NOTE: If things don't look exactly the same, don't worry. In every new version of XP the background picture gets updated. Also, the admin dashboard is automatically localized, based on your browser's preferred language.
 
 
 == Coming up

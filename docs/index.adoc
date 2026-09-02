@@ -1,4 +1,4 @@
- = Introduction to Enonic GraphQL API
+= Building a GraphQL API
 :toc: right
 :experimental:
 :imagesdir: media/

@@ -27,19 +27,19 @@ What does transfer, whichever transport you end up on, is everything on the sche
 
 To achieve this, we need to:
 
-1. Add the necessary libraries for events and SSE provided by the Enonic Platform.
+1. Add the libraries for events and SSE that ship with Enonic XP.
 2. Create a GraphQL Subscription type and add it to our GraphQL schema.
 3. Answer a subscription with a stream instead of a JSON body.
 
 == Root Subscription GraphQL type
 
-First of all, we should add the `lib-event` and the `lib-sse` dependencies to the `build.gradle` file.
+First of all, we should add the `lib-event` and the `lib-sse` dependencies to the `build.gradle` file. Both ship with XP, so they are referenced through the `xplibs` catalog and carry no version of their own.
 
 .build.gradle
 [source,kotlin]
 ----
-include "com.enonic.xp:lib-event:${xpVersion}"
-include "com.enonic.xp:lib-sse:${xpVersion}"
+include xplibs.event
+include xplibs.sse
 ----
 
 Creating a `Subscription` type is no different from creating a regular GraphQL Object type. In our example, for simplicity, we will use a field called `event` with the type `Json`.
@@ -301,7 +301,7 @@ Delete a note and a second event arrives. Stop the stream with kbd:[Ctrl+C]; the
 
 NOTE: As noted at the top of this chapter, a standard GraphQL client will subscribe over a WebSocket instead — one connection can then carry several operations chosen by the client. The `+/lib/graphql-rx+` page of the https://developer.enonic.com/docs/graphql-library[GraphQL Library documentation] covers that variant.
 
-That's it! In this chapter, we explored how to add Subscriptions and subscribe to real-time events using the capabilities of the Enonic Platform.
+That's it! In this chapter, we explored how to add subscriptions and stream real-time events from Enonic XP.
 
 == Where to go next
 

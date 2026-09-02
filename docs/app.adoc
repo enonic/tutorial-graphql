@@ -1,4 +1,4 @@
-= Create your first Enonic application
+= Create application
 :toc: right
 :experimental:
 :imagesdir: media/
@@ -6,7 +6,7 @@
 
 Create, build and deploy an application based on a starter
 
-== Intro
+== Introduction
 
 The expression "There's an app for that" fits well with Enonic. When you created the sandbox, several applications were automatically installed (based on the `Essentials` template), which extended the platform's capabilities.
 
@@ -23,7 +23,7 @@ This command will:
 
 * use the GitHub repo `github.com/enonic/starter-ts` as a starter
 * to create an app called `com.example.gqltutorial`
-* in the directory `gqltutorial` setting version number to `1.0.0`
+* in the directory `gqltutorial`, with the version set to `1.0.0-SNAPSHOT`
 * and link it to `mysandbox` which you created earlier
 
 TIP: `starter-ts` is Enonic's maintained TypeScript starter. Starting from a maintained starter rather than from a tutorial repository means you begin with an empty, well-configured application and build the API yourself — which is the point of this guide.
@@ -67,7 +67,7 @@ The application builds and deploys as it stands — it just does not do anything
 
 == Build and deploy
 
-Assuming `mysandbox` is still running in another Terminal window, run these commands:
+Assuming `mysandbox` is still running in another terminal window, run these commands:
 
   cd gqltutorial
   enonic dev
@@ -76,13 +76,16 @@ The last command (`dev`) will build the app, deploy it to `mysandbox`, and start
 
 [NOTE]
 ====
-The initial build may take a while.  Look for these lines to confirm it has completed:
+The initial build may take a while. Look for these lines to confirm it has completed:
 
-```
-[server] CJS ⚡️ Build success in 228ms
-[server] CLI Watching for changes in "."
-[server] CLI Ignoring changes in "**/{.git,node_modules}/**" | "build/resources/main"
-```
+[source]
+----
+✔ Build complete in 65ms
+> Task :deploy
+Deploying 'tutorial-graphql.jar' to '/Users/you/.enonic/sandboxes/mysandbox/home/deploy'
+BUILD SUCCESSFUL
+Waiting for changes to input files...
+----
 ====
 
 == Moving forward
