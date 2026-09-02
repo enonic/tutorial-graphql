@@ -14,6 +14,9 @@ dependencies {
   // Libraries from the Enonic Market (versions in gradle/libs.versions.toml)
   // ─────────────────────────────────────────────────────────────────────────
 
+  // https://market.enonic.com/vendors/enonic/cache-lib
+  include libs.cache
+
   // https://market.enonic.com/vendors/enonic/graphql-lib
   include libs.graphql
 }

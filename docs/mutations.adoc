@@ -127,7 +127,35 @@ Here is the complete example implementation of schema.ts. You can also see the i
 include::{sourcedir}/samples/mutation-schema.ts[]
 ----
 
-NOTE: For simplicity, we use a plain JavaScript object as our data store. Notes therefore live in the memory of one server: they are lost when the application is redeployed or the sandbox restarts, and they are not shared between nodes in a cluster. A real application would persist them with https://developer.enonic.com/docs/xp/stable/api/lib-content[lib-content] or https://developer.enonic.com/docs/xp/stable/api/lib-node[lib-node] instead.
+The resolvers above delegate to a small module of our own, which is where the notes actually live.
+
+== Storing the notes
+
+Our schema needs somewhere to keep notes. This guide uses https://developer.enonic.com/docs/cache-library[Cache Library], which keeps them in the memory of one server — enough to see mutations and subscriptions working, without bringing a content model into a chapter about GraphQL.
+
+Add the dependency:
+
+.build.gradle
+[source,kotlin]
+----
+include libs.cache
+----
+
+Then create the module the resolvers call:
+
+.src/main/resources/lib/notes.ts
+[source,ts]
+----
+include::{sourcedir}/samples/notes-store.ts[]
+----
+
+Two details are worth pointing out.
+
+The cache is created at module level, not inside a function, because a cache created per call would be empty on every call.
+
+And the library has no way to iterate its entries, so a single key holds a map of all notes rather than one entry per note. `expire: 0` keeps them until the application is reloaded.
+
+IMPORTANT: This is a single-server store. Each node in a cluster would keep its own copy, so requests would return different notes depending on where they landed. An application that needs to survive a restart, or to run on more than one node, should use https://developer.enonic.com/docs/xp/stable/api/lib-node[lib-node] or a grid library instead.
 
 Mutations travel over the same endpoint as queries — they are sent in the `query` property of the request body, exactly like a query:
 

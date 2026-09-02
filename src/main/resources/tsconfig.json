@@ -24,6 +24,7 @@
       "/lib/xp/event": ["../../../node_modules/@enonic-types/lib-event/event"],
       "/lib/xp/sse": ["../../../node_modules/@enonic-types/lib-sse/sse"],
       "/lib/xp/*": ["../../../node_modules/@enonic-types/lib-*"],
+      "/lib/cache": ["./types/cache"],
       "/lib/graphql": ["./types/graphql"],
       "/lib/graphql-rx": ["./types/graphql-rx"],
       "/*": ["./*"],

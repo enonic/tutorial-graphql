@@ -94,21 +94,34 @@ import {listener, send} from '/lib/xp/event';
 ----
 
 The resolver's job is to return a processor that publishes the events we care about.
-Create the processor and the event listener once, at module level, and let the resolver hand out the same processor every time.
+Two things have to be true for that to work: the processor must be the same object for every subscriber, and the event listener that feeds it must be registered exactly once.
 
-IMPORTANT: Do not create them inside the resolver. It runs on every subscribe, so a processor and listener built there would be registered again for each client and never removed, leaking a listener per subscription.
+IMPORTANT: Neither belongs in the resolver. A resolver runs on every subscribe, so a processor created there would be private to one client, and a listener registered there would be added again for every client and never removed.
+
+Put the processor in a module of its own, so everything that needs it shares one instance:
+
+.src/main/resources/lib/events.ts
+[source,ts]
+----
+include::{sourcedir}/src/main/resources/lib/events.ts[]
+----
+
+Register the listener in `main.ts`, the script XP runs when the application starts:
+
+.src/main/resources/main.ts
+[source,ts]
+----
+include::{sourcedir}/src/main/resources/main.ts[]
+----
+
+This is where a listener belongs. `main.ts` runs once as the application loads, so the listener is registered once, rather than on the first request that happens to reach a controller.
+
+The resolver then just hands out the shared processor:
 
 ./src/main/resources/apis/graphql/schema.ts
 [source,ts]
 ----
-const noteProcessor = createPublishProcessor();
-
-listener({
-    type: 'custom.note.*',
-    callback: (event) => {
-        noteProcessor.onNext(event);
-    }
-});
+import {noteProcessor} from '/lib/events';
 
 const rootSubscriptionType = schemaGenerator.createObjectType({
     name: 'Subscription',

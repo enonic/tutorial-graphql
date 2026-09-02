@@ -1,7 +1,9 @@
 # Libraries from the Enonic Market ( https://market.enonic.com/libraries )
 # Enonic XP's own libraries are provided by the `xplibs` catalog (com.enonic.xp.settings plugin).
 [versions]
+cache = "3.0.0"
 graphql = "3.0.0"
 
 [libraries]
+cache = { module = "com.enonic.lib:lib-cache", version.ref = "cache" }
 graphql = { module = "com.enonic.lib:lib-graphql", version.ref = "graphql" }
