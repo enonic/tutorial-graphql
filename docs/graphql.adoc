@@ -128,7 +128,9 @@ export function POST(req: Request): Response {
 ----
 
 The export name is the HTTP method: XP looks for an export matching the request's method, so `POST` handles our GraphQL requests.
-A special `all` export catches any method without a handler of its own, which we will use in the next chapter to serve several endpoints from one API.
+Nothing else is exported, so any other method — a browser visiting the endpoint, for instance — gets `405 Method Not Allowed` from XP without us writing a line for it.
+
+That is deliberate. The GraphQL over HTTP convention allows a query to be sent with `GET`, but a mutation must never be, since `GET` has to stay safe to repeat: a link preview or a prefetch could otherwise change data. Accepting only `POST` removes the question.
 
 `Request` and `Response` come from `@enonic-types/core`, the package that types the XP runtime.
 It is a development dependency only — nothing from it exists at runtime.

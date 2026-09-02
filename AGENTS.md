@@ -53,7 +53,10 @@ The application is teaching material first. Prefer clear, compact implementation
 * Server code is TypeScript compiled to CommonJS for the XP runtime. Import XP libraries by their runtime path (`+/lib/xp/sse+`, `+/lib/graphql+`) and export handlers named after the HTTP method. Do not introduce browser or Node-only APIs.
 * Keep the API's declared access and mounts in `graphql.yaml` aligned with the URLs and security claims in the tutorial.
 * The final schema intentionally uses in-memory storage to keep the mutation example small. Do not describe it as persistent or production-ready.
-* Subscriptions use XP events, `lib-graphql-rx`, and SSE. A subscription is executed on the SSE `open` event and cancelled on `close`; the subscription document is carried from the `GET` handler to that event through `sse.attributes`. Changes across the schema, controller, and subscription chapter must remain coordinated.
+* The API exports `POST` only. Every operation arrives there, and the controller decides the response shape: a query or mutation is answered with JSON, a subscription with an SSE stream. Do not add a `GET` handler — XP answers `405 Method Not Allowed` for free, and that is deliberate, since a mutation must never be reachable by a method that is expected to be safe to repeat.
+* Subscriptions use XP events, `lib-graphql-rx`, and SSE. The operation type is decided by inspecting the document *before* anything is executed. A subscription is executed on the SSE `open` event and cancelled on `close`, which is terminal and also fires after `timeout` and `error`.
+* `sse.attributes` carries the subscription document and variables from the request to the `sseEvent` handler, which receives no request of its own. Keep those attributes flat strings: an `undefined` or a nested object there fails at runtime with a `NullPointerException`, so variables are stored JSON-encoded and parsed back.
+* Changes across the schema, the controller, and the subscription chapter must remain coordinated.
 * Keep dependency versions aligned across `build.gradle`, `package.json`, `package-lock.json`, and documentation examples. Documentation may use an explicit `<version>` placeholder when teaching dependency setup, but surrounding prose must make that clear.
 
 ## Build, Test, and Lint

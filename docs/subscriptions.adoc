@@ -10,13 +10,13 @@ A subscription differs from a query in what the engine gives back.
 Where a query resolves to a value, a subscription resolves to a *publisher* that emits a result every time something happens.
 GraphQL itself says nothing about how those results reach the client — that is the transport's job, and XP offers two: https://developer.enonic.com/docs/code/stable/web/sse[SSE] and https://developer.enonic.com/docs/code/stable/web/websocket[WebSocket].
 
-We will use SSE. It is a plain HTTP GET that stays open, so it needs no handshake and can be watched with cURL.
+We will use SSE. The subscription is sent to the same endpoint as everything else, and the response is a stream that stays open instead of a JSON body — no handshake, and it can be watched with cURL.
 
 To achieve this, we need to:
 
 1. Add the necessary libraries for events and SSE provided by the Enonic Platform.
 2. Create a GraphQL Subscription type and add it to our GraphQL schema.
-3. Stream the subscription results from the API.
+3. Answer a subscription with a stream instead of a JSON body.
 
 == Root Subscription GraphQL type
 
@@ -129,44 +129,53 @@ The GraphQL part is ready.
 
 == Stream the results
 
-An SSE stream is opened by returning an `sse` object from a `GET` handler.
-Our API already exports `POST` for queries and mutations; `GET` becomes the subscription stream, and XP picks the handler by request method.
-
-The subscription document arrives as a query parameter, and we store it in `attributes` — per-connection state that XP hands back on every event for that connection:
+Our API already exports `POST`, and a subscription arrives on it like any other operation.
+The difference is what the engine returns: a query or a mutation resolves to data that can be serialized as JSON, while a subscription resolves to a *publisher* that emits results over time.
+So the controller decides how to answer by looking at the operation:
 
 ./src/main/resources/apis/graphql/graphql.ts
 [source,ts]
 ----
 import {send} from '/lib/xp/sse';
 
+// Attributes cross into the Java layer, so keep them flat strings: an
+// `undefined` or a nested object here fails with a NullPointerException.
 interface StreamAttributes {
     query: string;
+    variables: string;
 }
 
-export function GET(req: Request): Response {
-    const query = req.params.query;
+const SUBSCRIPTION = /^\s*subscription\b/; // <1>
 
-    if (!query) {
+export function POST(req: Request): Response {
+    const body = JSON.parse(req.body as string) as {query?: string; variables?: unknown};
+
+    if (!body.query) {
+        return badRequest('Missing `query` in request body.');
+    }
+
+    if (SUBSCRIPTION.test(body.query)) {
         return {
-            status: 400,
-            contentType: 'application/json',
-            body: {
-                errors: [{message: 'Missing `query` parameter.'}]
-            },
+            sse: { // <2>
+                attributes: {query: body.query, variables: JSON.stringify(body.variables ?? null)}, // <3>
+                retry: 5000, // <4>
+            }
         };
     }
 
+    const result = execute(graphQLSchema, body.query, body.variables);
+
     return {
-        sse: {
-            attributes: {query: query}, // <1>
-            retry: 5000, // <2>
-        }
+        contentType: 'application/json',
+        body: result,
     };
 }
 ----
 
-<1> Carries the subscription document to the `sseEvent` handler. The handler receives no request, so without this there would be no way to know what the client asked for — short of keeping a map of connections, which is the bookkeeping we want to avoid.
-<2> How long the client should wait before reconnecting, in milliseconds.
+<1> Decided before anything is executed, so the endpoint never runs an operation just to discover what kind it was.
+<2> Returning an `sse` object turns the response into an open stream. This is the same shape a `GET` handler would return — SSE is not tied to `GET` in XP.
+<3> Per-connection state that XP hands back on every event for this connection. The `sseEvent` handler receives no request, so this is how the subscription document reaches it; keeping a map of connections would be the alternative, and worse.
+<4> How long the client should wait before reconnecting, in milliseconds.
 
 Opening the stream does not run the subscription. That happens when XP fires the `open` event, which is also where we get the `clientId` needed to send anything back:
 
@@ -186,14 +195,21 @@ export function sseEvent(event: SseEvent<StreamAttributes>): void {
     }
 }
 
-function openSubscription(clientId: string, attributes: StreamAttributes): void {
-    const result = execute(graphQLSchema, attributes.query);
-    const publisher = result.data as Publisher | undefined; // <2>
+function isPublisher(data: unknown): data is Publisher {
+    return !!data && typeof (data as Publisher).subscribe === 'function';
+}
 
-    if (!publisher || typeof publisher.subscribe !== 'function') {
+function openSubscription(clientId: string, attributes: StreamAttributes): void {
+    const variables = JSON.parse(attributes.variables) as unknown;
+    const result = execute(graphQLSchema, attributes.query, variables);
+
+    if (!isPublisher(result.data)) { // <2>
         send({
             clientId: clientId,
-            message: {event: 'error', data: JSON.stringify(result)}
+            message: {
+                event: 'error',
+                data: JSON.stringify({errors: result.errors ?? [{message: 'The document is not a subscription.'}]})
+            }
         });
         return;
     }
@@ -208,7 +224,7 @@ function openSubscription(clientId: string, attributes: StreamAttributes): void 
     });
 
     subscribers[clientId] = subscriber;
-    publisher.subscribe(subscriber);
+    result.data.subscribe(subscriber);
 }
 
 function cancelSubscription(clientId: string): void {
@@ -221,17 +237,18 @@ function cancelSubscription(clientId: string): void {
 ----
 
 <1> `close` is terminal and fires after `timeout` and `error` as well, so it is the one place a subscription needs cancelling. Without it, a client that simply goes away leaves the processor delivering to nobody.
-<2> For a subscription, `execute()` returns a publisher as `data` instead of a result object. A query or mutation sent to this endpoint would not, which is what the check below reports.
+<2> A document can start with `subscription` and still fail — a misspelled field, for example. Reporting that as an error frame is friendlier than an empty stream that never delivers.
 <3> Each event is a complete execution result — the same shape a query returns — so a client parses it the same way.
 
 == Test the subscription
 
-Open the stream in one terminal. cURL's `-N` disables buffering so events appear as they arrive, and `--data-urlencode` saves us encoding the document by hand:
+Open the stream in one terminal. cURL's `-N` disables buffering, so events appear as they arrive rather than when the connection ends:
 
 [source,bash]
 ----
-curl -N --get "http://localhost:8080/api/com.example.gqltutorial:graphql" \
-  --data-urlencode 'query=subscription { event }'
+curl -N -X POST "http://localhost:8080/api/com.example.gqltutorial:graphql" \
+  -H "Content-Type: application/json" \
+  -d '{"query":"subscription { event }"}'
 ----
 
 The connection stays open with no output yet. In a second terminal, create a note:
