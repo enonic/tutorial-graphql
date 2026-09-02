@@ -1,4 +1,4 @@
-= Setting up the development environment
+= Setting up the development sandbox
 :toc: right
 :experimental:
 :imagesdir: media/
@@ -30,7 +30,7 @@ A https://developer.enonic.com/docs/xp/stable/development/sandboxes[sandbox] is 
 
 NOTE: The `-f` flag accepts the default answer to every prompt, which selects the most recent release of Enonic XP and starts the sandbox.
 
-== Sandbox Admin
+== Sandbox admin
 
 Let's have a look at the sandbox's web interface — also known as XP admin. Open http://localhost:8080[http://localhost:8080] in your browser (or just click the link).
 
@@ -49,7 +49,6 @@ image::xp-dashboard.png[The XP admin dashboard, 1727w]
 You are now on the admin dashboard. The right-hand menu (the `XP menu`) enables navigation between admin tools. Admin tools may be injected as extensions via applications.
 
 NOTE: If things don't look exactly the same, don't worry. In every new version of XP the background picture gets updated. Also, the admin dashboard is automatically localized, based on your browser's preferred language.
-
 
 == Coming up
 
