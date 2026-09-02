@@ -99,7 +99,7 @@ const serverSideConfig = {
   // Additionally, you can substitute captured regex groups using numbered
   // backreferences.
   moduleNameMapper: {
-    '/lib/myproject/(.*)': `<rootDir>/${DIR_SRC}/lib/myproject/$1`,
+    '/lib/(.*)': `<rootDir>/${DIR_SRC}/lib/$1`,
   },
 
   // A list of paths to modules that run some code to configure or set up the
