@@ -460,7 +460,7 @@ Where a query resolves to a value, a subscription resolves to a <strong>publishe
 GraphQL itself says nothing about how those results reach the client — that is the transport&#8217;s job, and XP offers two: <a href="https://developer.enonic.com/docs/code/stable/web/sse">SSE</a> and <a href="https://developer.enonic.com/docs/code/stable/web/websocket">WebSocket</a>.</p>
 </div>
 <div class="paragraph">
-<p>We will use SSE. It is a plain HTTP GET that stays open, so it needs no handshake and can be watched with cURL.</p>
+<p>We will use SSE. The subscription is sent to the same endpoint as everything else, and the response is a stream that stays open instead of a JSON body — no handshake, and it can be watched with cURL.</p>
 </div>
 <div class="paragraph">
 <p>To achieve this, we need to:</p>
@@ -474,7 +474,7 @@ GraphQL itself says nothing about how those results reach the client — that is
 <p>Create a GraphQL Subscription type and add it to our GraphQL schema.</p>
 </li>
 <li>
-<p>Stream the subscription results from the API.</p>
+<p>Answer a subscription with a stream instead of a JSON body.</p>
 </li>
 </ol>
 </div>
@@ -617,39 +617,45 @@ When two subscription fields need different slices of the same stream, call <cod
 <h2 id="stream_the_results"><a class="link" href="#stream_the_results">Stream the results</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>An SSE stream is opened by returning an <code>sse</code> object from a <code>GET</code> handler.
-Our API already exports <code>POST</code> for queries and mutations; <code>GET</code> becomes the subscription stream, and XP picks the handler by request method.</p>
-</div>
-<div class="paragraph">
-<p>The subscription document arrives as a query parameter, and we store it in <code>attributes</code> — per-connection state that XP hands back on every event for that connection:</p>
+<p>Our API already exports <code>POST</code>, and a subscription arrives on it like any other operation.
+The difference is what the engine returns: a query or a mutation resolves to data that can be serialized as JSON, while a subscription resolves to a <strong>publisher</strong> that emits results over time.
+So the controller decides how to answer by looking at the operation:</p>
 </div>
 <div class="listingblock">
 <div class="title">/src/main/resources/apis/graphql/graphql.ts</div>
 <div class="content">
 <pre class="highlight"><code class="language-ts" data-lang="ts">import {send} from '/lib/xp/sse';
 
+// Attributes cross into the Java layer, so keep them flat strings: an
+// `undefined` or a nested object here fails with a NullPointerException.
 interface StreamAttributes {
     query: string;
+    variables: string;
 }
 
-export function GET(req: Request): Response {
-    const query = req.params.query;
+const SUBSCRIPTION = /^\s*subscription\b/; <i class="conum" data-value="1"></i><b>(1)</b>
 
-    if (!query) {
+export function POST(req: Request): Response {
+    const body = JSON.parse(req.body as string) as {query?: string; variables?: unknown};
+
+    if (!body.query) {
+        return badRequest('Missing `query` in request body.');
+    }
+
+    if (SUBSCRIPTION.test(body.query)) {
         return {
-            status: 400,
-            contentType: 'application/json',
-            body: {
-                errors: [{message: 'Missing `query` parameter.'}]
-            },
+            sse: { <i class="conum" data-value="2"></i><b>(2)</b>
+                attributes: {query: body.query, variables: JSON.stringify(body.variables ?? null)}, <i class="conum" data-value="3"></i><b>(3)</b>
+                retry: 5000, <i class="conum" data-value="4"></i><b>(4)</b>
+            }
         };
     }
 
+    const result = execute(graphQLSchema, body.query, body.variables);
+
     return {
-        sse: {
-            attributes: {query: query}, <i class="conum" data-value="1"></i><b>(1)</b>
-            retry: 5000, <i class="conum" data-value="2"></i><b>(2)</b>
-        }
+        contentType: 'application/json',
+        body: result,
     };
 }</code></pre>
 </div>
@@ -658,10 +664,18 @@ export function GET(req: Request): Response {
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Carries the subscription document to the <code>sseEvent</code> handler. The handler receives no request, so without this there would be no way to know what the client asked for — short of keeping a map of connections, which is the bookkeeping we want to avoid.</td>
+<td>Decided before anything is executed, so the endpoint never runs an operation just to discover what kind it was.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Returning an <code>sse</code> object turns the response into an open stream. This is the same shape a <code>GET</code> handler would return — SSE is not tied to <code>GET</code> in XP.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Per-connection state that XP hands back on every event for this connection. The <code>sseEvent</code> handler receives no request, so this is how the subscription document reaches it; keeping a map of connections would be the alternative, and worse.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
 <td>How long the client should wait before reconnecting, in milliseconds.</td>
 </tr>
 </table>
@@ -685,14 +699,21 @@ export function sseEvent(event: SseEvent&lt;StreamAttributes&gt;): void {
     }
 }
 
-function openSubscription(clientId: string, attributes: StreamAttributes): void {
-    const result = execute(graphQLSchema, attributes.query);
-    const publisher = result.data as Publisher | undefined; <i class="conum" data-value="2"></i><b>(2)</b>
+function isPublisher(data: unknown): data is Publisher {
+    return !!data &amp;&amp; typeof (data as Publisher).subscribe === 'function';
+}
 
-    if (!publisher || typeof publisher.subscribe !== 'function') {
+function openSubscription(clientId: string, attributes: StreamAttributes): void {
+    const variables = JSON.parse(attributes.variables) as unknown;
+    const result = execute(graphQLSchema, attributes.query, variables);
+
+    if (!isPublisher(result.data)) { <i class="conum" data-value="2"></i><b>(2)</b>
         send({
             clientId: clientId,
-            message: {event: 'error', data: JSON.stringify(result)}
+            message: {
+                event: 'error',
+                data: JSON.stringify({errors: result.errors ?? [{message: 'The document is not a subscription.'}]})
+            }
         });
         return;
     }
@@ -707,7 +728,7 @@ function openSubscription(clientId: string, attributes: StreamAttributes): void 
     });
 
     subscribers[clientId] = subscriber;
-    publisher.subscribe(subscriber);
+    result.data.subscribe(subscriber);
 }
 
 function cancelSubscription(clientId: string): void {
@@ -727,7 +748,7 @@ function cancelSubscription(clientId: string): void {
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>For a subscription, <code>execute()</code> returns a publisher as <code>data</code> instead of a result object. A query or mutation sent to this endpoint would not, which is what the check below reports.</td>
+<td>A document can start with <code>subscription</code> and still fail — a misspelled field, for example. Reporting that as an error frame is friendlier than an empty stream that never delivers.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
@@ -741,12 +762,13 @@ function cancelSubscription(clientId: string): void {
 <h2 id="test_the_subscription"><a class="link" href="#test_the_subscription">Test the subscription</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Open the stream in one terminal. cURL&#8217;s <code>-N</code> disables buffering so events appear as they arrive, and <code>--data-urlencode</code> saves us encoding the document by hand:</p>
+<p>Open the stream in one terminal. cURL&#8217;s <code>-N</code> disables buffering, so events appear as they arrive rather than when the connection ends:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">curl -N --get "http://localhost:8080/api/com.example.gqltutorial:graphql" \
-  --data-urlencode 'query=subscription { event }'</code></pre>
+<pre class="highlight"><code class="language-bash" data-lang="bash">curl -N -X POST "http://localhost:8080/api/com.example.gqltutorial:graphql" \
+  -H "Content-Type: application/json" \
+  -d '{"query":"subscription { event }"}'</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -817,7 +839,7 @@ Standard GraphQL clients subscribe over a WebSocket using the <code>graphql-tran
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-02 07:19:31 UTC
+Last updated 2026-09-02 07:54:59 UTC
 </div>
 </div>
 </body>
