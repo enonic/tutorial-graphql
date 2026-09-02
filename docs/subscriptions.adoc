@@ -14,15 +14,13 @@ We will use SSE. The subscription is sent to the same endpoint as everything els
 
 [WARNING]
 ====
-Treat this chapter as a demonstration of how subscriptions wire into XP, rather than as a blueprint for production.
+This chapter shows how subscriptions wire into XP. It is not a production blueprint.
 
-Subscriptions are the least-used of the three GraphQL operation types, and plenty of substantial GraphQL APIs ship only queries and mutations, using webhooks or a purpose-built realtime service where they need push. Before reaching for one, it is worth asking whether polling or an ordinary event endpoint would do.
+* Subscriptions are the least-used operation type. Consider first whether polling, a webhook or a plain event endpoint would do.
+* SSE is used here because it needs no handshake and can be watched from a terminal. Real clients — GraphiQL, Apollo Client, urql — subscribe over a WebSocket with `graphql-transport-ws`.
+* An SSE stream holds an HTTP connection open for its lifetime, and over HTTP/1.x a browser allows only about six per origin, so a few streams can starve the page. See https://developer.enonic.com/docs/code/stable/web/sse[the SSE documentation].
 
-If you do need them, the transport chosen here is not the one most clients speak. SSE is used in this chapter because it needs no handshake and can be observed from a terminal, which makes it teachable. Standard GraphQL clients — GraphiQL, Apollo Client, urql — subscribe over a WebSocket using the `graphql-transport-ws` protocol, so that is what a browser or mobile client will most likely require.
-
-SSE also carries an operational limit worth knowing: a stream holds an HTTP connection open for its lifetime, and over HTTP/1.x browsers cap concurrent connections per origin at around six. A few open streams can therefore starve the rest of the page. See https://developer.enonic.com/docs/code/stable/web/sse[the SSE documentation] for the detail and the HTTP/2 mitigation.
-
-What does transfer, whichever transport you end up on, is everything on the schema side: a subscription resolves to a publisher, the publisher and its event listener belong at module level, and each subscription must be cancelled when its client goes away.
+The schema side carries over to either transport: a subscription resolves to a publisher, the publisher is shared and its listener registered once in `main.ts`, and every subscription is cancelled when its client disconnects.
 ====
 
 To achieve this, we need to:
