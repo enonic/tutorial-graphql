@@ -626,11 +626,9 @@ So the controller decides how to answer by looking at the operation:</p>
 <div class="content">
 <pre class="highlight"><code class="language-ts" data-lang="ts">import {send} from '/lib/xp/sse';
 
-// Attributes cross into the Java layer, so keep them flat strings: an
-// `undefined` or a nested object here fails with a NullPointerException.
 interface StreamAttributes {
     query: string;
-    variables: string;
+    variables?: unknown;
 }
 
 const SUBSCRIPTION = /^\s*subscription\b/; <i class="conum" data-value="1"></i><b>(1)</b>
@@ -645,7 +643,9 @@ export function POST(req: Request): Response {
     if (SUBSCRIPTION.test(body.query)) {
         return {
             sse: { <i class="conum" data-value="2"></i><b>(2)</b>
-                attributes: {query: body.query, variables: JSON.stringify(body.variables ?? null)}, <i class="conum" data-value="3"></i><b>(3)</b>
+                attributes: body.variables === undefined <i class="conum" data-value="3"></i><b>(3)</b>
+                    ? {query: body.query}
+                    : {query: body.query, variables: body.variables},
                 retry: 5000, <i class="conum" data-value="4"></i><b>(4)</b>
             }
         };
@@ -672,7 +672,19 @@ export function POST(req: Request): Response {
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>Per-connection state that XP hands back on every event for this connection. The <code>sseEvent</code> handler receives no request, so this is how the subscription document reaches it; keeping a map of connections would be the alternative, and worse.</td>
+<td>Per-connection state that XP hands back on every event for this connection. The <code>sseEvent</code> handler receives no request, so this is how the subscription document reaches it; keeping a map of connections would be the alternative, and worse.
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="Caution"></i>
+</td>
+<td class="content">
+Objects and numbers travel through <code>attributes</code> unchanged, but an <code>undefined</code> value fails at runtime with a <code>NullPointerException</code>. Leave the key out instead, as above.
+</td>
+</tr>
+</table>
+</div></td>
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
@@ -704,8 +716,7 @@ function isPublisher(data: unknown): data is Publisher {
 }
 
 function openSubscription(clientId: string, attributes: StreamAttributes): void {
-    const variables = JSON.parse(attributes.variables) as unknown;
-    const result = execute(graphQLSchema, attributes.query, variables);
+    const result = execute(graphQLSchema, attributes.query, attributes.variables);
 
     if (!isPublisher(result.data)) { <i class="conum" data-value="2"></i><b>(2)</b>
         send({
@@ -839,7 +850,7 @@ Standard GraphQL clients subscribe over a WebSocket using the <code>graphql-tran
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-02 07:54:59 UTC
+Last updated 2026-09-02 08:58:13 UTC
 </div>
 </div>
 </body>
