@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.26">
-<title>Setting up the development environment</title>
+<title>Setting up the development sandbox</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /*! Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -437,13 +437,13 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="article toc2 toc-right">
 <div id="header">
-<h1>Setting up the development environment</h1>
+<h1>Setting up the development sandbox</h1>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
 <li><a href="#install_cli">Install CLI</a></li>
 <li><a href="#create_a_sandbox">Create a sandbox</a></li>
-<li><a href="#sandbox_admin">Sandbox Admin</a></li>
+<li><a href="#sandbox_admin">Sandbox admin</a></li>
 <li><a href="#coming_up">Coming up</a></li>
 </ul>
 </div>
@@ -519,7 +519,7 @@ The <code>-f</code> flag accepts the default answer to every prompt, which selec
 </div>
 </div>
 <div class="sect1">
-<h2 id="sandbox_admin"><a class="link" href="#sandbox_admin">Sandbox Admin</a></h2>
+<h2 id="sandbox_admin"><a class="link" href="#sandbox_admin">Sandbox admin</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Let&#8217;s have a look at the sandbox&#8217;s web interface — also known as XP admin. Open <a href="http://localhost:8080">http://localhost:8080</a> in your browser (or just click the link).</p>
@@ -573,7 +573,7 @@ If things don&#8217;t look exactly the same, don&#8217;t worry. In every new ver
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-02 12:42:47 UTC
+Last updated 2026-09-02 12:51:24 UTC
 </div>
 </div>
 </body>
