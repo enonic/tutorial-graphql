@@ -99,7 +99,11 @@ const serverSideConfig = {
   // Additionally, you can substitute captured regex groups using numbered
   // backreferences.
   moduleNameMapper: {
-    '/lib/(.*)': `<rootDir>/${DIR_SRC}/lib/$1`,
+    // Map this app's own modules under /lib/, but leave the ones the runtime
+    // provides: /lib/xp/* is XP, /lib/enonic/* is Enonic libraries, and the
+    // Market libraries this app includes sit on flat paths that predate that
+    // convention. Mock those in a test rather than resolving them from source.
+    '^/lib/(?!xp/|enonic/|(graphql|graphql-rx|graphql-connection|cache)$)(.*)$': `<rootDir>/${DIR_SRC}/lib/$2`,
   },
 
   // A list of paths to modules that run some code to configure or set up the
