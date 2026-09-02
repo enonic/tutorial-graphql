@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.26">
-<title>GraphQL API</title>
+<title>Hello GraphQL</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /*! Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -437,7 +437,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="article toc2 toc-right">
 <div id="header">
-<h1>GraphQL API</h1>
+<h1>Hello GraphQL</h1>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
@@ -462,7 +462,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="graphql_library"><a class="link" href="#graphql_library">GraphQL Library</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>In order to build your own GraphQL API using the Enonic XP Platform, you should use the <a href="https://developer.enonic.com/docs/graphql-library">GraphQL Library</a>.
+<p>In order to build your own GraphQL API on Enonic XP, you should use the <a href="https://developer.enonic.com/docs/graphql-library">GraphQL Library</a>.
 This library makes it easy to build custom types and manage the schema lifecycle.
 Its documentation describes every function and constant used in this tutorial.</p>
 </div>
@@ -472,8 +472,25 @@ Its documentation describes every function and constant used in this tutorial.</
 <div class="listingblock">
 <div class="title">build.gradle</div>
 <div class="content">
-<pre class="highlight"><code class="language-kotlin" data-lang="kotlin">include "com.enonic.lib:lib-graphql:&lt;version&gt;"</code></pre>
+<pre class="highlight"><code class="language-kotlin" data-lang="kotlin">include libs.graphql</code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p>The starter declares dependencies through two version catalogs, so no version appears in <code>build.gradle</code> itself.
+Libraries from the Enonic Market, like this one, are listed in <code>gradle/libs.versions.toml</code> and referenced as <code>libs.&lt;name&gt;</code>:</p>
+</div>
+<div class="listingblock">
+<div class="title">gradle/libs.versions.toml</div>
+<div class="content">
+<pre class="highlight"><code class="language-toml" data-lang="toml">[versions]
+graphql = "3.0.0"
+
+[libraries]
+graphql = { module = "com.enonic.lib:lib-graphql", version.ref = "graphql" }</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Libraries that ship with XP are referenced as <code>xplibs.&lt;name&gt;</code> and need no entry at all — they follow the <code>xpVersion</code> in <code>gradle.properties</code>. We will use one of those in a later chapter.</p>
 </div>
 </div>
 </div>
@@ -795,7 +812,7 @@ Clients must therefore check <code>errors</code> even when <code>data</code> is 
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-02 10:42:21 UTC
+Last updated 2026-09-02 12:42:47 UTC
 </div>
 </div>
 </body>

@@ -494,7 +494,7 @@ GraphQL itself says nothing about how those results reach the client — that is
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>Add the necessary libraries for events and SSE provided by the Enonic Platform.</p>
+<p>Add the libraries for events and SSE that ship with Enonic XP.</p>
 </li>
 <li>
 <p>Create a GraphQL Subscription type and add it to our GraphQL schema.</p>
@@ -510,13 +510,13 @@ GraphQL itself says nothing about how those results reach the client — that is
 <h2 id="root_subscription_graphql_type"><a class="link" href="#root_subscription_graphql_type">Root Subscription GraphQL type</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>First of all, we should add the <code>lib-event</code> and the <code>lib-sse</code> dependencies to the <code>build.gradle</code> file.</p>
+<p>First of all, we should add the <code>lib-event</code> and the <code>lib-sse</code> dependencies to the <code>build.gradle</code> file. Both ship with XP, so they are referenced through the <code>xplibs</code> catalog and carry no version of their own.</p>
 </div>
 <div class="listingblock">
 <div class="title">build.gradle</div>
 <div class="content">
-<pre class="highlight"><code class="language-kotlin" data-lang="kotlin">include "com.enonic.xp:lib-event:${xpVersion}"
-include "com.enonic.xp:lib-sse:${xpVersion}"</code></pre>
+<pre class="highlight"><code class="language-kotlin" data-lang="kotlin">include xplibs.event
+include xplibs.sse</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -876,7 +876,7 @@ As noted at the top of this chapter, a standard GraphQL client will subscribe ov
 </table>
 </div>
 <div class="paragraph">
-<p>That&#8217;s it! In this chapter, we explored how to add Subscriptions and subscribe to real-time events using the capabilities of the Enonic Platform.</p>
+<p>That&#8217;s it! In this chapter, we explored how to add subscriptions and stream real-time events from Enonic XP.</p>
 </div>
 </div>
 </div>
@@ -907,7 +907,7 @@ As noted at the top of this chapter, a standard GraphQL client will subscribe ov
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-02 10:42:21 UTC
+Last updated 2026-09-02 12:42:47 UTC
 </div>
 </div>
 </body>
