@@ -5,11 +5,12 @@ import type {Publisher, Subscriber} from '/lib/graphql-rx';
 import {send} from '/lib/xp/sse';
 import graphQLSchema from './schema';
 
-// Attributes cross into the Java layer, so keep them flat strings: an
-// `undefined` or a nested object here fails with a NullPointerException.
+// Objects and numbers survive the trip into `sse.attributes`, but an
+// `undefined` value fails at runtime with a NullPointerException — so omit
+// the key rather than passing it through when there are no variables.
 interface StreamAttributes {
     query: string;
-    variables: string;
+    variables?: unknown;
 }
 
 // A subscription resolves to a publisher rather than to data, so it cannot be
@@ -37,7 +38,9 @@ export function POST(req: Request): Response {
     if (SUBSCRIPTION.test(body.query)) {
         return {
             sse: {
-                attributes: {query: body.query, variables: JSON.stringify(body.variables ?? null)},
+                attributes: body.variables === undefined
+                    ? {query: body.query}
+                    : {query: body.query, variables: body.variables},
                 retry: 5000,
             }
         };
@@ -73,8 +76,7 @@ function isPublisher(data: unknown): data is Publisher {
 }
 
 function openSubscription(clientId: string, attributes: StreamAttributes): void {
-    const variables = JSON.parse(attributes.variables) as unknown;
-    const result = execute(graphQLSchema, attributes.query, variables);
+    const result = execute(graphQLSchema, attributes.query, attributes.variables);
 
     if (!isPublisher(result.data)) {
         send({

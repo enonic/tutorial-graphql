@@ -138,11 +138,9 @@ So the controller decides how to answer by looking at the operation:
 ----
 import {send} from '/lib/xp/sse';
 
-// Attributes cross into the Java layer, so keep them flat strings: an
-// `undefined` or a nested object here fails with a NullPointerException.
 interface StreamAttributes {
     query: string;
-    variables: string;
+    variables?: unknown;
 }
 
 const SUBSCRIPTION = /^\s*subscription\b/; // <1>
@@ -157,7 +155,9 @@ export function POST(req: Request): Response {
     if (SUBSCRIPTION.test(body.query)) {
         return {
             sse: { // <2>
-                attributes: {query: body.query, variables: JSON.stringify(body.variables ?? null)}, // <3>
+                attributes: body.variables === undefined // <3>
+                    ? {query: body.query}
+                    : {query: body.query, variables: body.variables},
                 retry: 5000, // <4>
             }
         };
@@ -175,6 +175,8 @@ export function POST(req: Request): Response {
 <1> Decided before anything is executed, so the endpoint never runs an operation just to discover what kind it was.
 <2> Returning an `sse` object turns the response into an open stream. This is the same shape a `GET` handler would return — SSE is not tied to `GET` in XP.
 <3> Per-connection state that XP hands back on every event for this connection. The `sseEvent` handler receives no request, so this is how the subscription document reaches it; keeping a map of connections would be the alternative, and worse.
++
+CAUTION: Objects and numbers travel through `attributes` unchanged, but an `undefined` value fails at runtime with a `NullPointerException`. Leave the key out instead, as above.
 <4> How long the client should wait before reconnecting, in milliseconds.
 
 Opening the stream does not run the subscription. That happens when XP fires the `open` event, which is also where we get the `clientId` needed to send anything back:
@@ -200,8 +202,7 @@ function isPublisher(data: unknown): data is Publisher {
 }
 
 function openSubscription(clientId: string, attributes: StreamAttributes): void {
-    const variables = JSON.parse(attributes.variables) as unknown;
-    const result = execute(graphQLSchema, attributes.query, variables);
+    const result = execute(graphQLSchema, attributes.query, attributes.variables);
 
     if (!isPublisher(result.data)) { // <2>
         send({
