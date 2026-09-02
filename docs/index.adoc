@@ -15,8 +15,9 @@ By the end you will have:
 
 * a local development environment and a running Enonic application
 * a GraphQL schema with your own object types and resolvers
-* mutations that change data, and a subscription that streams events the moment they happen
+* mutations that change data
 * an endpoint you can drive from cURL, or from whichever GraphQL client you prefer
+* and, as an optional last step, a subscription that streams events as they happen
 
 Everything here is server-side — there is no UI to build, and every step ends with a command you can run to see it work.
 
