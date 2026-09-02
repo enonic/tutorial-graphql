@@ -443,6 +443,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <ul class="sectlevel1">
 <li><a href="#defining_the_note_type">Defining the Note type</a></li>
 <li><a href="#defining_the_root_mutation_type">Defining the root Mutation type</a></li>
+<li><a href="#storing_the_notes">Storing the notes</a></li>
 <li><a href="#using_variables">Using variables</a></li>
 <li><a href="#summary">Summary</a></li>
 <li><a href="#coming_up">Coming up</a></li>
@@ -628,17 +629,10 @@ You could also directly use the <code>noteType</code> variable, which was initia
     nonNull,
     reference
 } from '/lib/graphql';
+import {send} from '/lib/xp/event';
+import * as notes from '/lib/notes';
 
 const schemaGenerator = newSchemaGenerator();
-
-interface Note {
-    id: string;
-    title: string;
-    content: string;
-    createdAt: string;
-}
-
-const storage: Record&lt;string, Note&gt; = {};
 
 const noteType = schemaGenerator.createObjectType({
     name: 'Note',
@@ -670,11 +664,11 @@ const rootQueryType = schemaGenerator.createObjectType({
             args: {
                 id: nonNull(GraphQLID),
             },
-            resolve: (env) =&gt; storage[(env.args as {id: string}).id],
+            resolve: (env) =&gt; notes.get((env.args as {id: string}).id),
         },
         getNotes: {
             type: list(reference('Note')),
-            resolve: () =&gt; Object.keys(storage).map((key) =&gt; storage[key])
+            resolve: () =&gt; notes.list()
         }
     },
 });
@@ -690,13 +684,16 @@ const rootMutationType = schemaGenerator.createObjectType({
             },
             resolve: (env) =&gt; {
                 const args = env.args as {title: string; content: string};
-                const note: Note = {
-                    id: Math.random().toString(36).substring(2, 15),
-                    title: args.title,
-                    content: args.content,
-                    createdAt: new Date().toISOString(),
-                };
-                storage[note.id] = note;
+                const note = notes.create(args.title, args.content);
+
+                send({
+                    type: 'note.created',
+                    distributed: true,
+                    data: {
+                        note: note,
+                    }
+                });
+
                 return note;
             }
         },
@@ -706,9 +703,16 @@ const rootMutationType = schemaGenerator.createObjectType({
                 id: nonNull(GraphQLID),
             },
             resolve: (env) =&gt; {
-                const id = (env.args as {id: string}).id;
-                const note = storage[id];
-                delete storage[id];
+                const note = notes.remove((env.args as {id: string}).id);
+
+                send({
+                    type: 'note.deleted',
+                    distributed: true,
+                    data: {
+                        note: note,
+                    }
+                });
+
                 return note;
             }
         }
@@ -724,14 +728,103 @@ const graphQLSchema = schemaGenerator.createSchema({
 export default graphQLSchema;</code></pre>
 </div>
 </div>
-<div class="admonitionblock note">
+<div class="paragraph">
+<p>The resolvers above delegate to a small module of our own, which is where the notes actually live.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="storing_the_notes"><a class="link" href="#storing_the_notes">Storing the notes</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Our schema needs somewhere to keep notes. This guide uses <a href="https://developer.enonic.com/docs/cache-library">Cache Library</a>, which keeps them in the memory of one server — enough to see mutations and subscriptions working, without bringing a content model into a chapter about GraphQL.</p>
+</div>
+<div class="paragraph">
+<p>Add the dependency:</p>
+</div>
+<div class="listingblock">
+<div class="title">build.gradle</div>
+<div class="content">
+<pre class="highlight"><code class="language-kotlin" data-lang="kotlin">include libs.cache</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Then create the module the resolvers call:</p>
+</div>
+<div class="listingblock">
+<div class="title">src/main/resources/lib/notes.ts</div>
+<div class="content">
+<pre class="highlight"><code class="language-ts" data-lang="ts">import {newCache} from '/lib/cache';
+
+export interface Note {
+    id: string;
+    title: string;
+    content: string;
+    createdAt: string;
+}
+
+const NOTES = 'notes';
+
+const cache = newCache&lt;Record&lt;string, Note&gt;&gt;({size: 10, expire: 0});
+
+function notes(): Record&lt;string, Note&gt; {
+    return cache.get(NOTES, () =&gt; ({}));
+}
+
+export function list(): Note[] {
+    const all = notes();
+    return Object.keys(all).map((key) =&gt; all[key]);
+}
+
+export function get(id: string): Note | undefined {
+    return notes()[id];
+}
+
+export function create(title: string, content: string): Note {
+    const note: Note = {
+        id: Math.random().toString(36).substring(2, 15),
+        title: title,
+        content: content,
+        createdAt: new Date().toISOString(),
+    };
+
+    const all = notes();
+    all[note.id] = note;
+    cache.put(NOTES, all);
+
+    return note;
+}
+
+export function remove(id: string): Note | undefined {
+    const all = notes();
+    const note = all[id];
+
+    if (note) {
+        delete all[id];
+        cache.put(NOTES, all);
+    }
+
+    return note;
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Two details are worth pointing out.</p>
+</div>
+<div class="paragraph">
+<p>The cache is created at module level, not inside a function, because a cache created per call would be empty on every call.</p>
+</div>
+<div class="paragraph">
+<p>And the library has no way to iterate its entries, so a single key holds a map of all notes rather than one entry per note. <code>expire: 0</code> keeps them until the application is reloaded.</p>
+</div>
+<div class="admonitionblock important">
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-note" title="Note"></i>
+<i class="fa icon-important" title="Important"></i>
 </td>
 <td class="content">
-For simplicity, we use a plain JavaScript object as our data store. Notes therefore live in the memory of one server: they are lost when the application is redeployed or the sandbox restarts, and they are not shared between nodes in a cluster. A real application would persist them with <a href="https://developer.enonic.com/docs/xp/stable/api/lib-content">lib-content</a> or <a href="https://developer.enonic.com/docs/xp/stable/api/lib-node">lib-node</a> instead.
+This is a single-server store. Each node in a cluster would keep its own copy, so requests would return different notes depending on where they landed. An application that needs to survive a restart, or to run on more than one node, should use <a href="https://developer.enonic.com/docs/xp/stable/api/lib-node">lib-node</a> or a grid library instead.
 </td>
 </tr>
 </table>
@@ -888,7 +981,7 @@ Note the single quotes around the payload. They keep the shell from expanding <c
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-02 09:53:32 UTC
+Last updated 2026-09-02 10:35:35 UTC
 </div>
 </div>
 </body>

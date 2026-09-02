@@ -578,7 +578,7 @@ include "com.enonic.xp:lib-sse:${xpVersion}"</code></pre>
 </div>
 <div class="paragraph">
 <p>The resolver&#8217;s job is to return a processor that publishes the events we care about.
-Create the processor and the event listener once, at module level, and let the resolver hand out the same processor every time.</p>
+Two things have to be true for that to work: the processor must be the same object for every subscriber, and the event listener that feeds it must be registered exactly once.</p>
 </div>
 <div class="admonitionblock important">
 <table>
@@ -587,22 +587,53 @@ Create the processor and the event listener once, at module level, and let the r
 <i class="fa icon-important" title="Important"></i>
 </td>
 <td class="content">
-Do not create them inside the resolver. It runs on every subscribe, so a processor and listener built there would be registered again for each client and never removed, leaking a listener per subscription.
+Neither belongs in the resolver. A resolver runs on every subscribe, so a processor created there would be private to one client, and a listener registered there would be added again for every client and never removed.
 </td>
 </tr>
 </table>
 </div>
+<div class="paragraph">
+<p>Put the processor in a module of its own, so everything that needs it shares one instance:</p>
+</div>
+<div class="listingblock">
+<div class="title">src/main/resources/lib/events.ts</div>
+<div class="content">
+<pre class="highlight"><code class="language-ts" data-lang="ts">import {createPublishProcessor} from '/lib/graphql-rx';
+
+export const noteProcessor = createPublishProcessor();</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Register the listener in <code>main.ts</code>, the script XP runs when the application starts:</p>
+</div>
+<div class="listingblock">
+<div class="title">src/main/resources/main.ts</div>
+<div class="content">
+<pre class="highlight"><code class="language-ts" data-lang="ts">import {listener} from '/lib/xp/event';
+import {noteProcessor} from '/lib/events';
+
+export function init(): void {
+    listener({
+        type: 'custom.note.*',
+        callback: (event) =&gt; {
+            noteProcessor.onNext(event);
+        }
+    });
+}
+
+init();</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This is where a listener belongs. <code>main.ts</code> runs once as the application loads, so the listener is registered once, rather than on the first request that happens to reach a controller.</p>
+</div>
+<div class="paragraph">
+<p>The resolver then just hands out the shared processor:</p>
+</div>
 <div class="listingblock">
 <div class="title">/src/main/resources/apis/graphql/schema.ts</div>
 <div class="content">
-<pre class="highlight"><code class="language-ts" data-lang="ts">const noteProcessor = createPublishProcessor();
-
-listener({
-    type: 'custom.note.*',
-    callback: (event) =&gt; {
-        noteProcessor.onNext(event);
-    }
-});
+<pre class="highlight"><code class="language-ts" data-lang="ts">import {noteProcessor} from '/lib/events';
 
 const rootSubscriptionType = schemaGenerator.createObjectType({
     name: 'Subscription',
@@ -876,7 +907,7 @@ As noted at the top of this chapter, a standard GraphQL client will subscribe ov
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-02 09:53:32 UTC
+Last updated 2026-09-02 10:35:35 UTC
 </div>
 </div>
 </body>
