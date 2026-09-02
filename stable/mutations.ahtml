@@ -769,6 +769,23 @@ For simplicity, we use a plain JavaScript object as our data store. Notes theref
   -d '{"query":"{ getNotes { id title } }"}'</code></pre>
 </div>
 </div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-json" data-lang="json">{
+   "data":{
+      "getNotes":[
+         {
+            "id":"af6c4jrkjy4s5",
+            "title":"My Note"
+         }
+      ]
+   }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Only the fields you ask for come back — <code>content</code> and <code>createdAt</code> exist on the note, but were not requested here.</p>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -804,8 +821,23 @@ Most GraphQL clients have a separate pane for them:</p>
 <div class="content">
 <pre class="highlight"><code class="language-bash" data-lang="bash">curl -X POST "http://localhost:8080/api/com.example.gqltutorial:graphql" \
   -H "Content-Type: application/json" \
-  -d '{"query":"mutation CreateNote($title: String!, $content: String!) { createNote(title: $title, content: $content) { id } }","variables":{"title":"Shopping list","content":"Coffee, milk, bread"}}'</code></pre>
+  -d '{"query":"mutation CreateNote($title: String!, $content: String!) { createNote(title: $title, content: $content) { id createdAt } }","variables":{"title":"Shopping list","content":"Coffee, milk, bread"}}'</code></pre>
 </div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-json" data-lang="json">{
+   "data":{
+      "createNote":{
+         "id":"wnh3voq1lrk9f",
+         "createdAt":"2026-09-02T09:53:05.369Z"
+      }
+   }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The response contains exactly the fields the operation selected — <code>content</code> was sent as a variable but not asked for back.</p>
 </div>
 <div class="admonitionblock tip">
 <table>
@@ -856,7 +888,7 @@ Note the single quotes around the payload. They keep the shell from expanding <c
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-02 09:49:46 UTC
+Last updated 2026-09-02 09:53:32 UTC
 </div>
 </div>
 </body>
