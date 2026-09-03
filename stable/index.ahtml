@@ -507,6 +507,9 @@ Without one, a schema is just an object in memory.</p>
 <div class="paragraph">
 <p>You will create both in the <a href="graphql.ahtml">Hello GraphQL</a> chapter, then build on them through mutations and subscriptions.</p>
 </div>
+<div class="paragraph">
+<p>This edition covers GraphQL Library 3.x, which requires Enonic XP 8.0 or newer.</p>
+</div>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -550,7 +553,7 @@ This tutorial builds an API of your own design, with your own types and resolver
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-03 13:06:19 UTC
+Last updated 2026-09-03 13:14:41 UTC
 </div>
 </div>
 </body>
