@@ -560,21 +560,44 @@ include xplibs.sse</code></pre>
 <p>That leaves the <code>resolve</code> function.</p>
 </div>
 <div class="paragraph">
-<p>The library&#8217;s <code>/lib/graphql-rx</code> module supplies the two pieces a subscription needs: <code>createPublishProcessor</code>, an event source a resolver can return, and <code>createSubscriber</code>, which receives what the processor publishes.</p>
+<p>The library&#8217;s <code>/lib/graphql-rx</code> module supplies the two pieces a subscription needs: <code>createPublishProcessor</code>, an event source a resolver can return, and <code>createSubscriber</code>, which receives what the processor publishes. <code>/lib/graphql-rx</code> needs a declaration of its own, alongside the one added in the <a href="graphql.ahtml">Hello GraphQL</a> chapter:</p>
 </div>
 <div class="listingblock">
-<div class="title">/src/main/resources/apis/graphql/schema.ts</div>
+<div class="title">src/main/resources/types/graphql-rx.d.ts</div>
 <div class="content">
-<pre class="highlight"><code class="language-ts" data-lang="ts">import {createPublishProcessor} from '/lib/graphql-rx';</code></pre>
+<pre class="highlight"><code class="language-ts" data-lang="ts">/**
+ * Type definitions for the parts of lib-graphql-rx used by this application.
+ * See https://developer.enonic.com/docs/graphql-library
+ */
+declare global {
+    interface XpLibraries {
+        '/lib/graphql-rx': typeof import('./graphql-rx');
+    }
+}
+
+export interface Subscriber {
+    cancelSubscription(): void;
+}
+
+export interface Publisher {
+    subscribe(subscriber: Subscriber): void;
+    filter(predicate: (value: unknown) =&gt; boolean): Publisher;
+}
+
+export interface PublishProcessor extends Publisher {
+    onNext(value: unknown): void;
+    onError(error: unknown): void;
+    onComplete(): void;
+}
+
+export declare function createPublishProcessor(): PublishProcessor;
+export declare function createSubscriber(params: {onNext?: (event: unknown) =&gt; void}): Subscriber;</code></pre>
 </div>
-</div>
-<div class="paragraph">
-<p>And <code>lib-event</code>, to listen for the events themselves:</p>
 </div>
 <div class="listingblock">
-<div class="title">/src/main/resources/apis/graphql/schema.ts</div>
+<div class="title">src/main/resources/tsconfig.json</div>
 <div class="content">
-<pre class="highlight"><code class="language-ts" data-lang="ts">import {listener, send} from '/lib/xp/event';</code></pre>
+<pre class="highlight"><code class="language-jsonc" data-lang="jsonc">"/lib/graphql-rx": ["./types/graphql-rx"],</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -634,7 +657,8 @@ init();</code></pre>
 <div class="listingblock">
 <div class="title">/src/main/resources/apis/graphql/schema.ts</div>
 <div class="content">
-<pre class="highlight"><code class="language-ts" data-lang="ts">import {noteProcessor} from '/lib/events';
+<pre class="highlight"><code class="language-ts" data-lang="ts">import {Json} from '/lib/graphql'; // add to the existing import
+import {noteProcessor} from '/lib/events';
 
 const rootSubscriptionType = schemaGenerator.createObjectType({
     name: 'Subscription',
@@ -657,7 +681,10 @@ When two subscription fields need different slices of the same stream, call <cod
 <div class="listingblock">
 <div class="title">/src/main/resources/apis/graphql/schema.ts</div>
 <div class="content">
-<pre class="highlight"><code class="language-ts" data-lang="ts">send({
+<pre class="highlight"><code class="language-ts" data-lang="ts">import {send} from '/lib/xp/event';
+
+// inside the createNote resolver, after the note is stored
+send({
     type: 'note.created',
     distributed: true,
     data: {
@@ -679,7 +706,22 @@ So the controller decides how to answer by looking at the operation:</p>
 <div class="listingblock">
 <div class="title">/src/main/resources/apis/graphql/graphql.ts</div>
 <div class="content">
-<pre class="highlight"><code class="language-ts" data-lang="ts">import {send} from '/lib/xp/sse';
+<pre class="highlight"><code class="language-ts" data-lang="ts">import type {Request, Response, SseEvent} from '@enonic-types/core';
+import {execute} from '/lib/graphql';
+import {createSubscriber} from '/lib/graphql-rx';
+import type {Publisher, Subscriber} from '/lib/graphql-rx';
+import {send} from '/lib/xp/sse';
+import graphQLSchema from './schema';
+
+function badRequest(message: string): Response {
+    return {
+        status: 400,
+        contentType: 'application/json',
+        body: {
+            errors: [{message: message}]
+        },
+    };
+}
 
 interface StreamAttributes {
     query: string;
@@ -902,7 +944,7 @@ As noted at the top of this chapter, a standard GraphQL client will subscribe ov
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-03 16:00:14 UTC
+Last updated 2026-09-03 16:34:18 UTC
 </div>
 </div>
 </body>

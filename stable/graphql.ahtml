@@ -441,7 +441,11 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
-<li><a href="#graphql_library">GraphQL Library</a></li>
+<li><a href="#graphql_library">GraphQL Library</a>
+<ul class="sectlevel2">
+<li><a href="#type_declarations">Type declarations</a></li>
+</ul>
+</li>
 <li><a href="#define_graphql_api">Define GraphQL API</a></li>
 <li><a href="#define_schema">Define schema</a></li>
 <li><a href="#test_graphql_api">Test GraphQL API</a></li>
@@ -475,8 +479,9 @@ Its documentation describes every function and constant used in this tutorial.</
 </div>
 </div>
 <div class="paragraph">
-<p>The starter declares dependencies through two version catalogs, so no version appears in <code>build.gradle</code> itself.
-Libraries from the Enonic Market, like this one, are listed in <code>gradle/libs.versions.toml</code> and referenced as <code>libs.&lt;name&gt;</code>:</p>
+<p>No version appears in <code>build.gradle</code>, because the starter declares dependencies through two version catalogs.
+Libraries from the Enonic Market are listed in <code>gradle/libs.versions.toml</code> and referenced as <code>libs.&lt;name&gt;</code>.
+The starter ships that file with several libraries already listed, but not this one — add it:</p>
 </div>
 <div class="listingblock">
 <div class="title">gradle/libs.versions.toml</div>
@@ -489,7 +494,112 @@ graphql = { module = "com.enonic.lib:lib-graphql", version.ref = "graphql" }</co
 </div>
 </div>
 <div class="paragraph">
-<p>Libraries that ship with XP are referenced as <code>xplibs.&lt;name&gt;</code> and need no entry at all — they follow the <code>xpVersion</code> in <code>gradle.properties</code>. We will use one of those in a later chapter.</p>
+<p>Libraries that ship with XP need no entry at all. They are referenced as <code>xplibs.&lt;name&gt;</code> and follow the <code>xpVersion</code> in <code>gradle.properties</code>; we will use two of those in later chapters.</p>
+</div>
+<div class="sect2">
+<h3 id="type_declarations"><a class="link" href="#type_declarations">Type declarations</a></h3>
+<div class="paragraph">
+<p>The Gradle dependency gives the application the library at runtime, but TypeScript still needs to know the shape of what <code>/lib/graphql</code> exports, or <code>npm run check</code> fails with <code>TS2307: Cannot find module</code>.</p>
+</div>
+<div class="paragraph">
+<p>The library publishes its declarations as <code>@enonic-types/lib-graphql</code>. Until that package is on npm, keep them in the application and point <code>paths</code> at them:</p>
+</div>
+<div class="listingblock">
+<div class="title">src/main/resources/types/graphql.d.ts</div>
+<div class="content">
+<pre class="highlight"><code class="language-ts" data-lang="ts">/**
+ * Type definitions for the parts of lib-graphql used by this application.
+ *
+ * The library does not publish an @enonic-types package, so these are
+ * maintained here. See https://developer.enonic.com/docs/graphql-library
+ */
+declare global {
+    interface XpLibraries {
+        '/lib/graphql': typeof import('./graphql');
+    }
+}
+
+export type GraphQLType = unknown;
+export type GraphQLSchema = unknown;
+
+export declare const GraphQLInt: GraphQLType;
+export declare const GraphQLFloat: GraphQLType;
+export declare const GraphQLString: GraphQLType;
+export declare const GraphQLBoolean: GraphQLType;
+export declare const GraphQLID: GraphQLType;
+export declare const Json: GraphQLType;
+export declare const Date: GraphQLType;
+export declare const Time: GraphQLType;
+export declare const DateTime: GraphQLType;
+export declare const LocalDateTime: GraphQLType;
+export declare const LocalTime: GraphQLType;
+
+export interface ResolverEnvironment&lt;Source = unknown, Args = Record&lt;string, unknown&gt;&gt; {
+    source: Source;
+    args: Args;
+    context: unknown;
+}
+
+export interface OutputField {
+    type: GraphQLType;
+    args?: Record&lt;string, GraphQLType&gt;;
+    resolve?: (env: ResolverEnvironment) =&gt; unknown;
+}
+
+export interface ObjectTypeParams {
+    name: string;
+    fields: Record&lt;string, OutputField&gt;;
+    interfaces?: GraphQLType[];
+    description?: string;
+}
+
+export interface SchemaParams {
+    query: GraphQLType;
+    mutation?: GraphQLType;
+    subscription?: GraphQLType;
+    dictionary?: GraphQLType[];
+}
+
+export interface GraphQLError {
+    errorType: string;
+    message: string;
+}
+
+export interface ExecutionResult {
+    data?: unknown;
+    errors?: GraphQLError[];
+}
+
+export interface SchemaGenerator {
+    createSchema(params: SchemaParams): GraphQLSchema;
+    createObjectType(params: ObjectTypeParams): GraphQLType;
+    createInputObjectType(params: {name: string; fields: Record&lt;string, {type: GraphQLType}&gt;; description?: string}): GraphQLType;
+    createInterfaceType(params: ObjectTypeParams &amp; {typeResolver: (source: unknown) =&gt; GraphQLType}): GraphQLType;
+    createUnionType(params: {name: string; types: GraphQLType[]; typeResolver: (source: unknown) =&gt; GraphQLType; description?: string}): GraphQLType;
+    createEnumType(params: {name: string; values: string[] | Record&lt;string, unknown&gt;; description?: string}): GraphQLType;
+    createPageInfoObjectType(params: ObjectTypeParams): GraphQLType;
+}
+
+export declare function newSchemaGenerator(): SchemaGenerator;
+export declare function list(type: GraphQLType): GraphQLType;
+export declare function nonNull(type: GraphQLType): GraphQLType;
+export declare function reference(typeKey: string): GraphQLType;
+export declare function execute(schema: GraphQLSchema, query: string, variables?: unknown, context?: unknown): ExecutionResult;</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">src/main/resources/tsconfig.json</div>
+<div class="content">
+<pre class="highlight"><code class="language-jsonc" data-lang="jsonc">"paths": {
+  "/lib/xp/*": ["../../../node_modules/@enonic-types/lib-*"],
+  "/lib/graphql": ["./types/graphql"],
+  "/*": ["./*"]
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Later chapters add two more libraries, each needing the same treatment: <code>/lib/graphql-rx</code> in the subscriptions chapter and <code>/lib/cache</code> in the next one. The declarations for those are in the <a href="https://github.com/enonic/tutorial-graphql/tree/master/src/main/resources/types">tutorial&#8217;s own repository</a>.</p>
+</div>
 </div>
 </div>
 </div>
@@ -801,7 +911,7 @@ Clients must therefore check <code>errors</code> even when <code>data</code> is 
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-03 16:00:14 UTC
+Last updated 2026-09-03 16:34:18 UTC
 </div>
 </div>
 </body>

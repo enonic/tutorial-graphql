@@ -525,18 +525,18 @@ App names matter. XP will not run two apps with the same name in a single instan
 <div class="title">Selected files from the app code:</div>
 <div class="content">
 <pre class="highlight"><code class="language-files" data-lang="files">src/
- main/
-  resources/
-   apis/ <i class="conum" data-value="1"></i><b>(1)</b>
-   assets/ <i class="conum" data-value="2"></i><b>(2)</b>
-   main.ts <i class="conum" data-value="3"></i><b>(3)</b>
-   enonic.yaml <i class="conum" data-value="4"></i><b>(4)</b>
-   tsconfig.json <i class="conum" data-value="5"></i><b>(5)</b>
- jest/ <i class="conum" data-value="6"></i><b>(6)</b>
+  main/resources/
+    apis/ <i class="conum" data-value="1"></i><b>(1)</b>
+    assets/ <i class="conum" data-value="2"></i><b>(2)</b>
+    main.ts <i class="conum" data-value="3"></i><b>(3)</b>
+    enonic.yaml <i class="conum" data-value="4"></i><b>(4)</b>
+    tsconfig.json <i class="conum" data-value="5"></i><b>(5)</b>
+  jest/ <i class="conum" data-value="6"></i><b>(6)</b>
 build.gradle <i class="conum" data-value="7"></i><b>(7)</b>
 package.json <i class="conum" data-value="8"></i><b>(8)</b>
-tsdown.config.ts <i class="conum" data-value="9"></i><b>(9)</b>
-gradle.properties <i class="conum" data-value="10"></i><b>(10)</b></code></pre>
+gradle/libs.versions.toml <i class="conum" data-value="9"></i><b>(9)</b>
+tsdown.config.mts <i class="conum" data-value="10"></i><b>(10)</b>
+gradle.properties <i class="conum" data-value="11"></i><b>(11)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -575,10 +575,14 @@ gradle.properties <i class="conum" data-value="10"></i><b>(10)</b></code></pre>
 </tr>
 <tr>
 <td><i class="conum" data-value="9"></i><b>9</b></td>
-<td>Bundles both the server-side and client-side TypeScript</td>
+<td>Versions of the Enonic Market libraries the application uses</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="10"></i><b>10</b></td>
+<td>Bundles both the server-side and client-side TypeScript</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="11"></i><b>11</b></td>
 <td>App name, version and the required XP version</td>
 </tr>
 </table>
@@ -618,7 +622,7 @@ enonic dev</pre>
 <div class="content">
 <pre class="highlight"><code>✔ Build complete in 65ms
 &gt; Task :deploy
-Deploying 'tutorial-graphql.jar' to '/Users/you/.enonic/sandboxes/mysandbox/home/deploy'
+Deploying 'gqltutorial.jar' to '/Users/you/.enonic/sandboxes/mysandbox/home/deploy'
 BUILD SUCCESSFUL
 Waiting for changes to input files...</code></pre>
 </div>
@@ -640,7 +644,7 @@ Waiting for changes to input files...</code></pre>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-03 16:00:14 UTC
+Last updated 2026-09-03 16:34:18 UTC
 </div>
 </div>
 </body>

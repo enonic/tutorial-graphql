@@ -622,7 +622,6 @@ You could also directly use the <code>noteType</code> variable, which was initia
     nonNull,
     reference
 } from '/lib/graphql';
-import {send} from '/lib/xp/event';
 import * as notes from '/lib/notes';
 
 const schemaGenerator = newSchemaGenerator();
@@ -679,13 +678,6 @@ const rootMutationType = schemaGenerator.createObjectType({
                 const args = env.args as {title: string; content: string};
                 const note = notes.create(args.title, args.content);
 
-                send({
-                    type: 'note.created',
-                    distributed: true,
-                    data: {
-                        note: note,
-                    }
-                });
 
                 return note;
             }
@@ -698,13 +690,6 @@ const rootMutationType = schemaGenerator.createObjectType({
             resolve: (env) =&gt; {
                 const note = notes.remove((env.args as {id: string}).id);
 
-                send({
-                    type: 'note.deleted',
-                    distributed: true,
-                    data: {
-                        note: note,
-                    }
-                });
 
                 return note;
             }
@@ -733,12 +718,47 @@ export default graphQLSchema;</code></pre>
 <p>Our schema needs somewhere to keep notes. This guide uses <a href="https://developer.enonic.com/docs/cache-library">Cache Library</a>, which keeps them in the memory of one server — enough to see mutations and subscriptions working, without bringing a content model into a chapter about GraphQL.</p>
 </div>
 <div class="paragraph">
-<p>Add the dependency:</p>
+<p>Add the dependency, and a declaration for it as in the previous chapter — <code>/lib/cache</code> publishes no <code>@enonic-types</code> package either:</p>
 </div>
 <div class="listingblock">
 <div class="title">build.gradle</div>
 <div class="content">
 <pre class="highlight"><code class="language-kotlin" data-lang="kotlin">include libs.cache</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">src/main/resources/types/cache.d.ts</div>
+<div class="content">
+<pre class="highlight"><code class="language-ts" data-lang="ts">declare global {
+    interface XpLibraries {
+        '/lib/cache': typeof import('./cache');
+    }
+}
+
+export interface Cache&lt;T&gt; {
+    get(key: string, fetcher: () =&gt; T): T;
+    getIfPresent(key: string): T | null;
+    put(key: string, value: T): void;
+    remove(key: string): void;
+    removePattern(keyRegex: string): void;
+    clear(): void;
+    getSize(): number;
+}
+
+export interface CacheParams {
+    /** Names the cache, making it application-wide and shared by every script context. */
+    name?: string;
+    size?: number;
+    expire?: number;
+}
+
+export declare function newCache&lt;T&gt;(params: CacheParams): Cache&lt;T&gt;;</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">src/main/resources/tsconfig.json</div>
+<div class="content">
+<pre class="highlight"><code class="language-jsonc" data-lang="jsonc">"/lib/cache": ["./types/cache"],</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -988,7 +1008,7 @@ Note the single quotes around the payload. They keep the shell from expanding <c
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-03 16:00:14 UTC
+Last updated 2026-09-03 16:34:18 UTC
 </div>
 </div>
 </body>
