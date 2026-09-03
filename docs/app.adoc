@@ -6,12 +6,7 @@
 
 Create, build and deploy an application from a starter.
 
-== Introduction
-
-The expression "There's an app for that" fits well with Enonic. When you created the sandbox, several applications were automatically installed (based on the `Essentials` template), which extended the platform's capabilities.
-
-https://developer.enonic.com/docs/xp/stable/apps[Enonic apps] are used to ship everything from content models to code and platform extensions, which you will soon discover.
-
+Everything you build for XP ships as an https://developer.enonic.com/docs/xp/stable/apps[application] — code, schemas and extensions alike. Ours will hold the GraphQL API.
 
 == Create an app
 

@@ -41,14 +41,7 @@ image::xp-boot.png[The XP boot page, 1085w]
 
 The boot page provides an overview of the sandbox, including installed applications, as well as the https://developer.enonic.com/docs/xp/stable/deployment/config[standard configuration files].
 
-Click btn:[Log In as Guest] to open the XP admin dashboard. You should now see something like this:
-
-.The XP admin dashboard
-image::xp-dashboard.png[The XP admin dashboard, 1727w]
-
-You are now on the admin dashboard. The right-hand menu (the `XP menu`) enables navigation between admin tools. Admin tools may be injected as extensions via applications.
-
-NOTE: If things don't look exactly the same, don't worry. In every new version of XP the background picture gets updated. Also, the admin dashboard is automatically localized, based on your browser's preferred language.
+Click btn:[Log In as Guest] to open the XP admin dashboard to see if everything is working.
 
 == Coming up
 
