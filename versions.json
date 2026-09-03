@@ -3,7 +3,8 @@
     {
       "label": "stable",
       "checkout": "master",
-      "latest": true
+      "latest": true,
+      "displayName": "3.x"
     }
   ]
 }

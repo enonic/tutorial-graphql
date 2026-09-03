@@ -454,7 +454,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>A hands-on introduction to developing a GraphQL API.</p>
+<p>Build a Notes API with queries, mutations and live updates.</p>
 </div>
 </div>
 </div>
@@ -550,7 +550,7 @@ This tutorial builds an API of your own design, with your own types and resolver
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-02 13:03:09 UTC
+Last updated 2026-09-03 13:06:19 UTC
 </div>
 </div>
 </body>

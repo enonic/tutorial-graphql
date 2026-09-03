@@ -454,8 +454,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>In this section, we will look at how to add a <code>Mutation</code> to our GraphQL schema.
-In GraphQL, mutations are used to modify data on the server.</p>
+<p>Add mutations so clients can change data, not just read it.</p>
 </div>
 <div class="paragraph">
 <p>Let’s say we need a Notes API to manage notes.
@@ -996,7 +995,7 @@ Note the single quotes around the payload. They keep the shell from expanding <c
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-02 13:03:09 UTC
+Last updated 2026-09-03 13:06:19 UTC
 </div>
 </div>
 </body>

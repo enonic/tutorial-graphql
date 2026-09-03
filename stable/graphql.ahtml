@@ -454,7 +454,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>In this section, we will go through an example of how to create a custom GraphQL API.</p>
+<p>Define a schema and expose it as a universal API.</p>
 </div>
 </div>
 </div>
@@ -812,7 +812,7 @@ Clients must therefore check <code>errors</code> even when <code>data</code> is 
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-02 13:03:09 UTC
+Last updated 2026-09-03 13:06:19 UTC
 </div>
 </div>
 </body>

@@ -452,7 +452,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Installing the CLI and creating a development sandbox.</p>
+<p>Install the CLI and create a development sandbox.</p>
 </div>
 </div>
 </div>
@@ -573,7 +573,7 @@ If things don&#8217;t look exactly the same, don&#8217;t worry. In every new ver
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-02 13:03:09 UTC
+Last updated 2026-09-03 13:06:19 UTC
 </div>
 </div>
 </body>
