@@ -34,6 +34,8 @@ Without one, a schema is just an object in memory.
 
 You will create both in the <<graphql#, Hello GraphQL>> chapter, then build on them through mutations and subscriptions.
 
+This edition covers GraphQL Library 3.x, which requires Enonic XP 8.0 or newer.
+
 NOTE: This tutorial builds an API of your own design, with your own types and resolvers. If what you need is a ready-made GraphQL API for querying CMS content, you want https://developer.enonic.com/docs/guillotine[Guillotine] instead.
 
 image::ready-set-code.svg["Ready...Set...Code!", width=720px]
