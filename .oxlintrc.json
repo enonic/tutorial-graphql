@@ -3,7 +3,6 @@
 
   // An array of glob patterns indicating the files that should not be linted.
   "ignorePatterns": [
-    "src/jest/server/setupFile.ts",
     "src/**/*.js"
   ],
 
@@ -13,6 +12,10 @@
       {
         "argsIgnorePattern": "^_"
       }
-    ]
+    ],
+
+    // Not part of oxlint's default (correctness-only) rule set, so it has to be
+    // named explicitly to keep failing the build as it did under typescript-eslint.
+    "typescript/no-explicit-any": "error"
   }
 }

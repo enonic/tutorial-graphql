@@ -126,7 +126,9 @@ The resolvers delegate to a module of our own, which is where the notes live.
 
 Our schema needs somewhere to keep notes. This guide uses https://developer.enonic.com/docs/cache-library[Cache Library], which keeps them in the memory of one server — enough to see mutations and subscriptions working, without bringing a content model into a chapter about GraphQL.
 
-Add the dependency, and a declaration for it as in the previous chapter — `+/lib/cache+` publishes no `@enonic-types` package either:
+The starter already lists this library in `build.gradle`, commented out — uncomment it.
+Its version is in `gradle/libs.versions.toml` too, so there is nothing to add there.
+A declaration is still needed, as in the previous chapter: `+/lib/cache+` publishes no `@enonic-types` package either.
 
 .build.gradle
 [source,kotlin]

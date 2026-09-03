@@ -5,25 +5,68 @@
   // Read more about tsconfig.json at:
   // https://www.typescriptlang.org/tsconfig
 
+  // Specifies an array of filenames or patterns to include in the program.
+  // These filenames are resolved relative to the directory containing the
+  // tsconfig.json file.
   "include": [
     "**/*.ts"
   ],
 
+  // Specifies an array of filenames or patterns that should be skipped when
+  // resolving include.
+  // Important: exclude only changes which files are included as a result of
+  // the include setting. A file specified by exclude can still become part of
+  // your codebase due to an import statement in your code, a types inclusion,
+  // a /// <reference directive, or being specified in the files list.
+  // It is not a mechanism that prevents a file from being included in the
+  // codebase - it simply changes what the include setting finds.
   "exclude": [
     "**/*.d.ts",
+    "assets/**/*.*",
+    // "static/**/*.*",
   ],
 
   "compilerOptions": {
+    "target": "ES2015",
+    "lib": [
+      "ES5",
+    ],
+
     // A series of entries which re-map imports to lookup locations relative
     // to the baseUrl if set, or to the tsconfig file itself otherwise.
     "paths": {
       // Explicit per-library entries (rather than only the "/lib/xp/*"
       // wildcard) let the IDE's auto-import suggest the runtime-correct
-      // "/lib/xp/<name>" specifiers. Add an entry when installing a new
+      // "/lib/xp/<name>" specifiers. See also autoImportSpecifierExcludeRegexes
+      // in .vscode/settings.json. Add an entry when installing a new
       // @enonic-types/lib-* package.
+      "/lib/xp/admin": ["../../../node_modules/@enonic-types/lib-admin/admin"],
+      "/lib/xp/app": ["../../../node_modules/@enonic-types/lib-app/app"],
+      "/lib/xp/auditlog": ["../../../node_modules/@enonic-types/lib-auditlog/auditlog"],
+      "/lib/xp/auth": ["../../../node_modules/@enonic-types/lib-auth/auth"],
+      "/lib/xp/cluster": ["../../../node_modules/@enonic-types/lib-cluster/cluster"],
+      "/lib/xp/common": ["../../../node_modules/@enonic-types/lib-common/common"],
+      "/lib/xp/content": ["../../../node_modules/@enonic-types/lib-content/content"],
+      "/lib/xp/context": ["../../../node_modules/@enonic-types/lib-context/context"],
       "/lib/xp/event": ["../../../node_modules/@enonic-types/lib-event/event"],
+      "/lib/xp/export": ["../../../node_modules/@enonic-types/lib-export/export"],
+      "/lib/xp/grid": ["../../../node_modules/@enonic-types/lib-grid/grid"],
+      "/lib/xp/i18n": ["../../../node_modules/@enonic-types/lib-i18n/i18n"],
+      "/lib/xp/io": ["../../../node_modules/@enonic-types/lib-io/io"],
+      "/lib/xp/mail": ["../../../node_modules/@enonic-types/lib-mail/mail"],
+      "/lib/xp/node": ["../../../node_modules/@enonic-types/lib-node/node"],
+      "/lib/xp/portal": ["../../../node_modules/@enonic-types/lib-portal/portal"],
+      "/lib/xp/project": ["../../../node_modules/@enonic-types/lib-project/project"],
+      "/lib/xp/repo": ["../../../node_modules/@enonic-types/lib-repo/repo"],
+      "/lib/xp/scheduler": ["../../../node_modules/@enonic-types/lib-scheduler/scheduler"],
+      "/lib/xp/schema": ["../../../node_modules/@enonic-types/lib-schema/schema"],
       "/lib/xp/sse": ["../../../node_modules/@enonic-types/lib-sse/sse"],
+      "/lib/xp/task": ["../../../node_modules/@enonic-types/lib-task/task"],
+      "/lib/xp/value": ["../../../node_modules/@enonic-types/lib-value/value"],
+      "/lib/xp/vhost": ["../../../node_modules/@enonic-types/lib-vhost/vhost"],
+      "/lib/xp/websocket": ["../../../node_modules/@enonic-types/lib-websocket/websocket"],
       "/lib/xp/*": ["../../../node_modules/@enonic-types/lib-*"],
+      // Libraries that publish no @enonic-types package; declarations in ./types
       "/lib/cache": ["./types/cache"],
       "/lib/graphql": ["./types/graphql"],
       "/lib/graphql-rx": ["./types/graphql-rx"],
@@ -32,6 +75,13 @@
 
     "skipLibCheck": true,
 
+    // By default all visible ”@types” packages are included in your compilation.
+    // Packages in node_modules/@types of any enclosing folder are considered visible.
+    // For example, that means packages within ./node_modules/@types/,
+    // ../node_modules/@types/, ../../node_modules/@types/, and so on.
+    // If types is specified, only packages listed will be included in the global scope.
+    // This feature differs from typeRoots in that it is about specifying only the exact
+    // types you want included, whereas typeRoots supports saying you want particular folders.
     "types": [
       // Make the types for the Enonic XP Global objects and functions
       // available in the global scope.

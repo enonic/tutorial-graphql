@@ -20,6 +20,11 @@ const transform = {
           syntax: 'typescript',
           tsx: true,
         },
+        transform: {
+          react: {
+            runtime: 'automatic',
+          },
+        },
         target: 'es2022',
       },
       sourceMaps: 'inline', // Important to get correct line numbers when running coverage tests

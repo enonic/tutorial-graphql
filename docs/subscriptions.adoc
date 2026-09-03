@@ -31,7 +31,7 @@ To achieve this, we need to:
 
 == Root Subscription GraphQL type
 
-Add `lib-event` and `lib-sse`. Both ship with XP, so they come from the `xplibs` catalog and carry no version of their own.
+Uncomment `lib-event` and `lib-sse` in `build.gradle`. Both ship with XP, so they come from the `xplibs` catalog and carry no version of their own.
 
 .build.gradle
 [source,kotlin]

@@ -52,7 +52,7 @@ gradle.properties <11>
 <3> Runs when the application loads. Not needed for this guide.
 <4> Application descriptor
 <5> TypeScript configuration for the server-side code
-<6> Test setup, ready for tests you add later
+<6> Jest setup with an example test for each side, server and client
 <7> Java and XP library dependencies
 <8> Node dependencies and the build, lint and test scripts
 <9> Versions of the Enonic Market libraries the application uses

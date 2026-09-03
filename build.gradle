@@ -4,21 +4,63 @@ plugins {
 }
 
 dependencies {
+
   // ─────────────────────────────────────────────────────────────────────────
   // Libraries bundled with Enonic XP (versioned by xpVersion via the xplibs catalog)
   // ─────────────────────────────────────────────────────────────────────────
+  include xplibs.admin
+  // include xplibs.app
+  // include xplibs.auditlog
+  // include xplibs.auth
+  // include xplibs.cluster
+  // include xplibs.common
+  // include xplibs.content
+  // include xplibs.context
   include xplibs.event
+  // include xplibs.export
+  // include xplibs.grid
+  // include xplibs.i18n
+  // include xplibs.io
+  // include xplibs.mail
+  // include xplibs.node
+  // include xplibs.portal
+  // include xplibs.project
+  // include xplibs.repo
+  // include xplibs.scheduler
+  // include xplibs.schema
   include xplibs.sse
+  // include xplibs.task
+  // include xplibs.value
+  // include xplibs.vhost
+  // include xplibs.websocket
 
   // ─────────────────────────────────────────────────────────────────────────
   // Libraries from the Enonic Market (versions in gradle/libs.versions.toml)
   // ─────────────────────────────────────────────────────────────────────────
+
+  // https://market.enonic.com/vendors/enonic/lib-asset
+  // include libs.asset
 
   // https://market.enonic.com/vendors/enonic/cache-lib
   include libs.cache
 
   // https://market.enonic.com/vendors/enonic/graphql-lib
   include libs.graphql
+
+  // https://market.enonic.com/vendors/enonic/http-client-lib
+  // include libs.http.client
+
+  // https://market.enonic.com/vendors/enonic/mustache-lib
+  // include libs.mustache
+
+  // https://market.enonic.com/vendors/enonic/router-lib
+  // include libs.router
+
+  // https://market.enonic.com/vendors/enonic/lib-static
+  // include libs.static
+
+  // https://market.enonic.com/vendors/enonic/thymeleaf-lib
+  // include libs.thymeleaf
 }
 
 repositories {
@@ -36,14 +78,14 @@ node {
 
   // Version of node to download and install (only used if download is true)
   // It will be unpacked in the workDir
-  version = '24.11.0'
+  version = '24.20.0'
 }
 
 processResources {
-  exclude '**/.gitkeep'
+	exclude '**/.gitkeep'
   exclude '**/*.json'
-  exclude '**/*.ts'
-  exclude '**/*.tsx'
+	exclude '**/*.ts'
+	exclude '**/*.tsx'
 }
 
 tasks.register('npmBuild', NpmTask) {
@@ -59,7 +101,6 @@ tasks.register('npmBuild', NpmTask) {
     'NODE_ENV': project.findProperty('env') == 'dev' ? 'development' : 'production'
   ]
   inputs.dir 'src/main/resources'
-  inputs.file 'tsdown.config.mts'
   outputs.dir 'build/resources/main'
   outputs.upToDateWhen { false }
 }
@@ -67,27 +108,27 @@ tasks.register('npmBuild', NpmTask) {
 jar.dependsOn npmBuild
 
 tasks.register('npmCheck', NpmTask) {
-  dependsOn npmInstall
-  args = [
-    'run',
-    'check'
-  ]
-  environment = [
-    'FORCE_COLOR': 'true',
-  ]
+	dependsOn npmInstall
+	args = [
+		'run',
+		'check'
+	]
+	environment = [
+		'FORCE_COLOR': 'true',
+	]
 }
 
 check.dependsOn npmCheck
 
 tasks.register('npmTest', NpmTask) {
-  args = [
-    'run',
-    'test'
-  ]
-  dependsOn npmInstall
-  environment = [
-    'FORCE_COLOR': 'true',
-  ]
+	args = [
+		'run',
+		'test'
+	]
+	dependsOn npmInstall
+	environment = [
+		'FORCE_COLOR': 'true',
+	]
   inputs.dir 'src/jest'
   outputs.dir 'coverage'
   outputs.upToDateWhen { false }
@@ -97,8 +138,4 @@ test.dependsOn npmTest
 
 tasks.withType(Copy).configureEach {
   includeEmptyDirs = false
-}
-
-jar {
-  outputs.dir layout.buildDirectory.dir( "resources/main" )
 }
