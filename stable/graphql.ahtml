@@ -496,13 +496,27 @@ graphql = { module = "com.enonic.lib:lib-graphql", version.ref = "graphql" }</co
 <div class="paragraph">
 <p>Libraries that ship with XP need no entry at all. They are referenced as <code>xplibs.&lt;name&gt;</code> and follow the <code>xpVersion</code> in <code>gradle.properties</code>; we will use two of those in later chapters.</p>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<code>enonic dev</code> watches <code>src/main/resources</code>, not the Gradle build.
+Editing <code>build.gradle</code> or <code>gradle/libs.versions.toml</code> on its own therefore triggers no rebuild; the change is picked up by the next build that a source edit causes.
+Every chapter here adds source alongside its dependency, so you will not normally notice — but it explains a library that seems to be missing if you ever change only the build.
+</td>
+</tr>
+</table>
+</div>
 <div class="sect2">
 <h3 id="type_declarations"><a class="link" href="#type_declarations">Type declarations</a></h3>
 <div class="paragraph">
 <p>The Gradle dependency gives the application the library at runtime, but TypeScript still needs to know the shape of what <code>/lib/graphql</code> exports, or <code>npm run check</code> fails with <code>TS2307: Cannot find module</code>.</p>
 </div>
 <div class="paragraph">
-<p>The library publishes its declarations as <code>@enonic-types/lib-graphql</code>. Until that package is on npm, keep them in the application and point <code>paths</code> at them:</p>
+<p>The library publishes its declarations as <code>@enonic-types/lib-graphql</code>. Until that package is on npm, keep them in the application:</p>
 </div>
 <div class="listingblock">
 <div class="title">src/main/resources/types/graphql.d.ts</div>
@@ -587,14 +601,13 @@ export declare function reference(typeKey: string): GraphQLType;
 export declare function execute(schema: GraphQLSchema, query: string, variables?: unknown, context?: unknown): ExecutionResult;</code></pre>
 </div>
 </div>
+<div class="paragraph">
+<p>Then add one line to the <code>paths</code> block in the app&#8217;s <code>tsconfig.json</code>, leaving the entries the starter already lists in place — those are what make your IDE suggest the runtime-correct <code>/lib/xp/&lt;name&gt;</code> specifiers:</p>
+</div>
 <div class="listingblock">
 <div class="title">src/main/resources/tsconfig.json</div>
 <div class="content">
-<pre class="highlight"><code class="language-jsonc" data-lang="jsonc">"paths": {
-  "/lib/xp/*": ["../../../node_modules/@enonic-types/lib-*"],
-  "/lib/graphql": ["./types/graphql"],
-  "/*": ["./*"]
-}</code></pre>
+<pre class="highlight"><code class="language-jsonc" data-lang="jsonc">"/lib/graphql": ["./types/graphql"],</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -823,7 +836,7 @@ As a result, the GraphQL API will be available at the following endpoint:</p>
 <div class="content">
 <pre class="highlight"><code class="language-json" data-lang="json">{
    "data":{
-     "serverTime":"2025-07-08T12:44:22.049Z"
+     "serverTime":"2026-09-03T20:06:25.482Z"
    }
 }</code></pre>
 </div>
@@ -911,7 +924,7 @@ Clients must therefore check <code>errors</code> even when <code>data</code> is 
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-03 18:05:08 UTC
+Last updated 2026-09-03 20:39:44 UTC
 </div>
 </div>
 </body>

@@ -441,6 +441,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
+<li><a href="#not_your_average_query">Not your average query</a></li>
+<li><a href="#not_a_production_blueprint">Not a production blueprint</a></li>
 <li><a href="#root_subscription_graphql_type">Root Subscription GraphQL type</a></li>
 <li><a href="#stream_the_results">Stream the results</a></li>
 <li><a href="#test_the_subscription">Test the subscription</a></li>
@@ -454,43 +456,19 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>Stream events to clients as they happen.</p>
 </div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="not_your_average_query"><a class="link" href="#not_your_average_query">Not your average query</a></h2>
+<div class="sectionbody">
 <div class="paragraph">
-<p>A subscription differs from a query in what the engine gives back.
-Where a query resolves to a value, a subscription resolves to a <strong>publisher</strong> that emits a result every time something happens.
-GraphQL itself says nothing about how those results reach the client — that is the transport&#8217;s job, and XP offers two: <a href="https://developer.enonic.com/docs/code/stable/web/sse">SSE</a> and <a href="https://developer.enonic.com/docs/code/stable/web/websocket">WebSocket</a>.</p>
+<p>A subscription differs from a query in what the engine gives back. Where a query resolves to a value, a subscription resolves to a <strong>publisher</strong> that emits a result every time something happens.</p>
+</div>
+<div class="paragraph">
+<p>GraphQL itself says nothing about how those results reach the client — that is the transport&#8217;s job, and XP offers two: <a href="https://developer.enonic.com/docs/code/stable/web/sse">SSE</a> and <a href="https://developer.enonic.com/docs/code/stable/web/websocket">WebSocket</a>.</p>
 </div>
 <div class="paragraph">
 <p>We will use SSE. The subscription is sent to the same endpoint as everything else, and the response is a stream that stays open instead of a JSON body — no handshake, and it can be watched with cURL.</p>
-</div>
-<div class="admonitionblock warning">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-warning" title="Warning"></i>
-</td>
-<td class="content">
-<div class="paragraph">
-<p>This chapter shows how subscriptions wire into XP. It is not a production blueprint.</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Subscriptions are the least-used operation type. Consider first whether polling, a webhook or a plain event endpoint would do.</p>
-</li>
-<li>
-<p>SSE is used here because it needs no handshake and can be watched from a terminal. Real clients — GraphiQL, Apollo Client, urql — subscribe over a WebSocket with <code>graphql-transport-ws</code>.</p>
-</li>
-<li>
-<p>An SSE stream holds an HTTP connection open for its lifetime, and over HTTP/1.x a browser allows only about six per origin, so a few streams can starve the page. See <a href="https://developer.enonic.com/docs/code/stable/web/sse">the SSE documentation</a>.</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>The schema side carries over to either transport: a subscription resolves to a publisher, the publisher is shared and its listener registered once in <code>main.ts</code>, and every subscription is cancelled when its client disconnects.</p>
-</div>
-</td>
-</tr>
-</table>
 </div>
 <div class="paragraph">
 <p>To achieve this, we need to:</p>
@@ -507,6 +485,30 @@ GraphQL itself says nothing about how those results reach the client — that is
 <p>Answer a subscription with a stream instead of a JSON body.</p>
 </li>
 </ol>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="not_a_production_blueprint"><a class="link" href="#not_a_production_blueprint">Not a production blueprint</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This chapter shows how subscriptions wire into XP. Consider these points before using the approach in production:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Subscriptions are the least-used operation type. Consider first whether polling, a webhook or a plain event endpoint would do.</p>
+</li>
+<li>
+<p>SSE is used here because it needs no handshake and can be watched from a terminal. Real clients — GraphiQL, Apollo Client, urql — subscribe over a WebSocket with <code>graphql-transport-ws</code>.</p>
+</li>
+<li>
+<p>An SSE stream holds an HTTP connection open for its lifetime, and over HTTP/1.x a browser allows only about six per origin, so a few streams can starve the page. See <a href="https://developer.enonic.com/docs/code/stable/web/sse">the SSE documentation</a>.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The schema side carries over to either transport: a subscription resolves to a publisher, the publisher is shared and its listener registered once in <code>main.ts</code>, and every subscription is cancelled when its client disconnects.</p>
 </div>
 </div>
 </div>
@@ -652,6 +654,25 @@ init();</code></pre>
 <p>This is where a listener belongs. <code>main.ts</code> runs once as the application loads, so the listener is registered once, rather than on the first request that happens to reach a controller.</p>
 </div>
 <div class="paragraph">
+<p>The <code>type</code> is a pattern, and it carries a prefix XP adds for you: events sent from an application are namespaced under <code>custom.</code>, so the <code>note.created</code> the resolver sends arrives as <code>custom.note.created</code>.
+One <code>custom.note.*</code> listener therefore picks up both the created and the deleted event.</p>
+</div>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="Caution"></i>
+</td>
+<td class="content">
+One consequence to know about while you work.
+When <code>enonic dev</code> rebuilds without producing a new jar — after a comment, a formatting change, a type-only edit or a save with no changes — your scripts are reloaded but the application is not restarted, so <code>main.ts</code> does not run again.
+The listener stays attached to the previous instance of <code>/lib/events</code> while the resolver hands out a fresh one, and the stream goes quiet: subscriptions open, but no event ever arrives.
+Redeploy with <code>enonic project deploy</code> before subscribing again.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
 <p>The resolver then just hands out the shared processor:</p>
 </div>
 <div class="listingblock">
@@ -692,6 +713,10 @@ send({
     }
 });</code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p><code>deleteNote</code> does the same with <code>note.deleted</code>, with one difference: wrap the <code>send</code> in <code>if (note)</code>.
+<code>remove</code> returns nothing when the id is unknown, and the mutation then resolves to <code>null</code> — announcing a deletion that never happened, with no note in the event data, would leave subscribers with an event they cannot act on.</p>
 </div>
 </div>
 </div>
@@ -750,6 +775,10 @@ export function POST(req: Request): Response {
 
     const result = execute(graphQLSchema, body.query, body.variables);
 
+    if (isPublisher(result.data)) { <i class="conum" data-value="5"></i><b>(5)</b>
+        return badRequest('Send a single subscription operation to stream it.');
+    }
+
     return {
         contentType: 'application/json',
         body: result,
@@ -786,6 +815,10 @@ Objects and numbers travel through <code>attributes</code> unchanged, but an <co
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
 <td>How long the client should wait before reconnecting, in milliseconds.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>The regexp is a cheap test, and a subscription can slip past it — behind a leading comment, for example. Executing one returns a publisher, and XP cannot serialize that as JSON, so without this check the reader gets a 500 from deep inside Jackson instead of an answer. <code>isPublisher</code> is defined with the SSE handlers below.</td>
 </tr>
 </table>
 </div>
@@ -897,7 +930,7 @@ function cancelSubscription(clientId: string): void {
 <pre class="highlight"><code>retry:5000
 
 event:next
-data:{"data":{"event":{"type":"custom.note.created","timestamp":1752491906282,"localOrigin":true,"distributed":true,"data":{"note":{"id":"2g6inpt0ybexu","title":"My Note","content":"Brief content","createdAt":"2026-08-13T11:18:26.281Z"}}}}}</code></pre>
+data:{"data":{"event":{"type":"custom.note.created","timestamp":1788466007940,"localOrigin":true,"distributed":true,"data":{"note":{"id":"es0c2g0v8gu75","title":"My Note","content":"Brief content","createdAt":"2026-09-03T20:06:47.926Z"}}}}}</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -944,7 +977,7 @@ As noted at the top of this chapter, a standard GraphQL client will subscribe ov
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-03 18:05:08 UTC
+Last updated 2026-09-03 20:39:44 UTC
 </div>
 </div>
 </body>

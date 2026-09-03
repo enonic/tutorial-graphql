@@ -748,8 +748,6 @@ export interface Cache&lt;T&gt; {
 }
 
 export interface CacheParams {
-    /** Names the cache, making it application-wide and shared by every script context. */
-    name?: string;
     size?: number;
     expire?: number;
 }
@@ -780,7 +778,7 @@ export interface Note {
 
 const NOTES = 'notes';
 
-const cache = newCache&lt;Record&lt;string, Note&gt;&gt;({name: 'notes', size: 10});
+const cache = newCache&lt;Record&lt;string, Note&gt;&gt;({size: 10});
 
 function notes(): Record&lt;string, Note&gt; {
     return cache.get(NOTES, () =&gt; ({}));
@@ -824,16 +822,13 @@ export function remove(id: string): Note | undefined {
 </div>
 </div>
 <div class="paragraph">
-<p>Three details are worth pointing out.</p>
-</div>
-<div class="paragraph">
-<p><strong>The cache is named.</strong> That makes it application-wide, shared by every script context, which is the only reason it can be created at module level: an unnamed cache is created once <strong>per context</strong>, so entries written in one would be missing in another. A named cache also copies values in and out rather than holding them by reference, which is why <code>create</code> and <code>remove</code> write the map back with <code>put</code> instead of relying on having mutated it.</p>
+<p>Two details are worth pointing out.</p>
 </div>
 <div class="paragraph">
 <p><strong>A single key holds the whole map.</strong> The library cannot iterate its entries, so there is no way to implement <code>getNotes</code> from one entry per note.</p>
 </div>
 <div class="paragraph">
-<p><strong>Notes outlive a redeploy.</strong> A named cache survives a script reload, and with no <code>expire</code> set its entries live until the application is stopped, uninstalled or reconfigured — so notes you create will still be there after <code>enonic project deploy</code>.</p>
+<p><strong>Every change is written back with <code>put</code>.</strong> Cache Library 3.0.0 stores objects by reference, so mutating the map returned by <code>get</code> would be enough on its own. Writing it back is what the library&#8217;s documentation asks for, and it keeps <code>create</code> and <code>remove</code> correct if that behaviour ever changes.</p>
 </div>
 <div class="admonitionblock important">
 <table>
@@ -842,19 +837,22 @@ export function remove(id: string): Note | undefined {
 <i class="fa icon-important" title="Important"></i>
 </td>
 <td class="content">
-This is still a single-server store. Each node in a cluster keeps its own cache, so requests would return different notes depending on where they landed. An application that needs to run on more than one node, or to survive the application being stopped, should use <a href="https://developer.enonic.com/docs/xp/stable/api/lib-node">lib-node</a> or a grid library instead.
+This store lives in memory on a single node and does not survive a reload.
+Every <code>enonic dev</code> rebuild and every <code>enonic project deploy</code> starts from an empty store, so expect to recreate your notes as you work through the rest of the tutorial.
+In a cluster each node would keep its own copy, and requests would see different notes depending on where they landed.
+Anything that must persist, or run on more than one node, belongs in <a href="https://developer.enonic.com/docs/xp/stable/api/lib-node">lib-node</a> or a grid library.
 </td>
 </tr>
 </table>
 </div>
-<div class="admonitionblock caution">
+<div class="admonitionblock note">
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-caution" title="Caution"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-Never keep application state in a module-level variable — a plain object or array holding your data. XP gives no guarantee that a module is instantiated once, so such a variable is not reliably shared. A named cache is safe because the variable holds a <strong>handle</strong> to shared storage rather than the data itself.
+XP 8 runs one script engine per application, so the module-level <code>cache</code> variable — like any module-level variable — is in practice shared by every request. Do not build on that. The platform gives no such guarantee, and the coming GraalJS engine pool will run several engines. Cache Library 3.1 adds application-wide <strong>named</strong> caches for exactly that case; 3.0.0 accepts only <code>size</code> and <code>expire</code>, and each call to <code>newCache</code> returns a cache local to the script context that made it.
 </td>
 </tr>
 </table>
@@ -1010,7 +1008,7 @@ Note the single quotes around the payload. They keep the shell from expanding <c
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-03 18:05:08 UTC
+Last updated 2026-09-03 20:39:44 UTC
 </div>
 </div>
 </body>

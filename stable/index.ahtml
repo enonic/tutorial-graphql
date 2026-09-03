@@ -441,12 +441,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
-<li><a href="#introduction">Introduction</a>
-<ul class="sectlevel2">
-<li><a href="#what_you_will_be_working_with">What you will be working with</a></li>
-</ul>
-</li>
-<li><a href="#deep_dive">Deep dive</a></li>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#beyond_this_tutorial">Beyond this tutorial</a></li>
 </ul>
 </div>
 </div>
@@ -462,53 +458,31 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="introduction"><a class="link" href="#introduction">Introduction</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>GraphQL lets a client ask for exactly the data it needs, in a single request, against a schema it can discover for itself.
-This guide builds one from scratch on Enonic XP, in five short chapters.</p>
+<p>One request, and exactly the fields you asked for:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-graphql" data-lang="graphql">{ getNotes { id title } }</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-json" data-lang="json">{"data":{"getNotes":[{"id":"es0c2g0v8gu75","title":"My Note"}]}}</code></pre>
+</div>
 </div>
 <div class="paragraph">
-<p>By the end you will have:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>a local development environment and a running Enonic application</p>
-</li>
-<li>
-<p>a GraphQL schema with your own object types and resolvers</p>
-</li>
-<li>
-<p>mutations that change data</p>
-</li>
-<li>
-<p>an endpoint you can drive from cURL, or from whichever GraphQL client you prefer</p>
-</li>
-<li>
-<p>and, as an optional last step, a subscription that streams events as they happen</p>
-</li>
-</ul>
+<p>That endpoint is what you will build here, in five short chapters: a Notes API on Enonic XP with your own types and resolvers, mutations that change data, and a subscription that streams changes as they happen.
+Everything is server-side — there is no UI to build, and every chapter ends with a command you can run to see it work.</p>
 </div>
 <div class="paragraph">
-<p>Everything here is server-side — there is no UI to build, and every step ends with a command you can run to see it work.</p>
-</div>
-<div class="sect2">
-<h3 id="what_you_will_be_working_with"><a class="link" href="#what_you_will_be_working_with">What you will be working with</a></h3>
-<div class="paragraph">
-<p>Two building blocks do the job, and it is worth knowing which does what.</p>
-</div>
-<div class="paragraph">
-<p>The <a href="https://developer.enonic.com/docs/graphql-library">GraphQL Library</a> is where your API takes shape.
-It defines the schema — the types, fields and resolvers that describe your data — and executes incoming operations against it.</p>
-</div>
-<div class="paragraph">
-<p>A <a href="https://developer.enonic.com/docs/code/stable/web/apis">universal API</a> is what makes that schema reachable.
-It is XP&#8217;s way of exposing an HTTP endpoint from an application: you declare where it is mounted and who may call it, and XP routes matching requests to your code.
+<p>Two pieces do the job.
+The <a href="https://developer.enonic.com/docs/graphql-library">GraphQL Library</a> is where the API takes shape: it defines the schema — the types, fields and resolvers that describe your data — and executes incoming operations against it.
+A <a href="https://developer.enonic.com/docs/code/stable/web/apis">universal API</a> is what makes that schema reachable, XP&#8217;s way of exposing an HTTP endpoint from an application with its mount path and access rules declared next to the code.
 Without one, a schema is just an object in memory.</p>
 </div>
 <div class="paragraph">
-<p>You will create both in the <a href="graphql.ahtml">Hello GraphQL</a> chapter, then build on them through mutations and subscriptions.</p>
-</div>
-<div class="paragraph">
-<p>This edition covers GraphQL Library 3.x, which requires Enonic XP 8.0 or newer.</p>
+<p>You will create both in the <a href="graphql.ahtml">Hello GraphQL</a> chapter and build on them from there.
+This edition covers GraphQL Library 3.x, which requires Enonic XP 8.0 or newer.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -517,7 +491,7 @@ Without one, a schema is just an object in memory.</p>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-This tutorial builds an API of your own design, with your own types and resolvers. If what you need is a ready-made GraphQL API for querying CMS content, you want <a href="https://developer.enonic.com/docs/guillotine">Guillotine</a> instead.
+This tutorial builds an API of your own design. If what you need is a ready-made GraphQL API for querying CMS content, you want <a href="https://developer.enonic.com/docs/guillotine">Guillotine</a> instead.
 </td>
 </tr>
 </table>
@@ -532,28 +506,19 @@ This tutorial builds an API of your own design, with your own types and resolver
 </div>
 </div>
 </div>
-</div>
 <div class="sect1">
-<h2 id="deep_dive"><a class="link" href="#deep_dive">Deep dive</a></h2>
+<h2 id="beyond_this_tutorial"><a class="link" href="#beyond_this_tutorial">Beyond this tutorial</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This tutorial uses a small part of the library — enough to get a working API and no more.</p>
-</div>
-<div class="paragraph">
-<p>The full reference covers the rest: every scalar, object and input type, interfaces, unions and enums, Relay-style connections for paging, and the publishers behind subscriptions. It lives at</p>
-</div>
-<div class="paragraph">
-<p><a href="https://developer.enonic.com/docs/graphql-library" class="bare">https://developer.enonic.com/docs/graphql-library</a></p>
-</div>
-<div class="paragraph">
-<p>and documents the library&#8217;s three modules — <code>/lib/graphql</code> for schemas, types and execution, <code>/lib/graphql-connection</code> for cursor-based paging, and <code>/lib/graphql-rx</code> for subscriptions.</p>
+<p>These chapters use a small part of the library — enough for a working API and no more.
+The <a href="https://developer.enonic.com/docs/graphql-library">full reference</a> covers the rest, including interfaces, unions, enums, input types and Relay-style connections, across the library&#8217;s three modules: <code>/lib/graphql</code> for schemas, types and execution, <code>/lib/graphql-connection</code> for cursor-based paging, and <code>/lib/graphql-rx</code> for subscriptions.</p>
 </div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-03 18:05:08 UTC
+Last updated 2026-09-03 20:39:44 UTC
 </div>
 </div>
 </body>
