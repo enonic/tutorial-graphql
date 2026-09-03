@@ -514,7 +514,7 @@ GraphQL itself says nothing about how those results reach the client — that is
 <h2 id="root_subscription_graphql_type"><a class="link" href="#root_subscription_graphql_type">Root Subscription GraphQL type</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Add <code>lib-event</code> and <code>lib-sse</code>. Both ship with XP, so they come from the <code>xplibs</code> catalog and carry no version of their own.</p>
+<p>Uncomment <code>lib-event</code> and <code>lib-sse</code> in <code>build.gradle</code>. Both ship with XP, so they come from the <code>xplibs</code> catalog and carry no version of their own.</p>
 </div>
 <div class="listingblock">
 <div class="title">build.gradle</div>
@@ -944,7 +944,7 @@ As noted at the top of this chapter, a standard GraphQL client will subscribe ov
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-03 16:34:18 UTC
+Last updated 2026-09-03 18:05:08 UTC
 </div>
 </div>
 </body>

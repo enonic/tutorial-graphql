@@ -563,7 +563,7 @@ gradle.properties <i class="conum" data-value="11"></i><b>(11)</b></code></pre>
 </tr>
 <tr>
 <td><i class="conum" data-value="6"></i><b>6</b></td>
-<td>Test setup, ready for tests you add later</td>
+<td>Jest setup with an example test for each side, server and client</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="7"></i><b>7</b></td>
@@ -644,7 +644,7 @@ Waiting for changes to input files...</code></pre>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-03 16:34:18 UTC
+Last updated 2026-09-03 18:05:08 UTC
 </div>
 </div>
 </body>

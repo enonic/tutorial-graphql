@@ -718,7 +718,9 @@ export default graphQLSchema;</code></pre>
 <p>Our schema needs somewhere to keep notes. This guide uses <a href="https://developer.enonic.com/docs/cache-library">Cache Library</a>, which keeps them in the memory of one server — enough to see mutations and subscriptions working, without bringing a content model into a chapter about GraphQL.</p>
 </div>
 <div class="paragraph">
-<p>Add the dependency, and a declaration for it as in the previous chapter — <code>/lib/cache</code> publishes no <code>@enonic-types</code> package either:</p>
+<p>The starter already lists this library in <code>build.gradle</code>, commented out — uncomment it.
+Its version is in <code>gradle/libs.versions.toml</code> too, so there is nothing to add there.
+A declaration is still needed, as in the previous chapter: <code>/lib/cache</code> publishes no <code>@enonic-types</code> package either.</p>
 </div>
 <div class="listingblock">
 <div class="title">build.gradle</div>
@@ -1008,7 +1010,7 @@ Note the single quotes around the payload. They keep the shell from expanding <c
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-03 16:34:18 UTC
+Last updated 2026-09-03 18:05:08 UTC
 </div>
 </div>
 </body>
