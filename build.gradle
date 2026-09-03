@@ -59,7 +59,7 @@ tasks.register('npmBuild', NpmTask) {
     'NODE_ENV': project.findProperty('env') == 'dev' ? 'development' : 'production'
   ]
   inputs.dir 'src/main/resources'
-  inputs.file 'tsdown.config.ts'
+  inputs.file 'tsdown.config.mts'
   outputs.dir 'build/resources/main'
   outputs.upToDateWhen { false }
 }

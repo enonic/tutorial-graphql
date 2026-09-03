@@ -19,8 +19,9 @@ Add it to `build.gradle`:
 include libs.graphql
 ----
 
-The starter declares dependencies through two version catalogs, so no version appears in `build.gradle` itself.
-Libraries from the Enonic Market, like this one, are listed in `gradle/libs.versions.toml` and referenced as `libs.<name>`:
+No version appears in `build.gradle`, because the starter declares dependencies through two version catalogs.
+Libraries from the Enonic Market are listed in `gradle/libs.versions.toml` and referenced as `libs.<name>`.
+The starter ships that file with several libraries already listed, but not this one — add it:
 
 .gradle/libs.versions.toml
 [source,toml]
@@ -32,7 +33,31 @@ graphql = "3.0.0"
 graphql = { module = "com.enonic.lib:lib-graphql", version.ref = "graphql" }
 ----
 
-Libraries that ship with XP are referenced as `xplibs.<name>` and need no entry at all — they follow the `xpVersion` in `gradle.properties`. We will use one of those in a later chapter.
+Libraries that ship with XP need no entry at all. They are referenced as `xplibs.<name>` and follow the `xpVersion` in `gradle.properties`; we will use two of those in later chapters.
+
+=== Type declarations
+
+The Gradle dependency gives the application the library at runtime, but TypeScript still needs to know the shape of what `+/lib/graphql+` exports, or `npm run check` fails with `TS2307: Cannot find module`.
+
+The library publishes its declarations as `@enonic-types/lib-graphql`. Until that package is on npm, keep them in the application and point `paths` at them:
+
+.src/main/resources/types/graphql.d.ts
+[source,ts]
+----
+include::{sourcedir}/samples/types-graphql.d.ts[]
+----
+
+.src/main/resources/tsconfig.json
+[source,jsonc]
+----
+"paths": {
+  "/lib/xp/*": ["../../../node_modules/@enonic-types/lib-*"],
+  "/lib/graphql": ["./types/graphql"],
+  "/*": ["./*"]
+}
+----
+
+Later chapters add two more libraries, each needing the same treatment: `+/lib/graphql-rx+` in the subscriptions chapter and `+/lib/cache+` in the next one. The declarations for those are in the https://github.com/enonic/tutorial-graphql/tree/master/src/main/resources/types[tutorial's own repository].
 
 == Define GraphQL API
 

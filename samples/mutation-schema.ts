@@ -6,7 +6,6 @@ import {
     nonNull,
     reference
 } from '/lib/graphql';
-import {send} from '/lib/xp/event';
 import * as notes from '/lib/notes';
 
 const schemaGenerator = newSchemaGenerator();
@@ -63,13 +62,6 @@ const rootMutationType = schemaGenerator.createObjectType({
                 const args = env.args as {title: string; content: string};
                 const note = notes.create(args.title, args.content);
 
-                send({
-                    type: 'note.created',
-                    distributed: true,
-                    data: {
-                        note: note,
-                    }
-                });
 
                 return note;
             }
@@ -82,13 +74,6 @@ const rootMutationType = schemaGenerator.createObjectType({
             resolve: (env) => {
                 const note = notes.remove((env.args as {id: string}).id);
 
-                send({
-                    type: 'note.deleted',
-                    distributed: true,
-                    data: {
-                        note: note,
-                    }
-                });
 
                 return note;
             }
