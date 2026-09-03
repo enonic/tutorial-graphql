@@ -8,11 +8,10 @@ Define a schema and expose it as a universal API.
 
 == GraphQL Library
 
-In order to build your own GraphQL API on Enonic XP, you should use the https://developer.enonic.com/docs/graphql-library[GraphQL Library].
-This library makes it easy to build custom types and manage the schema lifecycle.
+The https://developer.enonic.com/docs/graphql-library[GraphQL Library] defines the schema and executes operations against it.
 Its documentation describes every function and constant used in this tutorial.
 
-First of all, we should add the https://developer.enonic.com/docs/graphql-library[GraphQL Library] dependency to the `build.gradle` file.
+Add it to `build.gradle`:
 
 .build.gradle
 [source,kotlin]

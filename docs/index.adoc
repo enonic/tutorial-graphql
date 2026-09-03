@@ -9,7 +9,7 @@ Build a Notes API with queries, mutations and live updates.
 == Introduction
 
 GraphQL lets a client ask for exactly the data it needs, in a single request, against a schema it can discover for itself.
-This guide builds one from scratch on Enonic XP: a small Notes API with queries, mutations and live updates, in five short chapters.
+This guide builds one from scratch on Enonic XP, in five short chapters.
 
 By the end you will have:
 
