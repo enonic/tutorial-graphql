@@ -460,7 +460,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="install_cli"><a class="link" href="#install_cli">Install CLI</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The <a href="https://developer.enonic.com/docs/enonic-cli">Enonic Command Line Interface</a> is an essential tool for developers working with Enonic.</p>
+<p>The <a href="https://developer.enonic.com/docs/enonic-cli">Enonic CLI</a> manages sandboxes, projects and deployments.</p>
 </div>
 <div class="paragraph">
 <p>If you have <code>npm</code> on your device, run this command:</p>
@@ -552,7 +552,7 @@ The <code>-f</code> flag accepts the default answer to every prompt, which selec
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-03 14:49:17 UTC
+Last updated 2026-09-03 15:54:17 UTC
 </div>
 </div>
 </body>

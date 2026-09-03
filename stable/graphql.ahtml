@@ -462,12 +462,11 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="graphql_library"><a class="link" href="#graphql_library">GraphQL Library</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>In order to build your own GraphQL API on Enonic XP, you should use the <a href="https://developer.enonic.com/docs/graphql-library">GraphQL Library</a>.
-This library makes it easy to build custom types and manage the schema lifecycle.
+<p>The <a href="https://developer.enonic.com/docs/graphql-library">GraphQL Library</a> defines the schema and executes operations against it.
 Its documentation describes every function and constant used in this tutorial.</p>
 </div>
 <div class="paragraph">
-<p>First of all, we should add the <a href="https://developer.enonic.com/docs/graphql-library">GraphQL Library</a> dependency to the <code>build.gradle</code> file.</p>
+<p>Add it to <code>build.gradle</code>:</p>
 </div>
 <div class="listingblock">
 <div class="title">build.gradle</div>
@@ -812,7 +811,7 @@ Clients must therefore check <code>errors</code> even when <code>data</code> is 
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-03 14:49:17 UTC
+Last updated 2026-09-03 15:54:17 UTC
 </div>
 </div>
 </body>

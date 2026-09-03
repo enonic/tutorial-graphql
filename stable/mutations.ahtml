@@ -457,8 +457,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>Add mutations so clients can change data, not just read it.</p>
 </div>
 <div class="paragraph">
-<p>Let’s say we need a Notes API to manage notes.
-This API should allow users to add new notes, view individual notes, delete notes, and retrieve a list of all notes.</p>
+<p>Our API will manage notes: create one, fetch it by id, list them all, and delete one.</p>
 </div>
 </div>
 </div>
@@ -995,7 +994,7 @@ Note the single quotes around the payload. They keep the shell from expanding <c
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-03 14:49:17 UTC
+Last updated 2026-09-03 15:54:17 UTC
 </div>
 </div>
 </body>

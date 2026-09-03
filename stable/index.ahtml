@@ -463,7 +463,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="sectionbody">
 <div class="paragraph">
 <p>GraphQL lets a client ask for exactly the data it needs, in a single request, against a schema it can discover for itself.
-This guide builds one from scratch on Enonic XP: a small Notes API with queries, mutations and live updates, in five short chapters.</p>
+This guide builds one from scratch on Enonic XP, in five short chapters.</p>
 </div>
 <div class="paragraph">
 <p>By the end you will have:</p>
@@ -553,7 +553,7 @@ This tutorial builds an API of your own design, with your own types and resolver
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-03 14:49:17 UTC
+Last updated 2026-09-03 15:54:17 UTC
 </div>
 </div>
 </body>
