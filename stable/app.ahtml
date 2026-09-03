@@ -447,7 +447,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </ul>
 </li>
 <li><a href="#build_and_deploy">Build and deploy</a></li>
-<li><a href="#moving_forward">Moving forward</a></li>
+<li><a href="#coming_up">Coming up</a></li>
 </ul>
 </div>
 </div>
@@ -630,17 +630,17 @@ Waiting for changes to input files...</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="moving_forward"><a class="link" href="#moving_forward">Moving forward</a></h2>
+<h2 id="coming_up"><a class="link" href="#coming_up">Coming up</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>You just created and built your very own application. In the next chapter you&#8217;ll get familiar with <a href="graphql.ahtml">how to build a GraphQL API</a>.</p>
+<p>Next you&#8217;ll <a href="graphql.ahtml">build the GraphQL API</a> itself.</p>
 </div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-03 15:54:17 UTC
+Last updated 2026-09-03 16:00:14 UTC
 </div>
 </div>
 </body>

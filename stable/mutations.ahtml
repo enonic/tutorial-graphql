@@ -507,7 +507,7 @@ Here&#8217;s a basic example:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>In this example, we define the fields for a GraphQL Object Type using the <code>schemaGenerator.createObjectType</code> function and apply constraints such as not-null to ensure required fields are properly validated.</p>
+<p><code>createObjectType</code> defines the fields, and <code>nonNull</code> marks the ones that must always have a value.</p>
 </div>
 </div>
 </div>
@@ -515,12 +515,10 @@ Here&#8217;s a basic example:</p>
 <h2 id="defining_the_root_mutation_type"><a class="link" href="#defining_the_root_mutation_type">Defining the root Mutation type</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Defining a mutation works the same way as defining any other GraphQL Object Type.
-The only difference is that the mutation type must be assigned to the <code>mutation</code> field when building the schema.</p>
+<p>A mutation type is built like any other object type. The only difference is where it goes: assigned to <code>mutation</code> when the schema is created.</p>
 </div>
 <div class="paragraph">
-<p>Let&#8217;s define the root <code>Mutation</code> type to specify which operations can modify the data.
-For the Notes API, we will include mutations for creating and deleting notes:</p>
+<p>The root <code>Mutation</code> type holds the operations that change data — here, creating and deleting a note:</p>
 </div>
 <div class="listingblock">
 <div class="title">src/main/resources/apis/graphql/schema.ts</div>
@@ -552,13 +550,10 @@ For the Notes API, we will include mutations for creating and deleting notes:</p
 </div>
 </div>
 <div class="paragraph">
-<p>This example is slightly more complex than defining the <code>Note</code> type.
-Here, we use arguments for the <code>createNote</code> and <code>deleteNote</code> fields, and we also define <code>resolve</code> functions for them.
-In general, if a field name matches the corresponding property in the source object and the value should be returned as-is, the <code>resolve</code> function can be omitted.</p>
+<p>Two things are new here: the fields take <code>args</code>, and they need a <code>resolve</code> function. A field whose name matches a property on the source object needs no resolver — the <code>Note</code> fields above rely on that.</p>
 </div>
 <div class="paragraph">
-<p>Also, notice how we reference the <code>Note</code> object in these fields.
-To specify the field type, we use the <code>reference</code> function, one of the type helpers described in the <a href="https://developer.enonic.com/docs/graphql-library">GraphQL Library documentation</a>.</p>
+<p>The field type is given by <code>reference</code>, one of the type helpers described in the <a href="https://developer.enonic.com/docs/graphql-library">GraphQL Library documentation</a>.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -573,7 +568,7 @@ You could also directly use the <code>noteType</code> variable, which was initia
 </table>
 </div>
 <div class="paragraph">
-<p>Now, let’s see how the <code>rootMutationType</code> is used when creating the schema:</p>
+<p>Add it to the schema:</p>
 </div>
 <div class="listingblock">
 <div class="title">src/main/resources/apis/graphql/schema.ts</div>
@@ -614,7 +609,7 @@ You could also directly use the <code>noteType</code> variable, which was initia
 </table>
 </div>
 <div class="paragraph">
-<p>Here is the complete example implementation of schema.ts. You can also see the implementation of the <code>getNote</code> and <code>getNotes</code> fields for the root <code>Query</code> type, which we omitted earlier since their implementation follows the same approach as the fields described in this section.</p>
+<p>The complete <code>schema.ts</code>, including the <code>getNote</code> and <code>getNotes</code> query fields, which follow the same pattern:</p>
 </div>
 <div class="listingblock">
 <div class="title">/src/main/resources/apis/graphql/schema.ts</div>
@@ -727,7 +722,7 @@ export default graphQLSchema;</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>The resolvers above delegate to a small module of our own, which is where the notes actually live.</p>
+<p>The resolvers delegate to a module of our own, which is where the notes live.</p>
 </div>
 </div>
 </div>
@@ -898,8 +893,7 @@ Never keep application state in a module-level variable — a plain object or ar
 <h2 id="using_variables"><a class="link" href="#using_variables">Using variables</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Writing argument values straight into the operation works, but clients normally send them separately as variables.
-Declare the variables in the operation, then supply their values with the request:</p>
+<p>Values written into the operation work, but clients normally send them separately as variables. Declare them in the operation, then supply the values with the request:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -963,21 +957,21 @@ Note the single quotes around the payload. They keep the shell from expanding <c
 <h2 id="summary"><a class="link" href="#summary">Summary</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>In this section, we covered:</p>
+<p>This chapter covered:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>How to add a mutation to a GraphQL schema</p>
+<p>adding a mutation to the schema</p>
 </li>
 <li>
-<p>How to use arguments in GraphQL type fields</p>
+<p>taking arguments on a field</p>
 </li>
 <li>
-<p>How to register GraphQL types in the dictionary to enable referencing them using the <code>reference</code> function</p>
+<p>registering a type in the <code>dictionary</code> so <code>reference</code> can resolve it</p>
 </li>
 <li>
-<p>How to pass argument values as variables</p>
+<p>sending argument values as variables</p>
 </li>
 </ul>
 </div>
@@ -994,7 +988,7 @@ Note the single quotes around the payload. They keep the shell from expanding <c
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-03 15:54:17 UTC
+Last updated 2026-09-03 16:00:14 UTC
 </div>
 </div>
 </body>

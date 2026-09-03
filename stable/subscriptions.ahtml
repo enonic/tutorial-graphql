@@ -514,7 +514,7 @@ GraphQL itself says nothing about how those results reach the client — that is
 <h2 id="root_subscription_graphql_type"><a class="link" href="#root_subscription_graphql_type">Root Subscription GraphQL type</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>First of all, we should add the <code>lib-event</code> and the <code>lib-sse</code> dependencies to the <code>build.gradle</code> file. Both ship with XP, so they are referenced through the <code>xplibs</code> catalog and carry no version of their own.</p>
+<p>Add <code>lib-event</code> and <code>lib-sse</code>. Both ship with XP, so they come from the <code>xplibs</code> catalog and carry no version of their own.</p>
 </div>
 <div class="listingblock">
 <div class="title">build.gradle</div>
@@ -524,7 +524,7 @@ include xplibs.sse</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Creating a <code>Subscription</code> type is no different from creating a regular GraphQL Object type. In our example, for simplicity, we will use a field called <code>event</code> with the type <code>Json</code>.</p>
+<p>A <code>Subscription</code> type is built like any other object type. Ours has one field, <code>event</code>, typed as <code>Json</code>.</p>
 </div>
 <div class="listingblock">
 <div class="title">/src/main/resources/apis/graphql/schema.ts</div>
@@ -543,7 +543,7 @@ include xplibs.sse</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>We then add it to our schema using the subscription property:</p>
+<p>Assign it to <code>subscription</code> when creating the schema:</p>
 </div>
 <div class="listingblock">
 <div class="title">/src/main/resources/apis/graphql/schema.ts</div>
@@ -557,13 +557,10 @@ include xplibs.sse</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Now we just need to implement the <code>resolve</code> function to complete the GraphQL part.</p>
+<p>That leaves the <code>resolve</code> function.</p>
 </div>
 <div class="paragraph">
-<p>The GraphQL Library provides functionality for creating a reactive processor for GraphQL publish streams using the <code>createPublishProcessor</code> function from its <code>/lib/graphql-rx</code> module. It also allows creating a subscriber via the <code>createSubscriber</code> function to handle operations such as subscribe, publish, connection, next, complete, etc., by processing push events to subscribers.</p>
-</div>
-<div class="paragraph">
-<p>You can include the library as follows:</p>
+<p>The library&#8217;s <code>/lib/graphql-rx</code> module supplies the two pieces a subscription needs: <code>createPublishProcessor</code>, an event source a resolver can return, and <code>createSubscriber</code>, which receives what the processor publishes.</p>
 </div>
 <div class="listingblock">
 <div class="title">/src/main/resources/apis/graphql/schema.ts</div>
@@ -572,7 +569,7 @@ include xplibs.sse</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>We will also include the Event Lib to subscribe to events:</p>
+<p>And <code>lib-event</code>, to listen for the events themselves:</p>
 </div>
 <div class="listingblock">
 <div class="title">/src/main/resources/apis/graphql/schema.ts</div>
@@ -655,7 +652,7 @@ const rootSubscriptionType = schemaGenerator.createObjectType({
 When two subscription fields need different slices of the same stream, call <code>filter()</code> on the processor instead of creating another one.</p>
 </div>
 <div class="paragraph">
-<p>To enable our <code>Subscription</code> to receive real messages, let&#8217;s add event publishing for <code>note.created</code> and <code>note.deleted</code> within the resolve functions of the <code>createNote</code> and <code>deleteNote</code> Mutation fields, respectively. Below is an example for <code>createNote</code>. For <code>deleteNote</code>, the implementation will be similar, except the <code>type</code> will be <code>note.deleted</code>.</p>
+<p>Nothing publishes yet. Send an event from the mutation resolvers — <code>note.created</code> in <code>createNote</code>, and <code>note.deleted</code> in <code>deleteNote</code>:</p>
 </div>
 <div class="listingblock">
 <div class="title">/src/main/resources/apis/graphql/schema.ts</div>
@@ -668,9 +665,6 @@ When two subscription fields need different slices of the same stream, call <cod
     }
 });</code></pre>
 </div>
-</div>
-<div class="paragraph">
-<p>The GraphQL part is ready.</p>
 </div>
 </div>
 </div>
@@ -879,9 +873,6 @@ As noted at the top of this chapter, a standard GraphQL client will subscribe ov
 </tr>
 </table>
 </div>
-<div class="paragraph">
-<p>That&#8217;s it! In this chapter, we explored how to add subscriptions and stream real-time events from Enonic XP.</p>
-</div>
 </div>
 </div>
 <div class="sect1">
@@ -911,7 +902,7 @@ As noted at the top of this chapter, a standard GraphQL client will subscribe ov
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-03 15:54:17 UTC
+Last updated 2026-09-03 16:00:14 UTC
 </div>
 </div>
 </body>

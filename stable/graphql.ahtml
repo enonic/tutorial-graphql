@@ -501,8 +501,7 @@ graphql = { module = "com.enonic.lib:lib-graphql", version.ref = "graphql" }</co
 The library builds and executes the schema; the universal API is what makes it reachable over HTTP.</p>
 </div>
 <div class="paragraph">
-<p>To create our GraphQL API, we need to create a <code>graphql</code> directory inside <code>/src/main/resources/apis</code>.
-Then, we must add a descriptor file named <code>graphql.yaml</code> and a controller file named <code>graphql.ts</code>.</p>
+<p>Create a <code>graphql</code> directory inside <code>/src/main/resources/apis</code>, holding a descriptor named <code>graphql.yaml</code> and a controller named <code>graphql.ts</code>.</p>
 </div>
 <div class="listingblock">
 <div class="title">/src/main/resources/apis/graphql/graphql.yaml</div>
@@ -517,7 +516,7 @@ allow:
 </div>
 </div>
 <div class="paragraph">
-<p>In the descriptor, we define which user roles will have access to the API, whether it should be mounted under <code>/api</code>, and optionally provide a <code>title</code> and <code>description</code>.</p>
+<p>The descriptor declares which roles may reach the API, whether it is mounted under <code>/api</code>, and optionally a <code>title</code> and <code>description</code>.</p>
 </div>
 <div class="paragraph">
 <p>APIs are not mounted anywhere by default, so <code>mount</code> and <code>allow</code> are what make this one reachable at all.
@@ -531,8 +530,7 @@ A real API would name a narrower principal here and check permissions inside the
 <h2 id="define_schema"><a class="link" href="#define_schema">Define schema</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Now we can focus on developing the GraphQL schema.
-Our server-side code is TypeScript, so we import what we need from the library by name.</p>
+<p>The code is TypeScript, so import what the schema needs from the library by name.</p>
 </div>
 <div class="listingblock">
 <div class="title">/src/main/resources/apis/graphql/schema.ts</div>
@@ -544,7 +542,7 @@ Our server-side code is TypeScript, so we import what we need from the library b
 <p>XP resolves <code>/lib/graphql</code> at runtime from the JAR we added to <code>build.gradle</code>, so this import is not a relative path into <code>node_modules</code> — it is the library as the platform sees it.</p>
 </div>
 <div class="paragraph">
-<p>After that, we need to obtain an instance of <code>schemaGenerator</code> in order to define <code>types</code>, <code>input types</code>, the <code>schema</code>, <code>unions</code>, <code>enums</code>, <code>interfaces</code>, and more.</p>
+<p>A schema generator creates the types, input types, unions, enums, interfaces and the schema itself:</p>
 </div>
 <div class="listingblock">
 <div class="title">/src/main/resources/apis/graphql/schema.ts</div>
@@ -553,12 +551,10 @@ Our server-side code is TypeScript, so we import what we need from the library b
 </div>
 </div>
 <div class="paragraph">
-<p>For simplicity, let’s start by creating a schema with a single field called <code>serverTime</code>.
-This will allow us to see how a schema is defined and how to get the response when querying our API.</p>
+<p>Start with a single field, <code>serverTime</code>, which is enough to query the API and see a response.</p>
 </div>
 <div class="paragraph">
-<p>We will begin constructing the schema by defining the root Query object type.
-This type serves as the entry point for all read operations in the GraphQL API and will contain the fields that clients can query.</p>
+<p>Every schema needs a root <code>Query</code> type. It is the entry point for reads, and holds the fields clients can ask for.</p>
 </div>
 <div class="listingblock">
 <div class="title">/src/main/resources/apis/graphql/schema.ts</div>
@@ -578,28 +574,24 @@ This type serves as the entry point for all read operations in the GraphQL API a
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Defines the root <code>Query</code> object type, which specifies the fields that can be queried in the GraphQL API.</td>
+<td>The root <code>Query</code> type, holding every field a client can query.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Declares the <code>serverTime</code> field inside the root query type.
-This is the name of the field that can be requested by GraphQL clients.</td>
+<td>The field name clients ask for.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>Specifies the return type of the <code>serverTime</code> field.
-In this case, it is a <code>GraphQLString</code>, meaning the field returns a string value.</td>
+<td>Its return type — a string.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>Defines the <code>resolver</code> function for the <code>serverTime</code> field.
-This function is executed when the field is queried and returns the current server time in ISO 8601 format.</td>
+<td>The resolver, run when the field is queried. Here it returns the current server time.</td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
-<p>Next, we define the schema object itself.
-The schema ties together the root Query type (and optionally Mutation and Subscription types) and serves as the core configuration for the GraphQL API.</p>
+<p>The schema itself ties the root types together — <code>query</code> now, <code>mutation</code> and <code>subscription</code> in later chapters.</p>
 </div>
 <div class="listingblock">
 <div class="title">/src/main/resources/apis/graphql/schema.ts</div>
@@ -615,17 +607,16 @@ export default graphQLSchema; <i class="conum" data-value="2"></i><b>(2)</b></co
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Creates a new GraphQL schema. This defines the overall structure of the API, starting with the root query type.</td>
+<td>The schema, built from its root types.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Export the created GraphQL schema for use in the application.</td>
+<td>Exported so the controller can execute against it.</td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
-<p>Now that the schema is defined, let’s define the HTTP POST method for our API controller.
-This method will handle incoming client requests and pass them to the GraphQL engine for execution.</p>
+<p>The controller receives requests and passes them to the engine:</p>
 </div>
 <div class="listingblock">
 <div class="title">/src/main/resources/apis/graphql/graphql.ts</div>
@@ -708,8 +699,7 @@ As a result, the GraphQL API will be available at the following endpoint:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>For testing, we will use cURL.
-It is assumed that cURL is already installed on your system.</p>
+<p>The examples use cURL, which you likely already have installed.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -717,7 +707,7 @@ It is assumed that cURL is already installed on your system.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>As a result of executing this command, you should see a response similar to the following:</p>
+<p>The response:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -811,7 +801,7 @@ Clients must therefore check <code>errors</code> even when <code>data</code> is 
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-03 15:54:17 UTC
+Last updated 2026-09-03 16:00:14 UTC
 </div>
 </div>
 </body>
