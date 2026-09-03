@@ -4,7 +4,7 @@
 :imagesdir: media/
 :sourcedir: ../
 
-On this page, we will explore how to add `Subscriptions`, which enable receiving real-time updates from a GraphQL server using long-lived requests.
+Stream events to clients as they happen.
 
 A subscription differs from a query in what the engine gives back.
 Where a query resolves to a value, a subscription resolves to a *publisher* that emits a result every time something happens.

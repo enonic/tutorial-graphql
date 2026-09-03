@@ -4,7 +4,7 @@
 :imagesdir: media/
 :sourcedir: ../
 
-A hands-on introduction to developing a GraphQL API.
+Build a Notes API with queries, mutations and live updates.
 
 == Introduction
 

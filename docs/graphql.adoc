@@ -4,7 +4,7 @@
 :imagesdir: media/
 :sourcedir: ../
 
-In this section, we will go through an example of how to create a custom GraphQL API.
+Define a schema and expose it as a universal API.
 
 == GraphQL Library
 

@@ -4,7 +4,7 @@
 :imagesdir: media/
 :sourcedir: ../
 
-Installing the CLI and creating a development sandbox.
+Install the CLI and create a development sandbox.
 
 == Install CLI
 

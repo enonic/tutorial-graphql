@@ -4,7 +4,7 @@
 :imagesdir: media/
 :sourcedir: ../
 
-Create, build and deploy an application based on a starter
+Create, build and deploy an application from a starter.
 
 == Introduction
 
