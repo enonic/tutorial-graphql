@@ -45,4 +45,4 @@ Click btn:[Log In as Guest] to open the XP admin dashboard to see if everything 
 
 == Coming up
 
-You're now familiar with the CLI and sandboxes. In the next chapter you'll create an <<app#, Enonic application>>.
+Next you'll create an <<app#, Enonic application>>.

@@ -31,7 +31,7 @@ To achieve this, we need to:
 
 == Root Subscription GraphQL type
 
-First of all, we should add the `lib-event` and the `lib-sse` dependencies to the `build.gradle` file. Both ship with XP, so they are referenced through the `xplibs` catalog and carry no version of their own.
+Add `lib-event` and `lib-sse`. Both ship with XP, so they come from the `xplibs` catalog and carry no version of their own.
 
 .build.gradle
 [source,kotlin]
@@ -40,7 +40,7 @@ include xplibs.event
 include xplibs.sse
 ----
 
-Creating a `Subscription` type is no different from creating a regular GraphQL Object type. In our example, for simplicity, we will use a field called `event` with the type `Json`.
+A `Subscription` type is built like any other object type. Ours has one field, `event`, typed as `Json`.
 
 ./src/main/resources/apis/graphql/schema.ts
 [source,ts]
@@ -58,7 +58,7 @@ const rootSubscriptionType = schemaGenerator.createObjectType({
 });
 ----
 
-We then add it to our schema using the subscription property:
+Assign it to `subscription` when creating the schema:
 
 ./src/main/resources/apis/graphql/schema.ts
 [source,ts]
@@ -71,11 +71,9 @@ const graphQLSchema = schemaGenerator.createSchema({
 });
 ----
 
-Now we just need to implement the `resolve` function to complete the GraphQL part.
+That leaves the `resolve` function.
 
-The GraphQL Library provides functionality for creating a reactive processor for GraphQL publish streams using the `createPublishProcessor` function from its `+/lib/graphql-rx+` module. It also allows creating a subscriber via the `createSubscriber` function to handle operations such as subscribe, publish, connection, next, complete, etc., by processing push events to subscribers.
-
-You can include the library as follows:
+The library's `+/lib/graphql-rx+` module supplies the two pieces a subscription needs: `createPublishProcessor`, an event source a resolver can return, and `createSubscriber`, which receives what the processor publishes.
 
 ./src/main/resources/apis/graphql/schema.ts
 [source,ts]
@@ -83,7 +81,7 @@ You can include the library as follows:
 import {createPublishProcessor} from '/lib/graphql-rx';
 ----
 
-We will also include the Event Lib to subscribe to events:
+And `lib-event`, to listen for the events themselves:
 
 ./src/main/resources/apis/graphql/schema.ts
 [source,ts]
@@ -135,7 +133,7 @@ const rootSubscriptionType = schemaGenerator.createObjectType({
 A single processor serves every subscriber.
 When two subscription fields need different slices of the same stream, call `filter()` on the processor instead of creating another one.
 
-To enable our `Subscription` to receive real messages, let's add event publishing for `note.created` and `note.deleted` within the resolve functions of the `createNote` and `deleteNote` Mutation fields, respectively. Below is an example for `createNote`. For `deleteNote`, the implementation will be similar, except the `type` will be `note.deleted`.
+Nothing publishes yet. Send an event from the mutation resolvers — `note.created` in `createNote`, and `note.deleted` in `deleteNote`:
 
 ./src/main/resources/apis/graphql/schema.ts
 [source,ts]
@@ -148,8 +146,6 @@ send({
     }
 });
 ----
-
-The GraphQL part is ready.
 
 == Stream the results
 
@@ -298,8 +294,6 @@ data:{"data":{"event":{"type":"custom.note.created","timestamp":1752491906282,"l
 Delete a note and a second event arrives. Stop the stream with kbd:[Ctrl+C]; the `close` event fires and the subscription is cancelled server-side.
 
 NOTE: As noted at the top of this chapter, a standard GraphQL client will subscribe over a WebSocket instead — one connection can then carry several operations chosen by the client. The `+/lib/graphql-rx+` page of the https://developer.enonic.com/docs/graphql-library[GraphQL Library documentation] covers that variant.
-
-That's it! In this chapter, we explored how to add subscriptions and stream real-time events from Enonic XP.
 
 == Where to go next
 

@@ -83,6 +83,6 @@ Waiting for changes to input files...
 ----
 ====
 
-== Moving forward
+== Coming up
 
-You just created and built your very own application. In the next chapter you'll get familiar with <<graphql#, how to build a GraphQL API>>.
+Next you'll <<graphql#, build the GraphQL API>> itself.

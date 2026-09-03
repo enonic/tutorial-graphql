@@ -39,8 +39,7 @@ Libraries that ship with XP are referenced as `xplibs.<name>` and need no entry 
 An Enonic XP application exposes its own HTTP endpoints as https://developer.enonic.com/docs/code/stable/web/apis[universal APIs].
 The library builds and executes the schema; the universal API is what makes it reachable over HTTP.
 
-To create our GraphQL API, we need to create a `graphql` directory inside `/src/main/resources/apis`.
-Then, we must add a descriptor file named `graphql.yaml` and a controller file named `graphql.ts`.
+Create a `graphql` directory inside `/src/main/resources/apis`, holding a descriptor named `graphql.yaml` and a controller named `graphql.ts`.
 
 ./src/main/resources/apis/graphql/graphql.yaml
 [source,yaml]
@@ -48,7 +47,7 @@ Then, we must add a descriptor file named `graphql.yaml` and a controller file n
 include::{sourcedir}/src/main/resources/apis/graphql/graphql.yaml[]
 ----
 
-In the descriptor, we define which user roles will have access to the API, whether it should be mounted under `/api`, and optionally provide a `title` and `description`.
+The descriptor declares which roles may reach the API, whether it is mounted under `/api`, and optionally a `title` and `description`.
 
 APIs are not mounted anywhere by default, so `mount` and `allow` are what make this one reachable at all.
 Be aware that `allow` controls who may call the API and nothing more — it does not limit what a resolver returns.
@@ -57,8 +56,7 @@ A real API would name a narrower principal here and check permissions inside the
 
 == Define schema
 
-Now we can focus on developing the GraphQL schema.
-Our server-side code is TypeScript, so we import what we need from the library by name.
+The code is TypeScript, so import what the schema needs from the library by name.
 
 ./src/main/resources/apis/graphql/schema.ts
 [source,ts]
@@ -68,7 +66,7 @@ import {GraphQLString, newSchemaGenerator} from '/lib/graphql';
 
 XP resolves `+/lib/graphql+` at runtime from the JAR we added to `build.gradle`, so this import is not a relative path into `node_modules` — it is the library as the platform sees it.
 
-After that, we need to obtain an instance of `schemaGenerator` in order to define `types`, `input types`, the `schema`, `unions`, `enums`, `interfaces`, and more.
+A schema generator creates the types, input types, unions, enums, interfaces and the schema itself:
 
 ./src/main/resources/apis/graphql/schema.ts
 [source,ts]
@@ -76,11 +74,9 @@ After that, we need to obtain an instance of `schemaGenerator` in order to defin
 const schemaGenerator = newSchemaGenerator();
 ----
 
-For simplicity, let’s start by creating a schema with a single field called `serverTime`.
-This will allow us to see how a schema is defined and how to get the response when querying our API.
+Start with a single field, `serverTime`, which is enough to query the API and see a response.
 
-We will begin constructing the schema by defining the root Query object type.
-This type serves as the entry point for all read operations in the GraphQL API and will contain the fields that clients can query.
+Every schema needs a root `Query` type. It is the entry point for reads, and holds the fields clients can ask for.
 
 ./src/main/resources/apis/graphql/schema.ts
 [source,ts]
@@ -96,16 +92,12 @@ const rootQueryType = schemaGenerator.createObjectType({ // <1>
 });
 ----
 
-<1> Defines the root `Query` object type, which specifies the fields that can be queried in the GraphQL API.
-<2> Declares the `serverTime` field inside the root query type.
-This is the name of the field that can be requested by GraphQL clients.
-<3> Specifies the return type of the `serverTime` field.
-In this case, it is a `GraphQLString`, meaning the field returns a string value.
-<4> Defines the `resolver` function for the `serverTime` field.
-This function is executed when the field is queried and returns the current server time in ISO 8601 format.
+<1> The root `Query` type, holding every field a client can query.
+<2> The field name clients ask for.
+<3> Its return type — a string.
+<4> The resolver, run when the field is queried. Here it returns the current server time.
 
-Next, we define the schema object itself.
-The schema ties together the root Query type (and optionally Mutation and Subscription types) and serves as the core configuration for the GraphQL API.
+The schema itself ties the root types together — `query` now, `mutation` and `subscription` in later chapters.
 
 ./src/main/resources/apis/graphql/schema.ts
 [source,ts]
@@ -117,12 +109,10 @@ const graphQLSchema = schemaGenerator.createSchema({ // <1>
 export default graphQLSchema; // <2>
 ----
 
-<1> Creates a new GraphQL schema. This defines the overall structure of the API, starting with the root query type.
+<1> The schema, built from its root types.
+<2> Exported so the controller can execute against it.
 
-<2> Export the created GraphQL schema for use in the application.
-
-Now that the schema is defined, let’s define the HTTP POST method for our API controller.
-This method will handle incoming client requests and pass them to the GraphQL engine for execution.
+The controller receives requests and passes them to the engine:
 
 ./src/main/resources/apis/graphql/graphql.ts
 [source,ts]
@@ -188,15 +178,14 @@ In our case, since the `appName` is `com.example.gqltutorial` and the `apiKey` i
 
  /api/com.example.gqltutorial:graphql
 
-For testing, we will use cURL.
-It is assumed that cURL is already installed on your system.
+The examples use cURL, which you likely already have installed.
 
 [source,bash]
 ----
 curl -X POST "http://localhost:8080/api/com.example.gqltutorial:graphql" -H "Content-Type: application/json" -d "{ \"query\": \"{ serverTime }\" }"
 ----
 
-As a result of executing this command, you should see a response similar to the following:
+The response:
 
 [source,json]
 ----

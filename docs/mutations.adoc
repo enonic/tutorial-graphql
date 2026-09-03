@@ -50,15 +50,13 @@ const noteType = schemaGenerator.createObjectType({
 });
 ----
 
-In this example, we define the fields for a GraphQL Object Type using the `schemaGenerator.createObjectType` function and apply constraints such as not-null to ensure required fields are properly validated.
+`createObjectType` defines the fields, and `nonNull` marks the ones that must always have a value.
 
 == Defining the root Mutation type
 
-Defining a mutation works the same way as defining any other GraphQL Object Type.
-The only difference is that the mutation type must be assigned to the `mutation` field when building the schema.
+A mutation type is built like any other object type. The only difference is where it goes: assigned to `mutation` when the schema is created.
 
-Let's define the root `Mutation` type to specify which operations can modify the data.
-For the Notes API, we will include mutations for creating and deleting notes:
+The root `Mutation` type holds the operations that change data — here, creating and deleting a note:
 
 .src/main/resources/apis/graphql/schema.ts
 [source,ts]
@@ -89,16 +87,13 @@ const rootMutationType = schemaGenerator.createObjectType({
 });
 ----
 
-This example is slightly more complex than defining the `Note` type.
-Here, we use arguments for the `createNote` and `deleteNote` fields, and we also define `resolve` functions for them.
-In general, if a field name matches the corresponding property in the source object and the value should be returned as-is, the `resolve` function can be omitted.
+Two things are new here: the fields take `args`, and they need a `resolve` function. A field whose name matches a property on the source object needs no resolver — the `Note` fields above rely on that.
 
-Also, notice how we reference the `Note` object in these fields.
-To specify the field type, we use the `reference` function, one of the type helpers described in the https://developer.enonic.com/docs/graphql-library[GraphQL Library documentation].
+The field type is given by `reference`, one of the type helpers described in the https://developer.enonic.com/docs/graphql-library[GraphQL Library documentation].
 
 NOTE: You could also directly use the `noteType` variable, which was initialized when creating the `Note` type. However, using `reference` is preferred, especially for larger schemas.
 
-Now, let’s see how the `rootMutationType` is used when creating the schema:
+Add it to the schema:
 
 .src/main/resources/apis/graphql/schema.ts
 [source,ts]
@@ -117,7 +112,7 @@ const graphQLSchema = schemaGenerator.createSchema({
 NOTE: `dictionary` is also necessary to ensure that objects referenced via `reference` are properly resolved and included in the schema.
 
 
-Here is the complete example implementation of schema.ts. You can also see the implementation of the `getNote` and `getNotes` fields for the root `Query` type, which we omitted earlier since their implementation follows the same approach as the fields described in this section.
+The complete `schema.ts`, including the `getNote` and `getNotes` query fields, which follow the same pattern:
 
 ./src/main/resources/apis/graphql/schema.ts
 [source,ts]
@@ -125,7 +120,7 @@ Here is the complete example implementation of schema.ts. You can also see the i
 include::{sourcedir}/samples/mutation-schema.ts[]
 ----
 
-The resolvers above delegate to a small module of our own, which is where the notes actually live.
+The resolvers delegate to a module of our own, which is where the notes live.
 
 == Storing the notes
 
@@ -208,8 +203,7 @@ Only the fields you ask for come back — `content` and `createdAt` exist on the
 
 == Using variables
 
-Writing argument values straight into the operation works, but clients normally send them separately as variables.
-Declare the variables in the operation, then supply their values with the request:
+Values written into the operation work, but clients normally send them separately as variables. Declare them in the operation, then supply the values with the request:
 
 [source,graphql]
 ----
@@ -257,12 +251,12 @@ TIP: Note the single quotes around the payload. They keep the shell from expandi
 
 == Summary
 
-In this section, we covered:
+This chapter covered:
 
-- How to add a mutation to a GraphQL schema
-- How to use arguments in GraphQL type fields
-- How to register GraphQL types in the dictionary to enable referencing them using the `reference` function
-- How to pass argument values as variables
+- adding a mutation to the schema
+- taking arguments on a field
+- registering a type in the `dictionary` so `reference` can resolve it
+- sending argument values as variables
 
 == Coming up
 
