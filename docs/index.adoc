@@ -8,46 +8,36 @@ Build a Notes API with queries, mutations and live updates.
 
 == Introduction
 
-GraphQL lets a client ask for exactly the data it needs, in a single request, against a schema it can discover for itself.
-This guide builds one from scratch on Enonic XP, in five short chapters.
+One request, and exactly the fields you asked for:
 
-By the end you will have:
+[source,graphql]
+----
+{ getNotes { id title } }
+----
 
-* a local development environment and a running Enonic application
-* a GraphQL schema with your own object types and resolvers
-* mutations that change data
-* an endpoint you can drive from cURL, or from whichever GraphQL client you prefer
-* and, as an optional last step, a subscription that streams events as they happen
+[source,json]
+----
+{"data":{"getNotes":[{"id":"es0c2g0v8gu75","title":"My Note"}]}}
+----
 
-Everything here is server-side — there is no UI to build, and every step ends with a command you can run to see it work.
+That endpoint is what you will build here, in five short chapters: a Notes API on Enonic XP with your own types and resolvers, mutations that change data, and a subscription that streams changes as they happen.
+Everything is server-side — there is no UI to build, and every chapter ends with a command you can run to see it work.
 
-=== What you will be working with
-
-Two building blocks do the job, and it is worth knowing which does what.
-
-The https://developer.enonic.com/docs/graphql-library[GraphQL Library] is where your API takes shape.
-It defines the schema — the types, fields and resolvers that describe your data — and executes incoming operations against it.
-
-A https://developer.enonic.com/docs/code/stable/web/apis[universal API] is what makes that schema reachable.
-It is XP's way of exposing an HTTP endpoint from an application: you declare where it is mounted and who may call it, and XP routes matching requests to your code.
+Two pieces do the job.
+The https://developer.enonic.com/docs/graphql-library[GraphQL Library] is where the API takes shape: it defines the schema — the types, fields and resolvers that describe your data — and executes incoming operations against it.
+A https://developer.enonic.com/docs/code/stable/web/apis[universal API] is what makes that schema reachable, XP's way of exposing an HTTP endpoint from an application with its mount path and access rules declared next to the code.
 Without one, a schema is just an object in memory.
 
-You will create both in the <<graphql#, Hello GraphQL>> chapter, then build on them through mutations and subscriptions.
-
+You will create both in the <<graphql#, Hello GraphQL>> chapter and build on them from there.
 This edition covers GraphQL Library 3.x, which requires Enonic XP 8.0 or newer.
 
-NOTE: This tutorial builds an API of your own design, with your own types and resolvers. If what you need is a ready-made GraphQL API for querying CMS content, you want https://developer.enonic.com/docs/guillotine[Guillotine] instead.
+NOTE: This tutorial builds an API of your own design. If what you need is a ready-made GraphQL API for querying CMS content, you want https://developer.enonic.com/docs/guillotine[Guillotine] instead.
 
 image::ready-set-code.svg["Ready...Set...Code!", width=720px]
 
 The first step is to <<setup#, crank up the development environment>>.
 
-== Deep dive
+== Beyond this tutorial
 
-This tutorial uses a small part of the library — enough to get a working API and no more.
-
-The full reference covers the rest: every scalar, object and input type, interfaces, unions and enums, Relay-style connections for paging, and the publishers behind subscriptions. It lives at
-
-https://developer.enonic.com/docs/graphql-library
-
-and documents the library's three modules — `+/lib/graphql+` for schemas, types and execution, `+/lib/graphql-connection+` for cursor-based paging, and `+/lib/graphql-rx+` for subscriptions.
+These chapters use a small part of the library — enough for a working API and no more.
+The https://developer.enonic.com/docs/graphql-library[full reference] covers the rest, including interfaces, unions, enums, input types and Relay-style connections, across the library's three modules: `+/lib/graphql+` for schemas, types and execution, `+/lib/graphql-connection+` for cursor-based paging, and `+/lib/graphql-rx+` for subscriptions.

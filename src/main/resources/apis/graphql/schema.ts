@@ -94,13 +94,15 @@ const rootMutationType = schemaGenerator.createObjectType({
             resolve: (env) => {
                 const note = notes.remove((env.args as {id: string}).id);
 
-                send({
-                    type: 'note.deleted',
-                    distributed: true,
-                    data: {
-                        note: note,
-                    }
-                });
+                if (note) {
+                    send({
+                        type: 'note.deleted',
+                        distributed: true,
+                        data: {
+                            note: note,
+                        }
+                    });
+                }
 
                 return note;
             }

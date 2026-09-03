@@ -35,11 +35,15 @@ graphql = { module = "com.enonic.lib:lib-graphql", version.ref = "graphql" }
 
 Libraries that ship with XP need no entry at all. They are referenced as `xplibs.<name>` and follow the `xpVersion` in `gradle.properties`; we will use two of those in later chapters.
 
+NOTE: `enonic dev` watches `src/main/resources`, not the Gradle build.
+Editing `build.gradle` or `gradle/libs.versions.toml` on its own therefore triggers no rebuild; the change is picked up by the next build that a source edit causes.
+Every chapter here adds source alongside its dependency, so you will not normally notice — but it explains a library that seems to be missing if you ever change only the build.
+
 === Type declarations
 
 The Gradle dependency gives the application the library at runtime, but TypeScript still needs to know the shape of what `+/lib/graphql+` exports, or `npm run check` fails with `TS2307: Cannot find module`.
 
-The library publishes its declarations as `@enonic-types/lib-graphql`. Until that package is on npm, keep them in the application and point `paths` at them:
+The library publishes its declarations as `@enonic-types/lib-graphql`. Until that package is on npm, keep them in the application:
 
 .src/main/resources/types/graphql.d.ts
 [source,ts]
@@ -47,14 +51,12 @@ The library publishes its declarations as `@enonic-types/lib-graphql`. Until tha
 include::{sourcedir}/samples/types-graphql.d.ts[]
 ----
 
+Then add one line to the `paths` block in the app's `tsconfig.json`, leaving the entries the starter already lists in place — those are what make your IDE suggest the runtime-correct `+/lib/xp/<name>+` specifiers:
+
 .src/main/resources/tsconfig.json
 [source,jsonc]
 ----
-"paths": {
-  "/lib/xp/*": ["../../../node_modules/@enonic-types/lib-*"],
-  "/lib/graphql": ["./types/graphql"],
-  "/*": ["./*"]
-}
+"/lib/graphql": ["./types/graphql"],
 ----
 
 Later chapters add two more libraries, each needing the same treatment: `+/lib/graphql-rx+` in the subscriptions chapter and `+/lib/cache+` in the next one. The declarations for those are in the https://github.com/enonic/tutorial-graphql/tree/master/src/main/resources/types[tutorial's own repository].
@@ -216,7 +218,7 @@ The response:
 ----
 {
    "data":{
-     "serverTime":"2025-07-08T12:44:22.049Z"
+     "serverTime":"2026-09-03T20:06:25.482Z"
    }
 }
 ----

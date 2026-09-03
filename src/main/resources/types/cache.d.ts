@@ -15,8 +15,6 @@ export interface Cache<T> {
 }
 
 export interface CacheParams {
-    /** Names the cache, making it application-wide and shared by every script context. */
-    name?: string;
     size?: number;
     expire?: number;
 }

@@ -6,28 +6,29 @@
 
 Stream events to clients as they happen.
 
-A subscription differs from a query in what the engine gives back.
-Where a query resolves to a value, a subscription resolves to a *publisher* that emits a result every time something happens.
+== Not your average query
+
+A subscription differs from a query in what the engine gives back. Where a query resolves to a value, a subscription resolves to a *publisher* that emits a result every time something happens.
+
 GraphQL itself says nothing about how those results reach the client — that is the transport's job, and XP offers two: https://developer.enonic.com/docs/code/stable/web/sse[SSE] and https://developer.enonic.com/docs/code/stable/web/websocket[WebSocket].
 
 We will use SSE. The subscription is sent to the same endpoint as everything else, and the response is a stream that stays open instead of a JSON body — no handshake, and it can be watched with cURL.
-
-[WARNING]
-====
-This chapter shows how subscriptions wire into XP. It is not a production blueprint.
-
-* Subscriptions are the least-used operation type. Consider first whether polling, a webhook or a plain event endpoint would do.
-* SSE is used here because it needs no handshake and can be watched from a terminal. Real clients — GraphiQL, Apollo Client, urql — subscribe over a WebSocket with `graphql-transport-ws`.
-* An SSE stream holds an HTTP connection open for its lifetime, and over HTTP/1.x a browser allows only about six per origin, so a few streams can starve the page. See https://developer.enonic.com/docs/code/stable/web/sse[the SSE documentation].
-
-The schema side carries over to either transport: a subscription resolves to a publisher, the publisher is shared and its listener registered once in `main.ts`, and every subscription is cancelled when its client disconnects.
-====
 
 To achieve this, we need to:
 
 1. Add the libraries for events and SSE that ship with Enonic XP.
 2. Create a GraphQL Subscription type and add it to our GraphQL schema.
 3. Answer a subscription with a stream instead of a JSON body.
+
+== Not a production blueprint
+
+This chapter shows how subscriptions wire into XP. Consider these points before using the approach in production:
+
+* Subscriptions are the least-used operation type. Consider first whether polling, a webhook or a plain event endpoint would do.
+* SSE is used here because it needs no handshake and can be watched from a terminal. Real clients — GraphiQL, Apollo Client, urql — subscribe over a WebSocket with `graphql-transport-ws`.
+* An SSE stream holds an HTTP connection open for its lifetime, and over HTTP/1.x a browser allows only about six per origin, so a few streams can starve the page. See https://developer.enonic.com/docs/code/stable/web/sse[the SSE documentation].
+
+The schema side carries over to either transport: a subscription resolves to a publisher, the publisher is shared and its listener registered once in `main.ts`, and every subscription is cancelled when its client disconnects.
 
 == Root Subscription GraphQL type
 
@@ -110,6 +111,14 @@ include::{sourcedir}/src/main/resources/main.ts[]
 
 This is where a listener belongs. `main.ts` runs once as the application loads, so the listener is registered once, rather than on the first request that happens to reach a controller.
 
+The `type` is a pattern, and it carries a prefix XP adds for you: events sent from an application are namespaced under `custom.`, so the `note.created` the resolver sends arrives as `custom.note.created`.
+One `+custom.note.*+` listener therefore picks up both the created and the deleted event.
+
+CAUTION: One consequence to know about while you work.
+When `enonic dev` rebuilds without producing a new jar — after a comment, a formatting change, a type-only edit or a save with no changes — your scripts are reloaded but the application is not restarted, so `main.ts` does not run again.
+The listener stays attached to the previous instance of `+/lib/events+` while the resolver hands out a fresh one, and the stream goes quiet: subscriptions open, but no event ever arrives.
+Redeploy with `enonic project deploy` before subscribing again.
+
 The resolver then just hands out the shared processor:
 
 ./src/main/resources/apis/graphql/schema.ts
@@ -148,6 +157,9 @@ send({
     }
 });
 ----
+
+`deleteNote` does the same with `note.deleted`, with one difference: wrap the `send` in `if (note)`.
+`remove` returns nothing when the id is unknown, and the mutation then resolves to `null` — announcing a deletion that never happened, with no note in the event data, would leave subscribers with an event they cannot act on.
 
 == Stream the results
 
@@ -202,6 +214,10 @@ export function POST(req: Request): Response {
 
     const result = execute(graphQLSchema, body.query, body.variables);
 
+    if (isPublisher(result.data)) { // <5>
+        return badRequest('Send a single subscription operation to stream it.');
+    }
+
     return {
         contentType: 'application/json',
         body: result,
@@ -215,6 +231,7 @@ export function POST(req: Request): Response {
 +
 CAUTION: Objects and numbers travel through `attributes` unchanged, but an `undefined` value fails at runtime with a `NullPointerException`. Leave the key out instead, as above.
 <4> How long the client should wait before reconnecting, in milliseconds.
+<5> The regexp is a cheap test, and a subscription can slip past it — behind a leading comment, for example. Executing one returns a publisher, and XP cannot serialize that as JSON, so without this check the reader gets a 500 from deep inside Jackson instead of an answer. `isPublisher` is defined with the SSE handlers below.
 
 Opening the stream does not run the subscription. That happens when XP fires the `open` event, which is also where we get the `clientId` needed to send anything back:
 
@@ -305,7 +322,7 @@ The first terminal receives an event:
 retry:5000
 
 event:next
-data:{"data":{"event":{"type":"custom.note.created","timestamp":1752491906282,"localOrigin":true,"distributed":true,"data":{"note":{"id":"2g6inpt0ybexu","title":"My Note","content":"Brief content","createdAt":"2026-08-13T11:18:26.281Z"}}}}}
+data:{"data":{"event":{"type":"custom.note.created","timestamp":1788466007940,"localOrigin":true,"distributed":true,"data":{"note":{"id":"es0c2g0v8gu75","title":"My Note","content":"Brief content","createdAt":"2026-09-03T20:06:47.926Z"}}}}}
 ----
 
 Delete a note and a second event arrives. Stop the stream with kbd:[Ctrl+C]; the `close` event fires and the subscription is cancelled server-side.
