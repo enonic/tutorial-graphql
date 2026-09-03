@@ -441,7 +441,6 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
-<li><a href="#introduction">Introduction</a></li>
 <li><a href="#create_an_app">Create an app</a>
 <ul class="sectlevel2">
 <li><a href="#project_structure">Project structure</a></li>
@@ -458,16 +457,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>Create, build and deploy an application from a starter.</p>
 </div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="introduction"><a class="link" href="#introduction">Introduction</a></h2>
-<div class="sectionbody">
 <div class="paragraph">
-<p>The expression "There&#8217;s an app for that" fits well with Enonic. When you created the sandbox, several applications were automatically installed (based on the <code>Essentials</code> template), which extended the platform&#8217;s capabilities.</p>
-</div>
-<div class="paragraph">
-<p><a href="https://developer.enonic.com/docs/xp/stable/apps">Enonic apps</a> are used to ship everything from content models to code and platform extensions, which you will soon discover.</p>
+<p>Everything you build for XP ships as an <a href="https://developer.enonic.com/docs/xp/stable/apps">application</a> — code, schemas and extensions alike. Ours will hold the GraphQL API.</p>
 </div>
 </div>
 </div>
@@ -649,7 +640,7 @@ Waiting for changes to input files...</code></pre>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-03 13:14:41 UTC
+Last updated 2026-09-03 14:49:17 UTC
 </div>
 </div>
 </body>
