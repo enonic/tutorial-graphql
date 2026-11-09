@@ -2,7 +2,7 @@
 # Enonic XP's own libraries are provided by the `xplibs` catalog (com.enonic.xp.settings plugin).
 [versions]
 asset = "2.0.1"
-cache = "3.0.0"
+cache = "3.0.1"
 graphql = "3.0.0"
 http-client = "4.0.1"
 mustache = "3.0.0"
